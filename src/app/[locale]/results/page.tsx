@@ -9,6 +9,8 @@ import { buildCombos, sortCombos, type SortMode } from "@/lib/combine";
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import PackageCard from "@/components/PackageCard";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
+import { findAirport } from "@/lib/airports";
+import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
 
 function nightsBetween(a: string, b: string) {
   const t1 = new Date(a).getTime();
@@ -120,6 +122,15 @@ function ResultsContent() {
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
   const isMockData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
 
+  // Bridges the destination airport to its country so we can link into the
+  // "Tourist Attractions" guide. Airports in a non-UN territory (e.g. Hong
+  // Kong, Taiwan) won't resolve — the explore card simply doesn't render.
+  const destinationCountry = useMemo(() => {
+    const airport = findAirport(search.destination);
+    if (!airport) return undefined;
+    return findCountryByEnglishName(airport.countryEn);
+  }, [search.destination]);
+
   const editSearchParams = useMemo(() => {
     const p = new URLSearchParams({
       mode: "known",
@@ -224,13 +235,39 @@ function ResultsContent() {
       )}
 
       {!loading && (
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          <Link
-            href={`/${locale}/itinerary?destination=${encodeURIComponent(search.destination)}&nights=${nights || 3}&budget=${search.budgetTotal}&currency=${search.currency}`}
-            className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
-          >
-            {dict.results.viewItinerary}
-          </Link>
+        <div className="mt-10 space-y-4">
+          {/* Itinerary prompt — surfaced first, as requested, so the itinerary
+              option always sits above the destination-exploration card. */}
+          <div className="rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-5 sm:p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-bold text-white">{dict.results.itineraryPromptTitle}</p>
+              <p className="text-sm text-white/70 mt-1 max-w-xl">{dict.results.itineraryPromptBody}</p>
+            </div>
+            <Link
+              href={`/${locale}/itinerary?destination=${encodeURIComponent(search.destination)}&nights=${nights || 3}&budget=${search.budgetTotal}&currency=${search.currency}`}
+              className="shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-bold text-brand-900 shadow-sm transition hover:bg-brand-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-900"
+            >
+              {dict.results.viewItinerary}
+            </Link>
+          </div>
+
+          {destinationCountry && (
+            <Link
+              href={`/${locale}/attractions/${destinationCountry.code}`}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5 transition hover:ring-brand-200 hover:shadow-md"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-3xl leading-none">{flagEmoji(destinationCountry.code)}</span>
+                <div>
+                  <p className="font-bold text-gray-900">{dict.results.exploreDestinationTitle}</p>
+                  <p className="text-sm text-gray-500 mt-1 max-w-xl">{dict.results.exploreDestinationBody}</p>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-xl border border-brand-200 px-5 py-3 text-sm font-bold text-brand-800">
+                {dict.results.exploreDestinationCta}
+              </span>
+            </Link>
+          )}
         </div>
       )}
 

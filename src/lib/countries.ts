@@ -229,3 +229,11 @@ export const COUNTRIES: Country[] = [
 export function findCountry(code: string): Country | undefined {
   return COUNTRIES.find((c) => c.code === code.toUpperCase());
 }
+
+// Looks a country up by its English short name — used to bridge the
+// airport dataset (which stores a plain English country name, not an ISO
+// code) to a country page. Airports in a territory that isn't a UN member
+// state (e.g. Hong Kong, Taiwan) intentionally have no match here.
+export function findCountryByEnglishName(name: string): Country | undefined {
+  return COUNTRIES.find((c) => c.nameEn.toLowerCase() === name.trim().toLowerCase());
+}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { BedType, DestinationSuggestion, Locale, TravelerCounts, TripType } from "@/lib/types";
+import type { RoomType, DestinationSuggestion, Locale, TravelerCounts, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import { formatDuration } from "@/lib/format";
 import { serializeChildrenAges } from "@/lib/searchParamsUtil";
@@ -15,7 +15,7 @@ export default function DestinationCard({
   currency,
   directOnly,
   minStars,
-  bedType,
+  roomType,
 }: {
   suggestion: DestinationSuggestion;
   locale: Locale;
@@ -27,7 +27,7 @@ export default function DestinationCard({
   currency: string;
   directOnly: boolean;
   minStars: number;
-  bedType?: BedType;
+  roomType?: RoomType;
 }) {
   const dict = getDictionary(locale);
   const name = locale === "ar" ? suggestion.destinationNameAr : suggestion.destinationNameEn;
@@ -45,7 +45,7 @@ export default function DestinationCard({
     currency,
     directOnly: String(directOnly),
     minStars: String(minStars),
-    bedType: bedType || "",
+    roomType: roomType || "",
   });
 
   return (
@@ -116,7 +116,7 @@ export default function DestinationCard({
               🍳 {suggestion.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
             </span>
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-              🛏️ {suggestion.hotel.bedType === "shared" ? dict.bedType.shared : dict.bedType.single}
+              🛏️ {dict.roomType[suggestion.hotel.roomType]}
             </span>
           </>
         )}

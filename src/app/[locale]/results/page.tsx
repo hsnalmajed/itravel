@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { BedType, FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
+import type { RoomType, FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
 import { buildCombos, sortCombos, type SortMode } from "@/lib/combine";
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import PackageCard from "@/components/PackageCard";
@@ -46,7 +46,7 @@ function ResultsContent() {
       breakfastIncluded: sp.get("breakfastIncluded") === "true",
       childrenAges: parseChildrenAges(sp.get("childrenAges")),
       infants: Number(sp.get("infants") || 0),
-      bedType: (sp.get("bedType") || undefined) as BedType | undefined,
+      roomType: (sp.get("roomType") || undefined) as RoomType | undefined,
     }),
     [sp]
   );
@@ -96,7 +96,7 @@ function ResultsContent() {
         currency: search.currency,
         minStars: String(search.minHotelStars),
         breakfastIncluded: String(Boolean(search.breakfastIncluded)),
-        bedType: search.bedType || "",
+        roomType: search.roomType || "",
       });
       tasks.push(
         fetch(`/api/hotels?${q.toString()}`)
@@ -138,7 +138,7 @@ function ResultsContent() {
       breakfastIncluded: String(Boolean(search.breakfastIncluded)),
       childrenAges: serializeChildrenAges(search.childrenAges || []),
       infants: String(search.infants || 0),
-      bedType: search.bedType || "",
+      roomType: search.roomType || "",
     });
     return p.toString();
   }, [search]);

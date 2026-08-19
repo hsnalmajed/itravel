@@ -1,4 +1,4 @@
-import type { FlightOffer, HotelOffer, SearchParams } from "./types";
+import type { FlightOffer, HotelOffer, RoomType, SearchParams } from "./types";
 import { DESTINATIONS } from "./destinations";
 
 // ---------------------------------------------------------------------------
@@ -243,8 +243,19 @@ function mockDistanceFromCenterKm(rand: () => number, stars: number): number {
   return Math.round((0.3 + rand() * spread) * 10) / 10;
 }
 
-function mockBedType(rand: () => number): "shared" | "single" {
-  return rand() < 0.5 ? "shared" : "single";
+const ROOM_TYPES: RoomType[] = ["single", "twin", "double", "triple", "suite", "apartment"];
+// Weighted so double rooms (the most common hotel inventory) come up most
+// often, with apartments/suites rarer — roughly mirrors real availability.
+const ROOM_TYPE_WEIGHTS = [0.12, 0.18, 0.38, 0.14, 0.08, 0.1];
+
+function mockRoomType(rand: () => number): RoomType {
+  const r = rand();
+  let cumulative = 0;
+  for (let i = 0; i < ROOM_TYPES.length; i++) {
+    cumulative += ROOM_TYPE_WEIGHTS[i];
+    if (r < cumulative) return ROOM_TYPES[i];
+  }
+  return "double";
 }
 
 // Fare-weight per passenger type: children pay a discounted fare, infants
@@ -335,13 +346,13 @@ export function generateMockHotels(params: SearchParams, nights: number): HotelO
       bookingHint: "Demo",
       distanceFromCenterKm: mockDistanceFromCenterKm(rand, stars),
       breakfastIncluded: mockBreakfastIncluded(rand, stars),
-      bedType: mockBedType(rand),
+      roomType: mockRoomType(rand),
     });
   }
   return offers
     .filter((h) => h.stars >= minStars)
     .filter((h) => !params.breakfastIncluded || h.breakfastIncluded)
-    .filter((h) => !params.bedType || h.bedType === params.bedType)
+    .filter((h) => !params.roomType || h.roomType === params.roomType)
     .sort((a, b) => a.totalPrice - b.totalPrice);
 }
 
@@ -472,7 +483,7 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
         // Duffel Stays doesn't expose bed configuration at the search-result
         // level (it's a per-room-rate detail) — fall back to the same stable
         // per-property estimate used for distance until that's wired up.
-        const bedType = mockBedType(seededRandom(`${r.accommodation?.id ?? r.id ?? String(idx)}bed`));
+        const roomType = mockRoomType(seededRandom(`${r.accommodation?.id ?? r.id ?? String(idx)}bed`));
         return {
           id: r.accommodation?.id ?? r.id ?? `duffel-hotel-${idx}`,
           name: r.accommodation?.name ?? "Hotel",
@@ -486,14 +497,14 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
           bookingHint: r.accommodation?.name ?? "Duffel",
           distanceFromCenterKm,
           breakfastIncluded,
-          bedType,
+          roomType,
         } as HotelOffer;
       })
       // Unrated (stars === 0) properties are kept rather than dropped, since
       // Duffel doesn't always return a star rating.
       .filter((h) => h.stars === 0 || h.stars >= (params.minHotelStars || 0))
       .filter((h) => !params.breakfastIncluded || h.breakfastIncluded)
-      .filter((h) => !params.bedType || h.bedType === params.bedType);
+      .filter((h) => !params.roomType || h.roomType === params.roomType);
 
     if (!offers.length) return generateMockHotels(params, nights);
     return offers.sort((a, b) => a.totalPrice - b.totalPrice);

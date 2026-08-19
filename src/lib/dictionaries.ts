@@ -8,6 +8,7 @@ export const dictionaries = {
     nav: {
       home: "الرئيسية",
       results: "النتائج",
+      attractions: "المعالم السياحية",
       itinerary: "الخطة السياحية",
     },
     travelers: {
@@ -28,11 +29,15 @@ export const dictionaries = {
       infantShort: "رضيع",
       infantsShort: "رضّع",
     },
-    bedType: {
-      label: "نوع السرير",
-      shared: "سرير مشترك",
-      single: "أسرّة منفصلة",
+    roomType: {
+      label: "نوع الغرفة",
       any: "لا يهم",
+      single: "مفرد · سرير واحد",
+      twin: "توأم · سريران منفصلان",
+      double: "مزدوج · سرير مزدوج/كوين/كينج",
+      triple: "ثلاثي/عائلي",
+      suite: "جناح",
+      apartment: "شقة كاملة",
     },
     categories: {
       label: "ما نوع الوجهة التي تفضلها؟",
@@ -107,6 +112,9 @@ export const dictionaries = {
       anyStars: "أي تصنيف",
       baggageIncluded: "أريد أمتعة مسجلة مشمولة",
       breakfastIncluded: "أريد إفطار الفندق مشمولاً",
+      additionalOptions: "خيارات إضافية:",
+      chooseTripTypeFirst: "اختر نوع الرحلة أولاً للمتابعة",
+      budgetPlaceholder: "6000",
       submit: "ابحث عن رحلتي",
       searching: "جاري البحث...",
       originPlaceholder: "مثال: الرياض",
@@ -183,6 +191,30 @@ export const dictionaries = {
       mockNotice:
         "هذه خطة نموذجية (Demo) لأن مفتاح الذكاء الاصطناعي غير مُفعّل بعد. أضف ANTHROPIC_API_KEY في ملف .env لتوليد خطط حقيقية بالذكاء الاصطناعي.",
     },
+    attractions: {
+      title: "المعالم السياحية",
+      subtitle: "اختر دولة لاستكشاف أبرز معالمها وأنشطتها ومأكولاتها",
+      searchPlaceholder: "ابحث عن دولة...",
+      continents: {
+        africa: "أفريقيا",
+        asia: "آسيا",
+        europe: "أوروبا",
+        northAmerica: "أمريكا الشمالية",
+        southAmerica: "أمريكا الجنوبية",
+        oceania: "أوقيانوسيا",
+      },
+      backToCountries: "كل الدول",
+      attractionsHeading: "المعالم السياحية",
+      activitiesHeading: "الأنشطة",
+      cuisineHeading: "المأكولات المحلية",
+      bestMonths: "أفضل وقت للزيارة",
+      howToBook: "طريقة الحجز",
+      photoUnavailable: "الصورة غير متوفرة حالياً",
+      comingSoonTitle: "التفاصيل قيد الإضافة",
+      comingSoonBody:
+        "لم نضِف بعد دليلاً مفصلاً لمعالم وأنشطة ومطاعم هذه الدولة. نعرض هنا نبذة ودولة عامة من ويكيبيديا في الوقت الحالي، وسنضيف التفاصيل الكاملة تباعاً.",
+      source: "المصدر: ويكيبيديا",
+    },
     footer: {
       disclaimer:
         "iTravel أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
@@ -196,6 +228,7 @@ export const dictionaries = {
     nav: {
       home: "Home",
       results: "Results",
+      attractions: "Attractions",
       itinerary: "Itinerary",
     },
     travelers: {
@@ -216,11 +249,15 @@ export const dictionaries = {
       infantShort: "infant",
       infantsShort: "infants",
     },
-    bedType: {
-      label: "Bed type",
-      shared: "Shared bed",
-      single: "Separate/twin beds",
+    roomType: {
+      label: "Room type",
       any: "No preference",
+      single: "Single · one bed",
+      twin: "Twin · two separate beds",
+      double: "Double · one double/queen/king bed",
+      triple: "Triple/Family",
+      suite: "Suite",
+      apartment: "Full apartment",
     },
     categories: {
       label: "What kind of destination do you prefer?",
@@ -295,6 +332,9 @@ export const dictionaries = {
       anyStars: "Any rating",
       baggageIncluded: "Require checked baggage included",
       breakfastIncluded: "Require hotel breakfast included",
+      additionalOptions: "Additional options:",
+      chooseTripTypeFirst: "Choose a trip type first to continue",
+      budgetPlaceholder: "6000",
       submit: "Find my trip",
       searching: "Searching...",
       originPlaceholder: "e.g. Riyadh",
@@ -370,6 +410,30 @@ export const dictionaries = {
       tips: "General trip tips",
       mockNotice:
         "This is a sample itinerary (demo) because the AI key isn't configured yet. Add ANTHROPIC_API_KEY in .env to generate real AI itineraries.",
+    },
+    attractions: {
+      title: "Tourist Attractions",
+      subtitle: "Pick a country to explore its top attractions, activities, and local cuisine",
+      searchPlaceholder: "Search for a country...",
+      continents: {
+        africa: "Africa",
+        asia: "Asia",
+        europe: "Europe",
+        northAmerica: "North America",
+        southAmerica: "South America",
+        oceania: "Oceania",
+      },
+      backToCountries: "All countries",
+      attractionsHeading: "Attractions",
+      activitiesHeading: "Activities",
+      cuisineHeading: "Local cuisine",
+      bestMonths: "Best time to visit",
+      howToBook: "How to book",
+      photoUnavailable: "Photo unavailable right now",
+      comingSoonTitle: "Full guide coming soon",
+      comingSoonBody:
+        "We haven't added a detailed attractions/activities/restaurants guide for this country yet. Showing a general country overview from Wikipedia for now — full details are on the way.",
+      source: "Source: Wikipedia",
     },
     footer: {
       disclaimer:

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { BedType, DestinationCategory, DestinationPairSuggestion, DestinationSuggestion, Locale, TripType } from "@/lib/types";
+import type { RoomType, DestinationCategory, DestinationPairSuggestion, DestinationSuggestion, Locale, TripType } from "@/lib/types";
 import DestinationCard from "@/components/DestinationCard";
 import DestinationPairCard from "@/components/DestinationPairCard";
 import { parseChildrenAges } from "@/lib/searchParamsUtil";
@@ -35,7 +35,7 @@ function DiscoverResultsContent() {
   const infants = sp.get("infants") || "0";
   const directOnly = sp.get("directOnly") === "true";
   const minStars = sp.get("minStars") || "0";
-  const bedType = (sp.get("bedType") || undefined) as BedType | undefined;
+  const roomType = (sp.get("roomType") || undefined) as RoomType | undefined;
   const multiDestination = sp.get("multiDestination") === "true";
   const baggageIncluded = sp.get("baggageIncluded") === "true";
   const breakfastIncluded = sp.get("breakfastIncluded") === "true";
@@ -70,7 +70,7 @@ function DiscoverResultsContent() {
         infants: Number(infants),
         directFlightsOnly: directOnly,
         minHotelStars: Number(minStars),
-        bedType,
+        roomType,
         multiDestination,
         baggageIncluded,
         breakfastIncluded,
@@ -100,7 +100,7 @@ function DiscoverResultsContent() {
     adults,
     directOnly,
     minStars,
-    bedType,
+    roomType,
     multiDestination,
     baggageIncluded,
     breakfastIncluded,
@@ -177,7 +177,7 @@ function DiscoverResultsContent() {
               currency={currency}
               directOnly={directOnly}
               minStars={Number(minStars)}
-              bedType={bedType}
+              roomType={roomType}
             />
           ))}
         </div>

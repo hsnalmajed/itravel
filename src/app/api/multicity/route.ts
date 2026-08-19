@@ -48,7 +48,7 @@ async function bestHotel(destination: string, departDate: string, nights: number
     directFlightsOnly: false,
     minHotelStars: params.minHotelStars,
     breakfastIncluded: params.breakfastIncluded,
-    bedType: params.bedType,
+    roomType: params.roomType,
   };
   const hotels = await searchHotels(searchParams, nights);
   return hotels[0] ?? null;
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     breakfastIncluded: Boolean(body.breakfastIncluded),
     childrenAges: Array.isArray(body.childrenAges) ? body.childrenAges.map(Number).filter(Number.isFinite) : [],
     infants: Number(body.infants || 0),
-    bedType: body.bedType || undefined,
+    roomType: body.roomType || undefined,
   };
 
   if (!params.origin || !params.departDate || params.legs.length < 2) {

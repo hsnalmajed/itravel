@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchHotels } from "@/lib/flights";
-import type { BedType, SearchParams } from "@/lib/types";
+import type { RoomType, SearchParams } from "@/lib/types";
 
 function nightsBetween(checkin: string, checkout: string) {
   const a = new Date(checkin).getTime();
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     directFlightsOnly: false,
     minHotelStars: Number(sp.get("minStars") || 0),
     breakfastIncluded: sp.get("breakfastIncluded") === "true",
-    bedType: (sp.get("bedType") || undefined) as BedType | undefined,
+    roomType: (sp.get("roomType") || undefined) as RoomType | undefined,
   };
 
   if (!params.destination || !params.departDate) {

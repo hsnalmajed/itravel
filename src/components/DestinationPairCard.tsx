@@ -76,7 +76,7 @@ export default function DestinationPairCard({
                     🍳 {leg.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
                   </span>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                    🛏️ {leg.hotel.bedType === "shared" ? dict.bedType.shared : dict.bedType.single}
+                    🛏️ {dict.roomType[leg.hotel.roomType]}
                   </span>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
                     📍 {dict.results.distanceFromCenter.replace("{km}", String(leg.hotel.distanceFromCenterKm))}

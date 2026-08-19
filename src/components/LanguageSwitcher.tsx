@@ -15,11 +15,11 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-full bg-white/10 p-1 text-sm">
+    <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1 text-sm">
       <button
         onClick={() => switchTo("ar")}
         className={`px-3 py-1 rounded-full transition ${
-          locale === "ar" ? "bg-white text-brand-900 font-semibold" : "text-white/80 hover:text-white"
+          locale === "ar" ? "bg-white text-brand-900 font-semibold shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-800"
         }`}
       >
         عربي
@@ -27,7 +27,7 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
       <button
         onClick={() => switchTo("en")}
         className={`px-3 py-1 rounded-full transition ${
-          locale === "en" ? "bg-white text-brand-900 font-semibold" : "text-white/80 hover:text-white"
+          locale === "en" ? "bg-white text-brand-900 font-semibold shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-800"
         }`}
       >
         EN

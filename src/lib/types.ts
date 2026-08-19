@@ -2,9 +2,12 @@ export type Locale = "ar" | "en";
 
 export type TripType = "flight" | "hotel" | "both";
 
-// "shared" = one shared/double bed, "single" = separate/twin beds — affects
-// which room type gets searched, so it matters for result accuracy.
-export type BedType = "shared" | "single";
+// Room type/bed configuration — affects which room gets searched, so it
+// matters for result accuracy. Mirrors the categories real hotel sites use:
+// single (one bed, one guest), twin (two separate beds in the same room),
+// double (one double/queen/king bed), triple (3+ beds, family-sized),
+// suite (separate living area), apartment (a full self-contained unit).
+export type RoomType = "single" | "twin" | "double" | "triple" | "suite" | "apartment";
 
 // Passenger composition, matching how flight/hotel sites break down
 // travelers: adults (13+), children (ages 1-12, one age per child so fares
@@ -32,7 +35,7 @@ export interface SearchParams {
   breakfastIncluded?: boolean;
   childrenAges?: number[];
   infants?: number;
-  bedType?: BedType; // undefined = no preference
+  roomType?: RoomType; // undefined = no preference
 }
 
 export interface FlightOffer {
@@ -71,7 +74,7 @@ export interface HotelOffer {
   bookingHint: string;
   distanceFromCenterKm: number;
   breakfastIncluded: boolean;
-  bedType: BedType;
+  roomType: RoomType;
 }
 
 export interface PackageCombo {
@@ -121,7 +124,7 @@ export interface DiscoverParams {
   breakfastIncluded?: boolean;
   childrenAges?: number[];
   infants?: number;
-  bedType?: BedType;
+  roomType?: RoomType;
   preferenceCategory?: DestinationCategory;
 }
 
@@ -174,7 +177,7 @@ export interface MultiCitySearchParams {
   breakfastIncluded?: boolean;
   childrenAges?: number[];
   infants?: number;
-  bedType?: BedType;
+  roomType?: RoomType;
 }
 
 export interface MultiCityLegResult {

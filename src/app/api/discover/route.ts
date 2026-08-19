@@ -35,7 +35,7 @@ async function suggestForDestination(
     breakfastIncluded: params.breakfastIncluded,
     childrenAges: params.childrenAges,
     infants: params.infants,
-    bedType: params.bedType,
+    roomType: params.roomType,
   };
 
   // Only the sides the user actually asked to budget for are searched —
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     breakfastIncluded: Boolean(body.breakfastIncluded),
     childrenAges: Array.isArray(body.childrenAges) ? body.childrenAges.map(Number).filter(Number.isFinite) : [],
     infants: Number(body.infants || 0),
-    bedType: body.bedType || undefined,
+    roomType: body.roomType || undefined,
     preferenceCategory: body.preferenceCategory || undefined,
   };
 

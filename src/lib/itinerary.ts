@@ -60,14 +60,16 @@ export async function generateItinerary(req: ItineraryRequest): Promise<Itinerar
   }
 
   const langInstruction = req.locale === "ar" ? "اكتب الخطة باللغة العربية." : "Write the plan in English.";
-  const prompt = `You are a professional travel planner. Create a detailed day-by-day itinerary.
+  const prompt = `You are a professional travel planner with access to real-time web search. Before writing anything, use the web_search tool to research ${req.destination}: top attractions, current opening hours/prices where relevant, and traveler-vetted recommendations. Run at least 2-3 searches. Prioritize trustworthy, up-to-date sources such as TripAdvisor (tripadvisor.com), official tourism board sites, and well-known travel guides — do not rely only on prior knowledge.
+
+Once your research is done, create a detailed, realistic day-by-day itinerary grounded in what you found.
 Destination: ${req.destination}
 Trip length: ${req.days} days
 ${req.budget ? `Approximate total budget (excluding flights/hotel): ${req.budget} ${req.currency ?? ""}` : ""}
 ${req.interests ? `Traveler interests: ${req.interests}` : ""}
 ${langInstruction}
 
-Respond ONLY with valid JSON matching exactly this TypeScript type, no markdown fences, no extra text:
+After finishing your research, your FINAL reply must contain ONLY valid JSON (no markdown fences, no extra commentary, no citations markup) matching exactly this TypeScript type:
 {
   "summary": string,
   "plan": [{ "day": number, "title": string, "activities": string[], "estimatedCost": string }],
@@ -84,14 +86,32 @@ Respond ONLY with valid JSON matching exactly this TypeScript type, no markdown 
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5",
-        max_tokens: 4000,
+        max_tokens: 8000,
+        tools: [
+          {
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: 5,
+          },
+        ],
         messages: [{ role: "user", content: prompt }],
       }),
     });
     if (!res.ok) throw new Error(`Anthropic API error: ${res.status}`);
     const data = await res.json();
-    const text = data.content?.[0]?.text ?? "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+
+    // The web_search tool is executed server-side by Anthropic within this
+    // single request/response, so `content` is an array that can interleave
+    // text blocks with server_tool_use / web_search_tool_result blocks.
+    // We only care about the text blocks, and specifically the final one,
+    // which per the prompt should be pure JSON.
+    const textBlocks = (data.content ?? []).filter(
+      (b: { type: string }) => b.type === "text"
+    ) as Array<{ type: "text"; text: string }>;
+    if (!textBlocks.length) throw new Error("No text content in AI response");
+    const lastText = textBlocks[textBlocks.length - 1].text;
+
+    const jsonMatch = lastText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("No JSON found in AI response");
     const parsed = JSON.parse(jsonMatch[0]);
 

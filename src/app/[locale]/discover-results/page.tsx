@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { DestinationPairSuggestion, DestinationSuggestion, Locale } from "@/lib/types";
 import DestinationCard from "@/components/DestinationCard";
@@ -20,7 +21,6 @@ function DiscoverResultsContent() {
   const locale = (params.locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(locale);
   const sp = useSearchParams();
-  const router = useRouter();
 
   const origin = sp.get("origin") || "";
   const budget = sp.get("budget") || "0";
@@ -31,6 +31,9 @@ function DiscoverResultsContent() {
   const directOnly = sp.get("directOnly") === "true";
   const minStars = sp.get("minStars") || "0";
   const multiDestination = sp.get("multiDestination") === "true";
+  const baggageIncluded = sp.get("baggageIncluded") === "true";
+  const breakfastIncluded = sp.get("breakfastIncluded") === "true";
+  const editSearchParams = sp.toString();
 
   const [mode, setMode] = useState<"single" | "multi">(multiDestination ? "multi" : "single");
   const [singleSuggestions, setSingleSuggestions] = useState<DestinationSuggestion[]>([]);
@@ -57,6 +60,8 @@ function DiscoverResultsContent() {
         directFlightsOnly: directOnly,
         minHotelStars: Number(minStars),
         multiDestination,
+        baggageIncluded,
+        breakfastIncluded,
       }),
     })
       .then((r) => r.json())
@@ -70,7 +75,19 @@ function DiscoverResultsContent() {
       })
       .catch(() => setError("error"))
       .finally(() => setLoading(false));
-  }, [origin, budget, currency, departDate, nights, adults, directOnly, minStars, multiDestination]);
+  }, [
+    origin,
+    budget,
+    currency,
+    departDate,
+    nights,
+    adults,
+    directOnly,
+    minStars,
+    multiDestination,
+    baggageIncluded,
+    breakfastIncluded,
+  ]);
 
   const isMockData = useMemo(() => {
     if (mode === "multi") return pairSuggestions.some((p) => p.legs.some((l) => l.flight.isMock || l.hotel.isMock));
@@ -88,12 +105,12 @@ function DiscoverResultsContent() {
             {origin} · {departDate} · {budget} {currency} · {dict.discoverResults.subtitle}
           </p>
         </div>
-        <button
-          onClick={() => router.back()}
+        <Link
+          href={`/${locale}?${editSearchParams}`}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
           {dict.discoverResults.backToSearch}
-        </button>
+        </Link>
       </div>
 
       {isMockData && !loading && (

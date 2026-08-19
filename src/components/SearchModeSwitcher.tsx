@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import SearchForm from "@/components/SearchForm";
@@ -8,7 +9,10 @@ import DiscoverForm from "@/components/DiscoverForm";
 
 export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
-  const [mode, setMode] = useState<"known" | "discover">("known");
+  const sp = useSearchParams();
+  // "Edit search" links from the discover-results page set mode=discover so
+  // the right form (with its own fields pre-filled) opens by default.
+  const [mode, setMode] = useState<"known" | "discover">(sp.get("mode") === "discover" ? "discover" : "known");
 
   return (
     <div className="w-full max-w-4xl mx-auto">

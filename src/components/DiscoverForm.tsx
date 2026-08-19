@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 
@@ -14,20 +14,26 @@ function todayPlus(days: number) {
 export default function DiscoverForm({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
   const router = useRouter();
+  const sp = useSearchParams();
 
-  const [origin, setOrigin] = useState(locale === "ar" ? "الرياض" : "Riyadh");
-  const [budget, setBudget] = useState(6000);
-  const [currency, setCurrency] = useState("SAR");
-  const [departDate, setDepartDate] = useState(todayPlus(30));
-  const [nights, setNights] = useState(5);
-  const [adults, setAdults] = useState(2);
-  const [directOnly, setDirectOnly] = useState(false);
-  const [minStars, setMinStars] = useState(0);
-  const [multiDestination, setMultiDestination] = useState(false);
+  // Pre-fill from the query string when arriving via "Edit search" so the
+  // user edits their previous search instead of starting from scratch.
+  const [origin, setOrigin] = useState(sp.get("origin") || (locale === "ar" ? "الرياض" : "Riyadh"));
+  const [budget, setBudget] = useState(Number(sp.get("budget")) || 6000);
+  const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
+  const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
+  const [nights, setNights] = useState(Number(sp.get("nights")) || 5);
+  const [adults, setAdults] = useState(Number(sp.get("adults")) || 2);
+  const [directOnly, setDirectOnly] = useState(sp.get("directOnly") === "true");
+  const [minStars, setMinStars] = useState(Number(sp.get("minStars")) || 0);
+  const [multiDestination, setMultiDestination] = useState(sp.get("multiDestination") === "true");
+  const [baggageIncluded, setBaggageIncluded] = useState(sp.get("baggageIncluded") === "true");
+  const [breakfastIncluded, setBreakfastIncluded] = useState(sp.get("breakfastIncluded") === "true");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams({
+      mode: "discover",
       origin,
       budget: String(budget),
       currency,
@@ -37,6 +43,8 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
       directOnly: String(directOnly),
       minStars: String(minStars),
       multiDestination: String(multiDestination),
+      baggageIncluded: String(baggageIncluded),
+      breakfastIncluded: String(breakfastIncluded),
     });
     router.push(`/${locale}/discover-results?${params.toString()}`);
   }
@@ -44,6 +52,8 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   const inputClass =
     "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
+  const checkboxLabelClass = "flex items-center gap-2 text-sm text-gray-700";
+  const checkboxClass = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600";
 
   return (
     <form
@@ -138,14 +148,34 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
           </select>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700 mt-1">
+        <label className={checkboxLabelClass}>
           <input
             type="checkbox"
             checked={directOnly}
             onChange={(e) => setDirectOnly(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+            className={checkboxClass}
           />
           {dict.discoverForm.directOnly}
+        </label>
+
+        <label className={checkboxLabelClass}>
+          <input
+            type="checkbox"
+            checked={baggageIncluded}
+            onChange={(e) => setBaggageIncluded(e.target.checked)}
+            className={checkboxClass}
+          />
+          {dict.discoverForm.baggageIncluded}
+        </label>
+
+        <label className={checkboxLabelClass}>
+          <input
+            type="checkbox"
+            checked={breakfastIncluded}
+            onChange={(e) => setBreakfastIncluded(e.target.checked)}
+            className={checkboxClass}
+          />
+          {dict.discoverForm.breakfastIncluded}
         </label>
 
         <div className="sm:col-span-2">

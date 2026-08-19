@@ -1,5 +1,6 @@
 import type { Locale, PackageCombo } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
+import { formatDuration } from "@/lib/format";
 
 function formatTime(iso: string, locale: Locale) {
   try {
@@ -53,6 +54,25 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
               </p>
             </div>
           </div>
+          {combo.flight.stops > 0 && combo.flight.layoverCity && (
+            <p className="mt-1.5 text-xs text-gray-500">
+              {dict.results.layoverIn
+                .replace("{city}", combo.flight.layoverCity)
+                .replace(
+                  "{duration}",
+                  combo.flight.layoverDurationMinutes
+                    ? formatDuration(combo.flight.layoverDurationMinutes, locale)
+                    : ""
+                )}
+            </p>
+          )}
+          <span
+            className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+              combo.flight.baggageIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            🧳 {combo.flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+          </span>
         </div>
       )}
 
@@ -73,6 +93,16 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
               </p>
             </div>
           </div>
+          <p className="mt-1.5 text-xs text-gray-500">
+            📍 {dict.results.distanceFromCenter.replace("{km}", String(combo.hotel.distanceFromCenterKm))}
+          </p>
+          <span
+            className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+              combo.hotel.breakfastIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            🍳 {combo.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+          </span>
         </div>
       )}
 

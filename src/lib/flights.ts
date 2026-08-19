@@ -48,6 +48,8 @@ interface DuffelCarrier {
 interface DuffelSegment {
   departing_at: string;
   arriving_at: string;
+  origin?: { iata_code: string };
+  destination?: { iata_code: string };
   marketing_carrier?: DuffelCarrier;
   operating_carrier?: DuffelCarrier;
 }
@@ -57,11 +59,22 @@ interface DuffelSlice {
   duration?: string;
   segments: DuffelSegment[];
 }
+interface DuffelBaggage {
+  type?: string; // "checked" | "carry_on"
+  quantity?: number;
+}
+interface DuffelOfferPassenger {
+  baggages?: DuffelBaggage[];
+}
 interface DuffelOfferRaw {
   id?: string;
   total_amount: string;
   total_currency: string;
   slices: DuffelSlice[];
+  // Best-effort field name from Duffel's offer schema — not yet verified
+  // against a live response since real keys aren't activated. Defaults to
+  // "no baggage" if the field is absent or shaped differently.
+  passengers?: DuffelOfferPassenger[];
 }
 interface DuffelOfferRequestResponse {
   data?: { offers?: DuffelOfferRaw[] };
@@ -70,11 +83,15 @@ interface DuffelAccommodation {
   id?: string;
   name: string;
   rating?: number;
+  location?: { geographic_coordinates?: { latitude: number; longitude: number } };
 }
 interface DuffelStayResult {
   id?: string;
   cheapest_rate_total_amount?: string;
   cheapest_rate_currency?: string;
+  // Best-effort field name — Duffel Stays' actual board-type field may live
+  // elsewhere (e.g. per-room rate); verify once real keys are activated.
+  cheapest_rate_board_type?: string;
   accommodation?: DuffelAccommodation;
 }
 interface DuffelStaysSearchResponse {
@@ -187,6 +204,45 @@ function seededRandom(seed: string) {
   };
 }
 
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Common connecting hubs used to generate a plausible layover city for mock
+// one-stop itineraries.
+const LAYOVER_HUBS = ["DXB", "DOH", "IST", "CAI", "AUH", "AMM"];
+
+function pickLayoverCity(rand: () => number, origin: string, destination: string): string {
+  const candidates = LAYOVER_HUBS.filter((c) => c !== origin && c !== destination);
+  const pool = candidates.length ? candidates : LAYOVER_HUBS;
+  return pool[Math.floor(rand() * pool.length)];
+}
+
+// Full-service carriers include checked baggage far more often than
+// budget/low-cost carriers — used to make mock baggage inclusion realistic.
+const FULL_SERVICE_AIRLINE_CODES = new Set(["SV", "TK", "EK", "QR"]);
+
+function mockBaggageIncluded(rand: () => number, airlineCode: string): boolean {
+  const probability = FULL_SERVICE_AIRLINE_CODES.has(airlineCode) ? 0.85 : 0.25;
+  return rand() < probability;
+}
+
+function mockBreakfastIncluded(rand: () => number, stars: number): boolean {
+  const probability = Math.min(0.85, 0.25 + stars * 0.12);
+  return rand() < probability;
+}
+
+function mockDistanceFromCenterKm(rand: () => number, stars: number): number {
+  const spread = stars >= 4 ? 4 : 9;
+  return Math.round((0.3 + rand() * spread) * 10) / 10;
+}
+
 const MOCK_AIRLINES = [
   { code: "SV", name: "Saudia" },
   { code: "XY", name: "flynas" },
@@ -226,10 +282,14 @@ export function generateMockFlights(params: SearchParams): FlightOffer[] {
       currency: params.currency,
       isMock: true,
       bookingHint: airline.name,
+      layoverCity: stops > 0 ? pickLayoverCity(rand, origin, destination) : null,
+      layoverDurationMinutes: stops > 0 ? 45 + Math.floor(rand() * 180) : null,
+      baggageIncluded: mockBaggageIncluded(rand, airline.code),
     });
   }
   return offers
     .filter((o) => !params.directFlightsOnly || o.stops === 0)
+    .filter((o) => !params.baggageIncluded || o.baggageIncluded)
     .sort((a, b) => a.price - b.price);
 }
 
@@ -260,10 +320,13 @@ export function generateMockHotels(params: SearchParams, nights: number): HotelO
       rating: Math.round((7 + rand() * 3) * 10) / 10,
       isMock: true,
       bookingHint: "Demo",
+      distanceFromCenterKm: mockDistanceFromCenterKm(rand, stars),
+      breakfastIncluded: mockBreakfastIncluded(rand, stars),
     });
   }
   return offers
     .filter((h) => h.stars >= minStars)
+    .filter((h) => !params.breakfastIncluded || h.breakfastIncluded)
     .sort((a, b) => a.totalPrice - b.totalPrice);
 }
 
@@ -300,6 +363,12 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
       const first = segments[0];
       const last = segments[segments.length - 1];
       const carrier = first.marketing_carrier ?? first.operating_carrier;
+      const stops = segments.length - 1;
+      // Layover city/duration are derived directly from segment timestamps —
+      // reliable regardless of Duffel's exact offer schema. Baggage is a
+      // best-effort read of `passengers[].baggages` (see interface note
+      // above); defaults to false if that shape doesn't match.
+      const layoverSegment = stops > 0 ? segments[0] : null;
       return {
         id: offer.id ?? `duffel-flight-${idx}`,
         airline: carrier?.name ?? "Unknown",
@@ -310,15 +379,23 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
         arriveTime: last.arriving_at,
         durationMinutes:
           parseIsoDurationMinutes(outbound.duration) ?? minutesBetween(first.departing_at, last.arriving_at),
-        stops: segments.length - 1,
+        stops,
         price: Math.round(parseFloat(offer.total_amount)),
         currency: offer.total_currency,
         isMock: false,
         bookingHint: carrier?.name ?? "Duffel",
+        layoverCity: layoverSegment?.destination?.iata_code ?? null,
+        layoverDurationMinutes:
+          stops > 0 ? minutesBetween(segments[0].arriving_at, segments[1].departing_at) : null,
+        baggageIncluded: Boolean(
+          offer.passengers?.[0]?.baggages?.some((b) => b.type === "checked" && (b.quantity ?? 0) > 0)
+        ),
       } as FlightOffer;
     });
 
-    const filtered = params.directFlightsOnly ? offers.filter((o) => o.stops === 0) : offers;
+    const filtered = offers
+      .filter((o) => !params.directFlightsOnly || o.stops === 0)
+      .filter((o) => !params.baggageIncluded || o.baggageIncluded);
     if (!filtered.length) return generateMockFlights(params);
     return filtered.sort((a, b) => a.price - b.price);
   } catch (err) {
@@ -360,6 +437,15 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
       .map((r, idx) => {
         const total = parseFloat(r.cheapest_rate_total_amount as string);
         const stars = r.accommodation?.rating ? Math.round(r.accommodation.rating) : 0;
+        const geo = r.accommodation?.location?.geographic_coordinates;
+        // Distance from the searched city center: computed precisely when
+        // Duffel returns the property's coordinates, otherwise a stable
+        // per-property estimate (still deterministic, never random per call).
+        const distanceFromCenterKm = geo
+          ? Math.round(haversineKm(coords.lat, coords.lon, geo.latitude, geo.longitude) * 10) / 10
+          : mockDistanceFromCenterKm(seededRandom(r.accommodation?.id ?? r.id ?? String(idx)), stars);
+        // Best-effort board-type read — see DuffelStayResult note above.
+        const breakfastIncluded = Boolean(r.cheapest_rate_board_type?.toLowerCase().includes("breakfast"));
         return {
           id: r.accommodation?.id ?? r.id ?? `duffel-hotel-${idx}`,
           name: r.accommodation?.name ?? "Hotel",
@@ -371,11 +457,14 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
           nights,
           isMock: false,
           bookingHint: r.accommodation?.name ?? "Duffel",
+          distanceFromCenterKm,
+          breakfastIncluded,
         } as HotelOffer;
       })
       // Unrated (stars === 0) properties are kept rather than dropped, since
       // Duffel doesn't always return a star rating.
-      .filter((h) => h.stars === 0 || h.stars >= (params.minHotelStars || 0));
+      .filter((h) => h.stars === 0 || h.stars >= (params.minHotelStars || 0))
+      .filter((h) => !params.breakfastIncluded || h.breakfastIncluded);
 
     if (!offers.length) return generateMockHotels(params, nights);
     return offers.sort((a, b) => a.totalPrice - b.totalPrice);

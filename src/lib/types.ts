@@ -13,6 +13,10 @@ export interface SearchParams {
   currency: string; // e.g. SAR, USD
   directFlightsOnly: boolean;
   minHotelStars: number; // 0-5, 0 = any
+  // Optional filters: undefined/false = no filter applied (results of both
+  // kinds are shown, with the info still displayed on each option).
+  baggageIncluded?: boolean;
+  breakfastIncluded?: boolean;
 }
 
 export interface FlightOffer {
@@ -29,6 +33,11 @@ export interface FlightOffer {
   currency: string;
   isMock: boolean;
   bookingHint: string;
+  // City (IATA code) of the first layover, and how long it lasts — null when
+  // the flight is direct (stops === 0).
+  layoverCity: string | null;
+  layoverDurationMinutes: number | null;
+  baggageIncluded: boolean;
 }
 
 export interface HotelOffer {
@@ -44,6 +53,8 @@ export interface HotelOffer {
   address?: string;
   isMock: boolean;
   bookingHint: string;
+  distanceFromCenterKm: number;
+  breakfastIncluded: boolean;
 }
 
 export interface PackageCombo {
@@ -82,6 +93,8 @@ export interface DiscoverParams {
   directFlightsOnly: boolean;
   minHotelStars: number;
   multiDestination: boolean;
+  baggageIncluded?: boolean;
+  breakfastIncluded?: boolean;
 }
 
 export interface DestinationSuggestion {
@@ -127,6 +140,8 @@ export interface MultiCitySearchParams {
   currency: string;
   directFlightsOnly: boolean;
   minHotelStars: number;
+  baggageIncluded?: boolean;
+  breakfastIncluded?: boolean;
 }
 
 export interface MultiCityLegResult {

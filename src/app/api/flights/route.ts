@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     currency: sp.get("currency") || "SAR",
     directFlightsOnly: sp.get("directOnly") === "true",
     minHotelStars: 0,
+    baggageIncluded: sp.get("baggageIncluded") === "true",
   };
 
   if (!params.origin || !params.destination || !params.departDate) {

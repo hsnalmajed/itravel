@@ -9,7 +9,7 @@ export function buildCombos(
   const combos: PackageCombo[] = [];
 
   if (tripType === "flight") {
-    for (const flight of flights.slice(0, 10)) {
+    for (const flight of flights.slice(0, 12)) {
       combos.push({
         flight,
         totalPrice: flight.price,
@@ -19,7 +19,7 @@ export function buildCombos(
       });
     }
   } else if (tripType === "hotel") {
-    for (const hotel of hotels.slice(0, 10)) {
+    for (const hotel of hotels.slice(0, 12)) {
       combos.push({
         hotel,
         totalPrice: hotel.totalPrice,
@@ -29,8 +29,8 @@ export function buildCombos(
       });
     }
   } else {
-    const topFlights = flights.slice(0, 4);
-    const topHotels = hotels.slice(0, 4);
+    const topFlights = flights.slice(0, 5);
+    const topHotels = hotels.slice(0, 5);
     for (const flight of topFlights) {
       for (const hotel of topHotels) {
         const totalPrice = flight.price + hotel.totalPrice;
@@ -51,5 +51,31 @@ export function buildCombos(
   const within = combos.filter((c) => c.withinBudget).sort((a, b) => a.remainingBudget - b.remainingBudget);
   const over = combos.filter((c) => !c.withinBudget).sort((a, b) => a.totalPrice - b.totalPrice);
 
-  return [...within, ...over].slice(0, 9);
+  return [...within, ...over].slice(0, 12);
+}
+
+// Sort modes for the results-page filter bar. "recommended" is a no-op
+// re-sort (buildCombos already returns combos in recommended order); the
+// others re-rank the same candidate pool by a different signal.
+export type SortMode = "recommended" | "cheapest" | "fastest" | "topRatedHotels";
+
+export function sortCombos(combos: PackageCombo[], mode: SortMode): PackageCombo[] {
+  if (mode === "recommended") return combos;
+  const arr = [...combos];
+  if (mode === "cheapest") {
+    return arr.sort((a, b) => a.totalPrice - b.totalPrice);
+  }
+  if (mode === "fastest") {
+    return arr.sort((a, b) => {
+      const da = a.flight?.durationMinutes ?? Infinity;
+      const db = b.flight?.durationMinutes ?? Infinity;
+      return da - db;
+    });
+  }
+  // topRatedHotels
+  return arr.sort((a, b) => {
+    const ra = a.hotel ? a.hotel.rating ?? a.hotel.stars : -1;
+    const rb = b.hotel ? b.hotel.rating ?? b.hotel.stars : -1;
+    return rb - ra;
+  });
 }

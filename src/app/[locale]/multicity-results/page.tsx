@@ -1,9 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale, MultiCityLegInput, MultiCityTripResult } from "@/lib/types";
+import { formatDuration } from "@/lib/format";
 
 function formatTime(iso: string | undefined, locale: Locale) {
   if (!iso) return "";
@@ -30,7 +32,6 @@ function MultiCityResultsContent() {
   const locale = (params.locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(locale);
   const sp = useSearchParams();
-  const router = useRouter();
 
   const origin = sp.get("origin") || "";
   const departDate = sp.get("departDate") || "";
@@ -40,6 +41,14 @@ function MultiCityResultsContent() {
   const directOnly = sp.get("directOnly") === "true";
   const minStars = sp.get("minStars") || "0";
   const legsRaw = sp.get("legs") || "[]";
+  const baggageIncluded = sp.get("baggageIncluded") === "true";
+  const breakfastIncluded = sp.get("breakfastIncluded") === "true";
+  const editSearchParams = useMemo(() => {
+    const p = new URLSearchParams(sp.toString());
+    p.set("mode", "known");
+    p.set("tripRoute", "multicity");
+    return p.toString();
+  }, [sp]);
 
   const [result, setResult] = useState<MultiCityTripResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,13 +84,26 @@ function MultiCityResultsContent() {
         currency,
         directFlightsOnly: directOnly,
         minHotelStars: Number(minStars),
+        baggageIncluded,
+        breakfastIncluded,
       }),
     })
       .then((r) => r.json())
       .then((data) => setResult(data))
       .catch(() => setError("error"))
       .finally(() => setLoading(false));
-  }, [origin, departDate, adults, budget, currency, directOnly, minStars, legsRaw]);
+  }, [
+    origin,
+    departDate,
+    adults,
+    budget,
+    currency,
+    directOnly,
+    minStars,
+    legsRaw,
+    baggageIncluded,
+    breakfastIncluded,
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
@@ -92,12 +114,12 @@ function MultiCityResultsContent() {
             {origin} · {departDate} · {budget} {currency}
           </p>
         </div>
-        <button
-          onClick={() => router.back()}
+        <Link
+          href={`/${locale}?${editSearchParams}`}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
           {dict.multicity.backToSearch}
-        </button>
+        </Link>
       </div>
 
       {loading && (
@@ -161,6 +183,27 @@ function MultiCityResultsContent() {
                   ) : (
                     <p className="text-sm text-red-500">{dict.multicity.noFlightFound}</p>
                   )}
+                  {leg.flight && leg.flight.stops > 0 && leg.flight.layoverCity && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      {dict.results.layoverIn
+                        .replace("{city}", leg.flight.layoverCity)
+                        .replace(
+                          "{duration}",
+                          leg.flight.layoverDurationMinutes
+                            ? formatDuration(leg.flight.layoverDurationMinutes, locale)
+                            : ""
+                        )}
+                    </p>
+                  )}
+                  {leg.flight && (
+                    <span
+                      className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        leg.flight.baggageIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      🧳 {leg.flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+                    </span>
+                  )}
                 </div>
 
                 <div className="border-t border-dashed border-gray-200 pt-3 mt-3">
@@ -182,6 +225,20 @@ function MultiCityResultsContent() {
                     </div>
                   ) : (
                     <p className="text-sm text-red-500">{dict.multicity.noHotelFound}</p>
+                  )}
+                  {leg.hotel && (
+                    <>
+                      <p className="mt-1 text-xs text-gray-400">
+                        {dict.results.distanceFromCenter.replace("{km}", String(leg.hotel.distanceFromCenterKm))}
+                      </p>
+                      <span
+                        className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          leg.hotel.breakfastIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        🍳 {leg.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+                      </span>
+                    </>
                   )}
                 </div>
               </div>
@@ -210,6 +267,27 @@ function MultiCityResultsContent() {
                 </div>
               ) : (
                 <p className="text-sm text-red-500">{dict.multicity.noFlightFound}</p>
+              )}
+              {result.returnFlight && result.returnFlight.stops > 0 && result.returnFlight.layoverCity && (
+                <p className="mt-1 text-xs text-gray-400">
+                  {dict.results.layoverIn
+                    .replace("{city}", result.returnFlight.layoverCity)
+                    .replace(
+                      "{duration}",
+                      result.returnFlight.layoverDurationMinutes
+                        ? formatDuration(result.returnFlight.layoverDurationMinutes, locale)
+                        : ""
+                    )}
+                </p>
+              )}
+              {result.returnFlight && (
+                <span
+                  className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    result.returnFlight.baggageIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  🧳 {result.returnFlight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+                </span>
               )}
             </div>
           </div>

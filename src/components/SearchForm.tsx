@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { FlightRoute, Locale, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 
@@ -16,25 +16,53 @@ interface LegDraft {
   nights: number;
 }
 
+const DEFAULT_LEGS_AR: LegDraft[] = [
+  { destination: "إسطنبول", nights: 3 },
+  { destination: "باريس", nights: 4 },
+];
+const DEFAULT_LEGS_EN: LegDraft[] = [
+  { destination: "Istanbul", nights: 3 },
+  { destination: "Paris", nights: 4 },
+];
+
 export default function SearchForm({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
   const router = useRouter();
+  const sp = useSearchParams();
 
-  const [tripRoute, setTripRoute] = useState<FlightRoute>("roundtrip");
-  const [tripType, setTripType] = useState<TripType>("both");
-  const [origin, setOrigin] = useState(locale === "ar" ? "الرياض" : "Riyadh");
-  const [destination, setDestination] = useState(locale === "ar" ? "إسطنبول" : "Istanbul");
-  const [departDate, setDepartDate] = useState(todayPlus(30));
-  const [returnDate, setReturnDate] = useState(todayPlus(35));
-  const [adults, setAdults] = useState(2);
-  const [budget, setBudget] = useState(6000);
-  const [currency, setCurrency] = useState("SAR");
-  const [directOnly, setDirectOnly] = useState(false);
-  const [minStars, setMinStars] = useState(0);
-  const [legs, setLegs] = useState<LegDraft[]>([
-    { destination: locale === "ar" ? "إسطنبول" : "Istanbul", nights: 3 },
-    { destination: locale === "ar" ? "باريس" : "Paris", nights: 4 },
-  ]);
+  // When arriving here from a results page's "Edit search" link, every
+  // field below is pre-filled from the query string instead of resetting
+  // to defaults — the user edits their previous search rather than
+  // starting over.
+  const [tripRoute, setTripRoute] = useState<FlightRoute>(
+    (sp.get("tripRoute") as FlightRoute) || "roundtrip"
+  );
+  const [tripType, setTripType] = useState<TripType>((sp.get("tripType") as TripType) || "both");
+  const [origin, setOrigin] = useState(sp.get("origin") || (locale === "ar" ? "الرياض" : "Riyadh"));
+  const [destination, setDestination] = useState(
+    sp.get("destination") || (locale === "ar" ? "إسطنبول" : "Istanbul")
+  );
+  const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
+  const [returnDate, setReturnDate] = useState(sp.get("returnDate") || todayPlus(35));
+  const [adults, setAdults] = useState(Number(sp.get("adults")) || 2);
+  const [budget, setBudget] = useState(Number(sp.get("budget")) || 6000);
+  const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
+  const [directOnly, setDirectOnly] = useState(sp.get("directOnly") === "true");
+  const [minStars, setMinStars] = useState(Number(sp.get("minStars")) || 0);
+  const [baggageIncluded, setBaggageIncluded] = useState(sp.get("baggageIncluded") === "true");
+  const [breakfastIncluded, setBreakfastIncluded] = useState(sp.get("breakfastIncluded") === "true");
+  const [legs, setLegs] = useState<LegDraft[]>(() => {
+    const raw = sp.get("legs");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 2) return parsed;
+      } catch {
+        // fall through to defaults
+      }
+    }
+    return locale === "ar" ? DEFAULT_LEGS_AR : DEFAULT_LEGS_EN;
+  });
 
   function updateLeg(index: number, patch: Partial<LegDraft>) {
     setLegs((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
@@ -60,6 +88,8 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         currency,
         directOnly: String(directOnly),
         minStars: String(minStars),
+        baggageIncluded: String(baggageIncluded),
+        breakfastIncluded: String(breakfastIncluded),
         legs: JSON.stringify(validLegs),
       });
       router.push(`/${locale}/multicity-results?${params.toString()}`);
@@ -67,6 +97,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
     }
 
     const params = new URLSearchParams({
+      tripRoute,
       tripType,
       origin,
       destination,
@@ -77,6 +108,8 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       currency,
       directOnly: String(directOnly),
       minStars: String(minStars),
+      baggageIncluded: String(baggageIncluded),
+      breakfastIncluded: String(breakfastIncluded),
     });
     router.push(`/${locale}/results?${params.toString()}`);
   }
@@ -84,6 +117,8 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   const inputClass =
     "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
+  const checkboxLabelClass = "flex items-center gap-2 text-sm text-gray-700";
+  const checkboxClass = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600";
 
   return (
     <form
@@ -218,12 +253,12 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         </div>
 
         {(tripRoute === "multicity" || tripType !== "hotel") && (
-          <label className="flex items-center gap-2 text-sm text-gray-700 mt-1">
+          <label className={checkboxLabelClass}>
             <input
               type="checkbox"
               checked={directOnly}
               onChange={(e) => setDirectOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+              className={checkboxClass}
             />
             {dict.form.directOnly}
           </label>
@@ -245,6 +280,30 @@ export default function SearchForm({ locale }: { locale: Locale }) {
               ))}
             </select>
           </div>
+        )}
+
+        {(tripRoute === "multicity" || tripType !== "hotel") && (
+          <label className={checkboxLabelClass}>
+            <input
+              type="checkbox"
+              checked={baggageIncluded}
+              onChange={(e) => setBaggageIncluded(e.target.checked)}
+              className={checkboxClass}
+            />
+            {dict.form.baggageIncluded}
+          </label>
+        )}
+
+        {(tripRoute === "multicity" || tripType !== "flight") && (
+          <label className={checkboxLabelClass}>
+            <input
+              type="checkbox"
+              checked={breakfastIncluded}
+              onChange={(e) => setBreakfastIncluded(e.target.checked)}
+              className={checkboxClass}
+            />
+            {dict.form.breakfastIncluded}
+          </label>
         )}
       </div>
 

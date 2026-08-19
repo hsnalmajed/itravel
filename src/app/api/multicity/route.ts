@@ -27,6 +27,7 @@ async function bestFlight(origin: string, destination: string, departDate: strin
     currency: params.currency,
     directFlightsOnly: params.directFlightsOnly,
     minHotelStars: 0,
+    baggageIncluded: params.baggageIncluded,
   };
   const flights = await searchFlights(searchParams);
   return flights[0] ?? null;
@@ -44,6 +45,7 @@ async function bestHotel(destination: string, departDate: string, nights: number
     currency: params.currency,
     directFlightsOnly: false,
     minHotelStars: params.minHotelStars,
+    breakfastIncluded: params.breakfastIncluded,
   };
   const hotels = await searchHotels(searchParams, nights);
   return hotels[0] ?? null;
@@ -66,6 +68,8 @@ export async function POST(req: NextRequest) {
     currency: body.currency || "SAR",
     directFlightsOnly: Boolean(body.directFlightsOnly),
     minHotelStars: Number(body.minHotelStars || 0),
+    baggageIncluded: Boolean(body.baggageIncluded),
+    breakfastIncluded: Boolean(body.breakfastIncluded),
   };
 
   if (!params.origin || !params.departDate || params.legs.length < 2) {

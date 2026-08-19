@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { DestinationSuggestion, Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
+import { formatDuration } from "@/lib/format";
 
 export default function DestinationCard({
   suggestion,
@@ -60,9 +61,41 @@ export default function DestinationCard({
         <p>
           ✈️ {suggestion.flight.airline} · {suggestion.flight.stops === 0 ? dict.results.stopsNone : `${suggestion.flight.stops} ${dict.results.stops}`}
         </p>
+        {suggestion.flight.stops > 0 && suggestion.flight.layoverCity && (
+          <p className="text-xs text-gray-400 ps-5">
+            {dict.results.layoverIn
+              .replace("{city}", suggestion.flight.layoverCity)
+              .replace(
+                "{duration}",
+                suggestion.flight.layoverDurationMinutes
+                  ? formatDuration(suggestion.flight.layoverDurationMinutes, locale)
+                  : ""
+              )}
+          </p>
+        )}
         <p>
           🏨 {suggestion.hotel.name} · {"★".repeat(Math.max(1, suggestion.hotel.stars))} · {suggestion.nights} {dict.results.nights}
         </p>
+        <p className="text-xs text-gray-400 ps-5">
+          {dict.results.distanceFromCenter.replace("{km}", String(suggestion.hotel.distanceFromCenterKm))}
+        </p>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <span
+          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            suggestion.flight.baggageIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          🧳 {suggestion.flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+        </span>
+        <span
+          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            suggestion.hotel.breakfastIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          🍳 {suggestion.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+        </span>
       </div>
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">

@@ -30,6 +30,8 @@ async function suggestForDestination(
     currency: params.currency,
     directFlightsOnly: params.directFlightsOnly,
     minHotelStars: params.minHotelStars,
+    baggageIncluded: params.baggageIncluded,
+    breakfastIncluded: params.breakfastIncluded,
   };
 
   const [flights, hotels] = await Promise.all([
@@ -69,6 +71,8 @@ export async function POST(req: NextRequest) {
     directFlightsOnly: Boolean(body.directFlightsOnly),
     minHotelStars: Number(body.minHotelStars || 0),
     multiDestination: Boolean(body.multiDestination),
+    baggageIncluded: Boolean(body.baggageIncluded),
+    breakfastIncluded: Boolean(body.breakfastIncluded),
   };
 
   if (!params.origin || !params.departDate || !params.budgetTotal) {

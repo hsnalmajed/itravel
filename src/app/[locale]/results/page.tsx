@@ -1,11 +1,11 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
-import { buildCombos } from "@/lib/combine";
+import { buildCombos, sortCombos, type SortMode } from "@/lib/combine";
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import PackageCard from "@/components/PackageCard";
 
@@ -28,7 +28,6 @@ function ResultsContent() {
   const locale = (params.locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(locale);
   const sp = useSearchParams();
-  const router = useRouter();
 
   const search: SearchParams = useMemo(
     () => ({
@@ -42,6 +41,8 @@ function ResultsContent() {
       currency: sp.get("currency") || "SAR",
       directFlightsOnly: sp.get("directOnly") === "true",
       minHotelStars: Number(sp.get("minStars") || 0),
+      baggageIncluded: sp.get("baggageIncluded") === "true",
+      breakfastIncluded: sp.get("breakfastIncluded") === "true",
     }),
     [sp]
   );
@@ -50,6 +51,7 @@ function ResultsContent() {
   const [hotels, setHotels] = useState<HotelOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("recommended");
 
   useEffect(() => {
     if (!search.destination || !search.departDate) return;
@@ -69,6 +71,7 @@ function ResultsContent() {
         adults: String(search.adults),
         currency: search.currency,
         directOnly: String(search.directFlightsOnly),
+        baggageIncluded: String(Boolean(search.baggageIncluded)),
       });
       if (search.returnDate) q.set("returnDate", search.returnDate);
       tasks.push(
@@ -86,6 +89,7 @@ function ResultsContent() {
         adults: String(search.adults),
         currency: search.currency,
         minStars: String(search.minHotelStars),
+        breakfastIncluded: String(Boolean(search.breakfastIncluded)),
       });
       tasks.push(
         fetch(`/api/hotels?${q.toString()}`)
@@ -103,10 +107,40 @@ function ResultsContent() {
     () => buildCombos(search.tripType, flights, hotels, search.budgetTotal),
     [search, flights, hotels]
   );
+  const sortedCombos = useMemo(() => sortCombos(combos, sortMode), [combos, sortMode]);
 
   const affiliateLinks = useMemo(() => buildAffiliateLinks(search), [search]);
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
   const isMockData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
+
+  const editSearchParams = useMemo(() => {
+    const p = new URLSearchParams({
+      mode: "known",
+      tripRoute: search.returnDate ? "roundtrip" : "oneway",
+      tripType: search.tripType,
+      origin: search.origin,
+      destination: search.destination,
+      departDate: search.departDate,
+      returnDate: search.returnDate || "",
+      adults: String(search.adults),
+      budget: String(search.budgetTotal),
+      currency: search.currency,
+      directOnly: String(search.directFlightsOnly),
+      minStars: String(search.minHotelStars),
+      baggageIncluded: String(Boolean(search.baggageIncluded)),
+      breakfastIncluded: String(Boolean(search.breakfastIncluded)),
+    });
+    return p.toString();
+  }, [search]);
+
+  const sortOptions: { mode: SortMode; label: string }[] = [
+    { mode: "recommended", label: dict.results.sortRecommended },
+    { mode: "cheapest", label: dict.results.sortCheapest },
+    ...(search.tripType !== "hotel" ? [{ mode: "fastest" as SortMode, label: dict.results.sortFastest }] : []),
+    ...(search.tripType !== "flight"
+      ? [{ mode: "topRatedHotels" as SortMode, label: dict.results.sortTopRatedHotels }]
+      : []),
+  ];
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
@@ -119,12 +153,12 @@ function ResultsContent() {
             {search.returnDate ? ` – ${search.returnDate}` : ""} · {dict.results.subtitle}
           </p>
         </div>
-        <button
-          onClick={() => router.back()}
+        <Link
+          href={`/${locale}?${editSearchParams}`}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
           {dict.results.backToSearch}
-        </button>
+        </Link>
       </div>
 
       {isMockData && !loading && (
@@ -151,9 +185,29 @@ function ResultsContent() {
         <p className="text-gray-500 py-10 text-center">{dict.results.noResults}</p>
       )}
 
+      {!loading && !error && combos.length > 0 && sortOptions.length > 1 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-gray-500 me-1">{dict.results.sortBy}:</span>
+          {sortOptions.map((opt) => (
+            <button
+              key={opt.mode}
+              type="button"
+              onClick={() => setSortMode(opt.mode)}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+                sortMode === opt.mode
+                  ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {!loading && combos.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {combos.map((combo, i) => (
+          {sortedCombos.map((combo, i) => (
             <PackageCard key={i} combo={combo} locale={locale} />
           ))}
         </div>

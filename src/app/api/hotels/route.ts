@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
     currency: sp.get("currency") || "SAR",
     directFlightsOnly: false,
     minHotelStars: Number(sp.get("minStars") || 0),
+    breakfastIncluded: sp.get("breakfastIncluded") === "true",
   };
 
   if (!params.destination || !params.departDate) {

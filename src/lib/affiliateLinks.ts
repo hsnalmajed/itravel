@@ -1,5 +1,5 @@
 import type { SearchParams } from "./types";
-import { resolveIata } from "./amadeus";
+import { resolveIata } from "./flights";
 
 // Best-effort deep links to trusted booking sites for comparison / affiliate revenue.
 // Replace the *_AFFILIATE_ID env vars with your real partner IDs once approved.

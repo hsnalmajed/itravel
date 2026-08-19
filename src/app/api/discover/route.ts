@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchFlights, searchHotels } from "@/lib/amadeus";
+import { searchFlights, searchHotels } from "@/lib/flights";
 import { DESTINATIONS } from "@/lib/destinations";
 import type {
   DestinationPairSuggestion,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchFlights } from "@/lib/amadeus";
+import { searchFlights } from "@/lib/flights";
 import type { SearchParams } from "@/lib/types";
 
 export async function GET(req: NextRequest) {

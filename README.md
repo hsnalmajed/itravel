@@ -30,23 +30,24 @@ Open http://localhost:3000 — you'll be redirected to `/ar` or `/en` based on y
 
 This project **cannot and should not scrape** booking.com, Wego, Skyscanner, Almosafer, or flynas directly — their terms of service prohibit it. The correct, legal path is:
 
-### أ) بيانات أسعار حقيقية عبر Amadeus (جاهز الآن) / Real pricing via Amadeus (ready today)
+### أ) بيانات أسعار حقيقية عبر Duffel (جاهز الآن) / Real pricing via Duffel (ready today)
 
-يستخدم الموقع بالفعل [Amadeus for Developers](https://developers.amadeus.com/register) — واجهة برمجية رسمية للمطورين توفر بحث طيران وفنادق حقيقي مع حصة مجانية شهرية في بيئة الاختبار (test environment)، ثم تسعير حسب الاستخدام بعد ذلك.
+> **ملاحظة:** كان المشروع يستخدم سابقاً Amadeus for Developers، لكن أمديوس أوقفت بوابة الاشتراك الذاتي (self-service) نهائياً في 17 يوليو 2026 وأصبحت تتطلب عملية مبيعات للمؤسسات (enterprise). لذلك تحوّل المشروع إلى [Duffel](https://duffel.com) — واجهة برمجية واحدة للطيران (+300 شركة طيران) والفنادق (Duffel Stays، أكثر من 2 مليون عقار)، بتسجيل ذاتي فوري بدون مكالمة مبيعات.
+>
+> **Note:** This project previously used Amadeus for Developers, but Amadeus fully decommissioned its self-service portal on July 17, 2026 (it's now enterprise/sales-only). The project now uses [Duffel](https://duffel.com) instead — a single API for both flights (300+ airlines) and hotels (Duffel Stays, 2M+ properties), with instant self-serve signup and no sales call required.
 
-The site already integrates [Amadeus for Developers](https://developers.amadeus.com/register) — an official developer API offering real flight & hotel search with a free monthly quota in the test environment, then usage-based pricing beyond that.
+يستخدم الموقع الآن [Duffel](https://duffel.com) — تسعير حسب الاستخدام (pay-as-you-go) بدون رسوم شهرية: عمليات البحث مجانية، وتُفرض رسوم صغيرة فقط عند إتمام حجز فعلي (٣$ + ١٪ من قيمة الحجز تقريباً).
+
+The site now uses [Duffel](https://duffel.com) — pay-as-you-go with no monthly fee: searches are free, and small fees only apply when a booking is actually confirmed (~$3 + 1% of order value).
 
 خطوات التفعيل / To activate:
-1. أنشئ حساباً مجانياً على developers.amadeus.com وأنشئ تطبيقاً في "My Self-Service Workspace".
-2. انسخ `API Key` و `API Secret` إلى ملف `.env.local`:
+1. أنشئ حساباً مجانياً على duffel.com (تسجيل ذاتي فوري، بدون مكالمة مبيعات).
+2. من لوحة التحكم: Developers → Access tokens → أنشئ مفتاح اختبار (يبدأ بـ `duffel_test_`) لتجربة بيانات حقيقية بدون أي مخاطرة مالية، أو مفتاح مباشر (`duffel_live_`) عند الجاهزية لاستقبال حجوزات فعلية.
+3. أضف المفتاح إلى `.env.local`:
    ```
-   AMADEUS_API_KEY=...
-   AMADEUS_API_SECRET=...
-   AMADEUS_ENV=test
+   DUFFEL_API_KEY=...
    ```
-3. أعد تشغيل الموقع — سيتحول تلقائياً من البيانات التجريبية إلى بيانات Amadeus الحقيقية.
-
-عندما تكون جاهزاً للإنتاج بحجم أكبر، غيّر `AMADEUS_ENV=production` (يتطلب اتفاقية إنتاج مدفوعة مع Amadeus).
+4. أعد تشغيل الموقع — سيتحول تلقائياً من البيانات التجريبية إلى بيانات Duffel الحقيقية.
 
 ### ب) روابط مقارنة وعمولة (affiliate) لبقية المصادر / Comparison & affiliate links for the rest
 
@@ -64,14 +65,14 @@ The site already integrates [Amadeus for Developers](https://developers.amadeus.
 
 ### ج) الخطة السياحية بالذكاء الاصطناعي / AI itinerary
 
-يستخدم الموقع Claude (Anthropic API) لتوليد خطط سياحية حقيقية ومخصصة. للتفعيل:
-1. أنشئ مفتاحاً على https://console.anthropic.com/
+يستخدم الموقع Claude (Anthropic API) لتوليد خطط سياحية حقيقية ومخصصة، مع تفعيل أداة البحث الحي في الإنترنت (web search) بحيث يعتمد الذكاء الاصطناعي على مصادر موثوقة وحديثة مثل TripAdvisor والمواقع الرسمية للسياحة بدلاً من الاعتماد فقط على معرفته المُدرَّب عليها مسبقاً. للتفعيل:
+1. أنشئ مفتاحاً على https://platform.claude.com/ (Settings → API Keys).
 2. أضفه إلى `.env.local`:
    ```
    ANTHROPIC_API_KEY=...
    ANTHROPIC_MODEL=claude-sonnet-4-5
    ```
-بدون هذا المفتاح، يعرض الموقع خطة نموذجية (Demo) بدلاً من ذلك.
+بدون هذا المفتاح، يعرض الموقع خطة نموذجية (Demo) بدلاً من ذلك. ملاحظة: البحث الحي مدفوع بشكل منفصل (~10$ لكل 1000 عملية بحث) بالإضافة إلى تكلفة استخدام النموذج نفسه.
 
 ---
 
@@ -91,8 +92,7 @@ npm run cf:deploy           # يبني وينشر الموقع مباشرة
 
 بعد أول نشر، أضف المفاتيح السرية (بدلاً من وضعها في ملف عادي):
 ```bash
-npx wrangler secret put AMADEUS_API_KEY
-npx wrangler secret put AMADEUS_API_SECRET
+npx wrangler secret put DUFFEL_API_KEY
 npx wrangler secret put ANTHROPIC_API_KEY
 ```
 
@@ -126,12 +126,12 @@ src/
       results/page.tsx   # نتائج الطيران/الفنادق ومطابقة الميزانية
       itinerary/page.tsx # مولّد الخطة السياحية بالذكاء الاصطناعي
     api/
-      flights/route.ts   # يستدعي Amadeus (أو بيانات تجريبية) لعروض الطيران
-      hotels/route.ts    # يستدعي Amadeus (أو بيانات تجريبية) لعروض الفنادق
+      flights/route.ts   # يستدعي Duffel (أو بيانات تجريبية) لعروض الطيران
+      hotels/route.ts    # يستدعي Duffel (أو بيانات تجريبية) لعروض الفنادق
       itinerary/route.ts # يستدعي Claude (أو خطة نموذجية) لتوليد الخطة
   components/            # عناصر واجهة قابلة لإعادة الاستخدام
   lib/
-    amadeus.ts           # عميل Amadeus + توليد بيانات تجريبية واقعية
+    flights.ts           # عميل Duffel + توليد بيانات تجريبية واقعية
     affiliateLinks.ts     # روابط المقارنة/الإحالة لكل مصدر
     combine.ts            # منطق مطابقة تركيبات طيران+فندق مع الميزانية
     itinerary.ts           # استدعاء Claude لتوليد الخطة السياحية

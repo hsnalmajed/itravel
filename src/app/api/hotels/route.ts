@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchHotels } from "@/lib/amadeus";
+import { searchHotels } from "@/lib/flights";
 import type { SearchParams } from "@/lib/types";
 
 function nightsBetween(checkin: string, checkout: string) {

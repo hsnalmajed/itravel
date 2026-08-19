@@ -131,7 +131,7 @@ export default function DestinationCard({
 
       <Link
         href={`/${locale}/results?${resultsParams.toString()}`}
-        className="mt-4 block w-full text-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+        className="mt-4 block w-full text-center rounded-xl bg-gradient-to-r from-brand-700 to-brand-900 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
       >
         {dict.discoverResults.viewDetails}
       </Link>

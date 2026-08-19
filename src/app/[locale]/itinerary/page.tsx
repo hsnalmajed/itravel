@@ -44,15 +44,20 @@ function ItineraryContent() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition";
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.75 text-sm text-gray-800 shadow-sm transition outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100 hover:border-gray-300";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10">
-      <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{dict.itinerary.title}</h1>
-      <p className="text-gray-500 mt-1 mb-6">{dict.itinerary.subtitle}</p>
+      <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.itinerary.title}</h1>
+      <p className="text-gray-500 mt-1.5 mb-6">{dict.itinerary.subtitle}</p>
 
-      <form onSubmit={generate} className="rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form
+        onSubmit={generate}
+        className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-brand-950/5 ring-1 ring-black/5"
+      >
+        <div className="h-1.5 bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
+        <div className="p-5 sm:p-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>{dict.form.destination}</label>
           <input
@@ -105,10 +110,11 @@ function ItineraryContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-accent-600 to-accent-700 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-accent-600/20 hover:brightness-105 active:scale-[0.99] transition disabled:opacity-60"
+            className="w-full rounded-xl bg-gradient-to-r from-accent-600 to-accent-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-accent-600/25 hover:brightness-105 hover:-translate-y-0.5 active:scale-[0.99] transition disabled:opacity-60 disabled:hover:translate-y-0"
           >
-            {loading ? dict.itinerary.generating : dict.itinerary.generate}
+            {loading ? dict.itinerary.generating : `${dict.itinerary.generate} 🗺️`}
           </button>
+        </div>
         </div>
       </form>
 
@@ -125,8 +131,14 @@ function ItineraryContent() {
 
           <div className="space-y-4">
             {result.plan.map((day) => (
-              <div key={day.day} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-                <h3 className="font-bold text-gray-900 mb-2">
+              <div
+                key={day.day}
+                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 transition hover:shadow-md hover:ring-brand-100"
+              >
+                <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-900 text-white text-xs font-bold">
+                    {day.day}
+                  </span>
                   {dict.itinerary.day} {day.day}: {day.title.replace(/^Day \d+:\s*/i, "").replace(/^اليوم \d+:\s*/, "")}
                 </h3>
                 <ul className="list-disc ps-5 space-y-1 text-sm text-gray-600">

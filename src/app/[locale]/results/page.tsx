@@ -167,8 +167,8 @@ function ResultsContent() {
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{dict.results.title}</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.results.title}</h1>
+          <p className="text-gray-500 mt-1.5">
             {search.origin && `${search.origin} → `}
             {search.destination} · {search.departDate}
             {search.returnDate ? ` – ${search.returnDate}` : ""} · {dict.results.subtitle}
@@ -176,8 +176,9 @@ function ResultsContent() {
         </div>
         <Link
           href={`/${locale}?${editSearchParams}`}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
+          <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>
           {dict.results.backToSearch}
         </Link>
       </div>
@@ -214,10 +215,10 @@ function ResultsContent() {
               key={opt.mode}
               type="button"
               onClick={() => setSortMode(opt.mode)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+              className={`rounded-full px-4 py-1.75 text-sm font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
                 sortMode === opt.mode
-                  ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  ? "bg-gradient-to-br from-brand-700 to-brand-900 text-white border-brand-800 shadow-md shadow-brand-900/20"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-brand-200 hover:text-brand-800"
               }`}
             >
               {opt.label}
@@ -271,8 +272,8 @@ function ResultsContent() {
         </div>
       )}
 
-      <div className="mt-10 rounded-2xl bg-white p-5 ring-1 ring-black/5">
-        <p className="text-sm font-semibold text-gray-700 mb-3">{dict.results.compareOn}</p>
+      <div className="mt-10 rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5">
+        <p className="text-sm font-bold text-gray-700 mb-3">🔗 {dict.results.compareOn}</p>
         <div className="flex flex-wrap gap-2">
           {affiliateLinks.map((link) => (
             <a
@@ -280,7 +281,7 @@ function ResultsContent() {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer nofollow sponsored"
-              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
             >
               {link.name}
             </a>

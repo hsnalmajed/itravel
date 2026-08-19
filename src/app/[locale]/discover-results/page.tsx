@@ -122,15 +122,16 @@ function DiscoverResultsContent() {
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{dict.discoverResults.title}</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.discoverResults.title}</h1>
+          <p className="text-gray-500 mt-1.5">
             {origin} · {departDate} · {budget} {currency} · {dict.discoverResults.subtitle}
           </p>
         </div>
         <Link
           href={`/${locale}?${editSearchParams}`}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
+          <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>
           {dict.discoverResults.backToSearch}
         </Link>
       </div>

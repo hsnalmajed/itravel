@@ -54,12 +54,27 @@ export const dictionaries = {
       title: "رحلتك القادمة تبدأ بميزانيتك",
       subtitle:
         "أدخل ميزانيتك وتفضيلاتك، وسيقترح عليك iTravel أفضل خيارات الطيران والفنادق ضمن ميزانيتك، مع خطة سياحية جاهزة",
+      trust1: "بدون عمولات حجز خفية",
+      trust2: "مقارنة من مصادر موثوقة",
+      trust3: "خطة سياحية جاهزة لكل رحلة",
     },
     modeSelect: {
       knownTitle: "لدي وجهة محددة",
       knownSubtitle: "أعرف إلى أين أريد السفر، أبحث عن أفضل رحلة وفندق ضمن ميزانيتي",
       discoverTitle: "اقترح لي وجهة ضمن ميزانيتي",
       discoverSubtitle: "لم أحدد وجهة بعد — أخبرني بما يناسب ميزانيتي من الوجهات",
+    },
+    home: {
+      stepsEyebrow: "كيف يعمل iTravel",
+      stepsTitle: "من الميزانية إلى خطة سفر كاملة، بثلاث خطوات",
+      step1Title: "حدد ميزانيتك وتفضيلاتك",
+      step1Body: "أدخل ميزانيتك الإجمالية وتواريخ رحلتك — وجهة محددة تعرفها، أو اقتراح ضمن ميزانيتك إن لم تحدد بعد.",
+      step2Title: "نقارن لك أفضل الخيارات",
+      step2Body: "نقارن الطيران والفنادق عبر مصادر موثوقة محلياً وعالمياً، ونرتبها حسب ما يناسب ميزانيتك فعلياً.",
+      step3Title: "احصل على خطة سياحية جاهزة",
+      step3Body: "بعد اختيار رحلتك، نبني لك خطة يومية لأبرز المعالم والأنشطة والمأكولات المحلية في وجهتك.",
+      featuresEyebrow: "لماذا iTravel",
+      featuresTitle: "كل ما تحتاجه لتخطيط رحلة ضمن ميزانيتك",
     },
     discoverForm: {
       title: "اكتشف وجهتك القادمة",
@@ -233,6 +248,8 @@ export const dictionaries = {
       disclaimer:
         "iTravel أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
       rights: "جميع الحقوق محفوظة",
+      linksHeading: "روابط سريعة",
+      partnersHeading: "نقارن أسعارك عبر",
     },
   },
   en: {
@@ -288,12 +305,30 @@ export const dictionaries = {
       title: "Your next trip starts with your budget",
       subtitle:
         "Enter your budget and preferences, and iTravel will suggest the best flight and hotel options that fit — plus an AI-generated itinerary.",
+      trust1: "No hidden booking fees",
+      trust2: "Compared across trusted sources",
+      trust3: "A ready itinerary for every trip",
     },
     modeSelect: {
       knownTitle: "I have a destination",
       knownSubtitle: "I know where I want to go — find the best flight and hotel within my budget",
       discoverTitle: "Suggest a destination within my budget",
       discoverSubtitle: "I haven't picked a destination yet — show me what fits my budget",
+    },
+    home: {
+      stepsEyebrow: "How iTravel works",
+      stepsTitle: "From your budget to a complete trip plan, in three steps",
+      step1Title: "Set your budget and preferences",
+      step1Body:
+        "Enter your total budget and travel dates — a destination you already know, or a suggestion if you haven't picked one yet.",
+      step2Title: "We compare the best options for you",
+      step2Body:
+        "We compare flights and hotels across trusted local and global sources, and rank them by what actually fits your budget.",
+      step3Title: "Get a ready-made itinerary",
+      step3Body:
+        "Once you've picked your trip, we build a day-by-day plan for the top attractions, activities, and local food in your destination.",
+      featuresEyebrow: "Why iTravel",
+      featuresTitle: "Everything you need to plan a trip within your budget",
     },
     discoverForm: {
       title: "Discover your next destination",
@@ -467,6 +502,8 @@ export const dictionaries = {
       disclaimer:
         "iTravel is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
       rights: "All rights reserved",
+      linksHeading: "Quick links",
+      partnersHeading: "We compare your price across",
     },
   },
 } as const;

@@ -27,35 +27,49 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
         <button
           type="button"
           onClick={() => setMode("known")}
-          className={`rounded-2xl px-5 py-4 text-start transition ring-1 ${
+          className={`group flex items-start gap-3.5 rounded-2xl px-5 py-4 text-start transition ring-1 ${
             mode === "known"
-              ? "bg-white ring-brand-200 shadow-lg"
-              : "bg-white/95 ring-white/40 shadow-sm hover:bg-white"
+              ? "bg-white ring-2 ring-accent-500 shadow-lg shadow-accent-900/10"
+              : "bg-white/95 ring-white/40 shadow-sm hover:bg-white hover:-translate-y-0.5"
           }`}
         >
-          <p className={`font-bold ${mode === "known" ? "text-brand-900" : "text-gray-700"}`}>
-            🎯 {dict.modeSelect.knownTitle}
-          </p>
-          <p className={`text-sm mt-0.5 ${mode === "known" ? "text-gray-500" : "text-gray-500"}`}>
-            {dict.modeSelect.knownSubtitle}
-          </p>
+          <span
+            className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl text-xl transition ${
+              mode === "known" ? "bg-accent-500 text-white" : "bg-brand-50 text-brand-800"
+            }`}
+          >
+            🎯
+          </span>
+          <span>
+            <p className={`font-bold ${mode === "known" ? "text-brand-950" : "text-gray-700"}`}>
+              {dict.modeSelect.knownTitle}
+            </p>
+            <p className="text-sm mt-0.5 text-gray-500">{dict.modeSelect.knownSubtitle}</p>
+          </span>
         </button>
 
         <button
           type="button"
           onClick={() => setMode("discover")}
-          className={`rounded-2xl px-5 py-4 text-start transition ring-1 ${
+          className={`group flex items-start gap-3.5 rounded-2xl px-5 py-4 text-start transition ring-1 ${
             mode === "discover"
-              ? "bg-white ring-brand-200 shadow-lg"
-              : "bg-white/95 ring-white/40 shadow-sm hover:bg-white"
+              ? "bg-white ring-2 ring-accent-500 shadow-lg shadow-accent-900/10"
+              : "bg-white/95 ring-white/40 shadow-sm hover:bg-white hover:-translate-y-0.5"
           }`}
         >
-          <p className={`font-bold ${mode === "discover" ? "text-brand-900" : "text-gray-700"}`}>
-            🧭 {dict.modeSelect.discoverTitle}
-          </p>
-          <p className={`text-sm mt-0.5 ${mode === "discover" ? "text-gray-500" : "text-gray-500"}`}>
-            {dict.modeSelect.discoverSubtitle}
-          </p>
+          <span
+            className={`shrink-0 inline-flex h-11 w-11 items-center justify-center rounded-xl text-xl transition ${
+              mode === "discover" ? "bg-accent-500 text-white" : "bg-brand-50 text-brand-800"
+            }`}
+          >
+            🧭
+          </span>
+          <span>
+            <p className={`font-bold ${mode === "discover" ? "text-brand-950" : "text-gray-700"}`}>
+              {dict.modeSelect.discoverTitle}
+            </p>
+            <p className="text-sm mt-0.5 text-gray-500">{dict.modeSelect.discoverSubtitle}</p>
+          </span>
         </button>
       </div>
 

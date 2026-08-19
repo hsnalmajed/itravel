@@ -18,28 +18,29 @@ export default function Header({ locale }: { locale: Locale }) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex items-center justify-between">
-        <Link href={`/${locale}`} className="flex items-center gap-2.5 text-brand-900 font-bold text-xl">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 p-1.5 ring-1 ring-brand-100">
+    <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur-md shadow-[0_1px_0_0_rgba(15,23,42,0.04),0_8px_24px_-16px_rgba(15,23,42,0.15)]">
+      <div className="h-[3px] bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+        <Link href={`/${locale}`} className="flex items-center gap-2.5 text-brand-950 font-extrabold text-xl shrink-0">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 p-1.5 ring-1 ring-brand-100 shadow-sm">
             <Image src="/logo-icon.png" alt={dict.siteName} width={36} height={30} className="h-full w-full object-contain" priority />
           </span>
           <span className="tracking-tight">{dict.siteName}</span>
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-8 text-gray-600 text-sm font-semibold">
+        <nav className="hidden sm:flex items-center gap-1 text-gray-600 text-sm font-semibold">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="relative py-1 transition hover:text-brand-800 after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:scale-x-0 after:rounded-full after:bg-accent-500 after:transition-transform hover:after:scale-x-100"
+              className="rounded-lg px-3.5 py-2 transition hover:bg-brand-50 hover:text-brand-900"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <LanguageSwitcher locale={locale} />
           <button
             type="button"

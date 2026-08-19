@@ -37,12 +37,23 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-accent-300 ring-1 ring-white/15 backdrop-blur-sm">
             ✈️ {dict.hero.badge}
           </span>
-          <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+          <h1 className="mt-5 text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1]">
             {dict.hero.title}
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-5 text-base sm:text-lg text-white/75 max-w-2xl mx-auto leading-relaxed">
             {dict.hero.subtitle}
           </p>
+
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 text-sm text-white/85">
+            {[dict.hero.trust1, dict.hero.trust2, dict.hero.trust3].map((t) => (
+              <span key={t} className="inline-flex items-center gap-2">
+                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-accent-500/90 text-white text-[10px]">
+                  ✓
+                </span>
+                {t}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -52,39 +63,80 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </Suspense>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-20 grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {[
-          {
-            icon: "💰",
-            title: loc === "ar" ? "حسب ميزانيتك بالضبط" : "Exactly your budget",
-            body:
-              loc === "ar"
-                ? "أدخل ميزانيتك الإجمالية وسنطابق لك أفضل تركيبة طيران وفندق تقع ضمنها."
-                : "Enter your total budget and we match the best flight + hotel combo that fits.",
-          },
-          {
-            icon: "🔎",
-            title: loc === "ar" ? "مصادر موثوقة" : "Trusted sources",
-            body:
-              loc === "ar"
-                ? "مقارنة عبر مصادر موثوقة محلياً ودولياً مثل Booking.com وWego وسكاي سكانر والمسافر وflynas."
-                : "Compare across trusted local & global sources like Booking.com, Wego, Skyscanner, Almosafer, and flynas.",
-          },
-          {
-            icon: "🗺️",
-            title: loc === "ar" ? "خطة سياحية بالذكاء الاصطناعي" : "AI-crafted itinerary",
-            body:
-              loc === "ar"
-                ? "خطة يومية جاهزة حسب مدة رحلتك واهتماماتك، مبنية على الذكاء الاصطناعي ومصادر موثوقة."
-                : "A day-by-day plan based on your trip length and interests, powered by AI and trusted sources.",
-          },
-        ].map((f) => (
-          <div key={f.title} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-            <div className="text-3xl">{f.icon}</div>
-            <h3 className="mt-3 font-bold text-gray-900">{f.title}</h3>
-            <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{f.body}</p>
+      {/* How it works — three steps, connected by a line on larger screens,
+          so the product reads as a guided flow rather than a bare form. */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-20">
+        <div className="text-center mb-10">
+          <span className="text-xs font-bold uppercase tracking-wider text-accent-700">{dict.home.stepsEyebrow}</span>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">{dict.home.stepsTitle}</h2>
+        </div>
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6">
+          <div
+            className="hidden sm:block absolute top-6 start-[16.5%] end-[16.5%] h-px bg-gradient-to-r from-transparent via-brand-200 to-transparent"
+            aria-hidden="true"
+          />
+          {[
+            { n: 1, title: dict.home.step1Title, body: dict.home.step1Body },
+            { n: 2, title: dict.home.step2Title, body: dict.home.step2Body },
+            { n: 3, title: dict.home.step3Title, body: dict.home.step3Body },
+          ].map((s) => (
+            <div key={s.n} className="relative text-center sm:text-start">
+              <span className="relative z-10 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 text-white font-extrabold shadow-lg shadow-brand-900/20 ring-4 ring-brand-50">
+                {s.n}
+              </span>
+              <h3 className="mt-4 font-bold text-gray-900">{s.title}</h3>
+              <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-white border-y border-gray-100">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-accent-700">{dict.home.featuresEyebrow}</span>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">{dict.home.featuresTitle}</h2>
           </div>
-        ))}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "💰",
+                title: loc === "ar" ? "حسب ميزانيتك بالضبط" : "Exactly your budget",
+                body:
+                  loc === "ar"
+                    ? "أدخل ميزانيتك الإجمالية وسنطابق لك أفضل تركيبة طيران وفندق تقع ضمنها."
+                    : "Enter your total budget and we match the best flight + hotel combo that fits.",
+              },
+              {
+                icon: "🔎",
+                title: loc === "ar" ? "مصادر موثوقة" : "Trusted sources",
+                body:
+                  loc === "ar"
+                    ? "مقارنة عبر مصادر موثوقة محلياً ودولياً مثل Booking.com وWego وسكاي سكانر والمسافر وflynas."
+                    : "Compare across trusted local & global sources like Booking.com, Wego, Skyscanner, Almosafer, and flynas.",
+              },
+              {
+                icon: "🗺️",
+                title: loc === "ar" ? "خطة سياحية بالذكاء الاصطناعي" : "AI-crafted itinerary",
+                body:
+                  loc === "ar"
+                    ? "خطة يومية جاهزة حسب مدة رحلتك واهتماماتك، مبنية على الذكاء الاصطناعي ومصادر موثوقة."
+                    : "A day-by-day plan based on your trip length and interests, powered by AI and trusted sources.",
+              },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="group rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-brand-100"
+              >
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50 text-2xl ring-1 ring-accent-100 transition group-hover:bg-accent-100">
+                  {f.icon}
+                </div>
+                <h3 className="mt-4 font-bold text-gray-900">{f.title}</h3>
+                <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

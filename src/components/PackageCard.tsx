@@ -103,6 +103,9 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
           >
             🍳 {combo.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
           </span>
+          <span className="mt-2 ms-1.5 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+            🛏️ {combo.hotel.bedType === "shared" ? dict.bedType.shared : dict.bedType.single}
+          </span>
         </div>
       )}
 

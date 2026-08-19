@@ -243,6 +243,18 @@ function mockDistanceFromCenterKm(rand: () => number, stars: number): number {
   return Math.round((0.3 + rand() * spread) * 10) / 10;
 }
 
+function mockBedType(rand: () => number): "shared" | "single" {
+  return rand() < 0.5 ? "shared" : "single";
+}
+
+// Fare-weight per passenger type: children pay a discounted fare, infants
+// (usually lap infants) a small fraction — matches typical airline pricing.
+function travelerWeight(params: SearchParams): number {
+  const children = params.childrenAges?.length ?? 0;
+  const infants = params.infants ?? 0;
+  return Math.max(1, params.adults) + children * 0.75 + infants * 0.1;
+}
+
 const MOCK_AIRLINES = [
   { code: "SV", name: "Saudia" },
   { code: "XY", name: "flynas" },
@@ -257,6 +269,7 @@ export function generateMockFlights(params: SearchParams): FlightOffer[] {
   const origin = resolveIata(params.origin);
   const destination = resolveIata(params.destination);
   const basePrice = 350 + Math.floor(rand() * 1400);
+  const weight = travelerWeight(params);
   const offers: FlightOffer[] = [];
   const count = 6;
   for (let i = 0; i < count; i++) {
@@ -264,7 +277,7 @@ export function generateMockFlights(params: SearchParams): FlightOffer[] {
     const stops = params.directFlightsOnly ? 0 : Math.floor(rand() * 3 === 0 ? 0 : rand() * 2);
     const durationMinutes = 90 + Math.floor(rand() * 500) + stops * 90;
     const priceFactor = 0.75 + rand() * 0.7 - stops * 0.08;
-    const price = Math.max(180, Math.round((basePrice * priceFactor * params.adults) / 5) * 5);
+    const price = Math.max(180, Math.round((basePrice * priceFactor * weight) / 5) * 5);
     const departHour = 1 + Math.floor(rand() * 22);
     const departTime = `${params.departDate}T${String(departHour).padStart(2, "0")}:${rand() > 0.5 ? "00" : "30"}:00`;
     const arriveTime = new Date(new Date(departTime).getTime() + durationMinutes * 60000).toISOString();
@@ -322,11 +335,13 @@ export function generateMockHotels(params: SearchParams, nights: number): HotelO
       bookingHint: "Demo",
       distanceFromCenterKm: mockDistanceFromCenterKm(rand, stars),
       breakfastIncluded: mockBreakfastIncluded(rand, stars),
+      bedType: mockBedType(rand),
     });
   }
   return offers
     .filter((h) => h.stars >= minStars)
     .filter((h) => !params.breakfastIncluded || h.breakfastIncluded)
+    .filter((h) => !params.bedType || h.bedType === params.bedType)
     .sort((a, b) => a.totalPrice - b.totalPrice);
 }
 
@@ -344,12 +359,20 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
       slices.push({ origin: destination, destination: origin, departure_date: params.returnDate });
     }
 
+    // Duffel accepts either {type: "adult"} or {age} per passenger — children
+    // and infants are specified by age so Duffel applies the right fare.
+    const passengers: ({ type: "adult" } | { age: number })[] = [
+      ...Array.from({ length: params.adults || 1 }, () => ({ type: "adult" as const })),
+      ...(params.childrenAges ?? []).map((age) => ({ age })),
+      ...Array.from({ length: params.infants ?? 0 }, () => ({ age: 0 })),
+    ];
+
     const data = await duffelPost<DuffelOfferRequestResponse>(
       "/air/offer_requests?return_offers=true",
       {
         data: {
           slices,
-          passengers: Array.from({ length: params.adults || 1 }, () => ({ type: "adult" })),
+          passengers,
           cabin_class: "economy",
           max_connections: params.directFlightsOnly ? 0 : 2,
         },
@@ -446,6 +469,10 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
           : mockDistanceFromCenterKm(seededRandom(r.accommodation?.id ?? r.id ?? String(idx)), stars);
         // Best-effort board-type read — see DuffelStayResult note above.
         const breakfastIncluded = Boolean(r.cheapest_rate_board_type?.toLowerCase().includes("breakfast"));
+        // Duffel Stays doesn't expose bed configuration at the search-result
+        // level (it's a per-room-rate detail) — fall back to the same stable
+        // per-property estimate used for distance until that's wired up.
+        const bedType = mockBedType(seededRandom(`${r.accommodation?.id ?? r.id ?? String(idx)}bed`));
         return {
           id: r.accommodation?.id ?? r.id ?? `duffel-hotel-${idx}`,
           name: r.accommodation?.name ?? "Hotel",
@@ -459,12 +486,14 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
           bookingHint: r.accommodation?.name ?? "Duffel",
           distanceFromCenterKm,
           breakfastIncluded,
+          bedType,
         } as HotelOffer;
       })
       // Unrated (stars === 0) properties are kept rather than dropped, since
       // Duffel doesn't always return a star rating.
       .filter((h) => h.stars === 0 || h.stars >= (params.minHotelStars || 0))
-      .filter((h) => !params.breakfastIncluded || h.breakfastIncluded);
+      .filter((h) => !params.breakfastIncluded || h.breakfastIncluded)
+      .filter((h) => !params.bedType || h.bedType === params.bedType);
 
     if (!offers.length) return generateMockHotels(params, nights);
     return offers.sort((a, b) => a.totalPrice - b.totalPrice);

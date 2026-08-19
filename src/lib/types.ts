@@ -2,6 +2,19 @@ export type Locale = "ar" | "en";
 
 export type TripType = "flight" | "hotel" | "both";
 
+// "shared" = one shared/double bed, "single" = separate/twin beds — affects
+// which room type gets searched, so it matters for result accuracy.
+export type BedType = "shared" | "single";
+
+// Passenger composition, matching how flight/hotel sites break down
+// travelers: adults (13+), children (ages 1-12, one age per child so fares
+// can be priced correctly), and infants (under 1, usually free/near-free).
+export interface TravelerCounts {
+  adults: number;
+  childrenAges: number[];
+  infants: number;
+}
+
 export interface SearchParams {
   tripType: TripType;
   origin: string; // IATA code or city name
@@ -17,6 +30,9 @@ export interface SearchParams {
   // kinds are shown, with the info still displayed on each option).
   baggageIncluded?: boolean;
   breakfastIncluded?: boolean;
+  childrenAges?: number[];
+  infants?: number;
+  bedType?: BedType; // undefined = no preference
 }
 
 export interface FlightOffer {
@@ -55,6 +71,7 @@ export interface HotelOffer {
   bookingHint: string;
   distanceFromCenterKm: number;
   breakfastIncluded: boolean;
+  bedType: BedType;
 }
 
 export interface PackageCombo {
@@ -83,11 +100,18 @@ export interface ItineraryResult {
   isMock: boolean;
 }
 
+// A loose taste-based taxonomy for the "suggest a destination" flow — lets
+// the user steer suggestions toward what they actually enjoy rather than
+// just budget-fit. Each destination in destinations.ts carries 1-3 of these.
+export type DestinationCategory = "beach" | "nature" | "adventure" | "city" | "culture" | "family";
+
 export interface DiscoverParams {
   origin: string;
+  tripType: TripType;
   budgetTotal: number;
   currency: string;
   departDate: string; // YYYY-MM-DD
+  returnDate: string; // YYYY-MM-DD — nights are derived from depart/return
   nights: number;
   adults: number;
   directFlightsOnly: boolean;
@@ -95,6 +119,10 @@ export interface DiscoverParams {
   multiDestination: boolean;
   baggageIncluded?: boolean;
   breakfastIncluded?: boolean;
+  childrenAges?: number[];
+  infants?: number;
+  bedType?: BedType;
+  preferenceCategory?: DestinationCategory;
 }
 
 export interface DestinationSuggestion {
@@ -102,8 +130,10 @@ export interface DestinationSuggestion {
   destinationNameAr: string;
   destinationNameEn: string;
   emoji: string;
-  flight: FlightOffer;
-  hotel: HotelOffer;
+  // Optional because "discover" can be scoped to flights-only or
+  // hotels-only, in which case only one side of the trip is priced.
+  flight?: FlightOffer;
+  hotel?: HotelOffer;
   nights: number;
   totalPrice: number;
   currency: string;
@@ -142,6 +172,9 @@ export interface MultiCitySearchParams {
   minHotelStars: number;
   baggageIncluded?: boolean;
   breakfastIncluded?: boolean;
+  childrenAges?: number[];
+  infants?: number;
+  bedType?: BedType;
 }
 
 export interface MultiCityLegResult {

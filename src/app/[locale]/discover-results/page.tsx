@@ -4,9 +4,10 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { DestinationPairSuggestion, DestinationSuggestion, Locale } from "@/lib/types";
+import type { BedType, DestinationCategory, DestinationPairSuggestion, DestinationSuggestion, Locale, TripType } from "@/lib/types";
 import DestinationCard from "@/components/DestinationCard";
 import DestinationPairCard from "@/components/DestinationPairCard";
+import { parseChildrenAges } from "@/lib/searchParamsUtil";
 
 export default function DiscoverResultsPage() {
   return (
@@ -22,17 +23,23 @@ function DiscoverResultsContent() {
   const dict = getDictionary(locale);
   const sp = useSearchParams();
 
+  const tripType = (sp.get("tripType") as TripType) || "both";
   const origin = sp.get("origin") || "";
   const budget = sp.get("budget") || "0";
   const currency = sp.get("currency") || "SAR";
   const departDate = sp.get("departDate") || "";
+  const returnDate = sp.get("returnDate") || "";
   const nights = sp.get("nights") || "5";
   const adults = sp.get("adults") || "1";
+  const childrenAges = parseChildrenAges(sp.get("childrenAges"));
+  const infants = sp.get("infants") || "0";
   const directOnly = sp.get("directOnly") === "true";
   const minStars = sp.get("minStars") || "0";
+  const bedType = (sp.get("bedType") || undefined) as BedType | undefined;
   const multiDestination = sp.get("multiDestination") === "true";
   const baggageIncluded = sp.get("baggageIncluded") === "true";
   const breakfastIncluded = sp.get("breakfastIncluded") === "true";
+  const preferenceCategory = (sp.get("preferenceCategory") || undefined) as DestinationCategory | undefined;
   const editSearchParams = sp.toString();
 
   const [mode, setMode] = useState<"single" | "multi">(multiDestination ? "multi" : "single");
@@ -52,16 +59,22 @@ function DiscoverResultsContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         origin,
+        tripType,
         budgetTotal: Number(budget),
         currency,
         departDate,
+        returnDate,
         nights: Number(nights),
         adults: Number(adults),
+        childrenAges,
+        infants: Number(infants),
         directFlightsOnly: directOnly,
         minHotelStars: Number(minStars),
+        bedType,
         multiDestination,
         baggageIncluded,
         breakfastIncluded,
+        preferenceCategory,
       }),
     })
       .then((r) => r.json())
@@ -75,23 +88,29 @@ function DiscoverResultsContent() {
       })
       .catch(() => setError("error"))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     origin,
+    tripType,
     budget,
     currency,
     departDate,
+    returnDate,
     nights,
     adults,
     directOnly,
     minStars,
+    bedType,
     multiDestination,
     baggageIncluded,
     breakfastIncluded,
+    preferenceCategory,
   ]);
 
   const isMockData = useMemo(() => {
-    if (mode === "multi") return pairSuggestions.some((p) => p.legs.some((l) => l.flight.isMock || l.hotel.isMock));
-    return singleSuggestions.some((s) => s.flight.isMock || s.hotel.isMock);
+    if (mode === "multi")
+      return pairSuggestions.some((p) => p.legs.some((l) => l.flight?.isMock || l.hotel?.isMock));
+    return singleSuggestions.some((s) => s.flight?.isMock || s.hotel?.isMock);
   }, [mode, singleSuggestions, pairSuggestions]);
 
   const hasResults = mode === "multi" ? pairSuggestions.length > 0 : singleSuggestions.length > 0;
@@ -151,10 +170,14 @@ function DiscoverResultsContent() {
               suggestion={s}
               locale={locale}
               origin={origin}
-              adults={Number(adults)}
+              tripType={tripType}
+              departDate={departDate}
+              returnDate={returnDate}
+              travelers={{ adults: Number(adults), childrenAges, infants: Number(infants) }}
               currency={currency}
               directOnly={directOnly}
               minStars={Number(minStars)}
+              bedType={bedType}
             />
           ))}
         </div>

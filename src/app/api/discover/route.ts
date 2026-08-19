@@ -6,6 +6,7 @@ import type {
   DestinationSuggestion,
   DiscoverParams,
   SearchParams,
+  TripType,
 } from "@/lib/types";
 
 function addDays(dateStr: string, days: number) {
@@ -20,7 +21,7 @@ async function suggestForDestination(
   nights: number
 ): Promise<DestinationSuggestion | null> {
   const searchParams: SearchParams = {
-    tripType: "both",
+    tripType: params.tripType,
     origin: params.origin,
     destination: destination.code,
     departDate: params.departDate,
@@ -32,18 +33,27 @@ async function suggestForDestination(
     minHotelStars: params.minHotelStars,
     baggageIncluded: params.baggageIncluded,
     breakfastIncluded: params.breakfastIncluded,
+    childrenAges: params.childrenAges,
+    infants: params.infants,
+    bedType: params.bedType,
   };
 
+  // Only the sides the user actually asked to budget for are searched —
+  // "hotels only" shouldn't require a matching flight to exist, and vice versa.
+  const wantsFlight = params.tripType !== "hotel";
+  const wantsHotel = params.tripType !== "flight";
+
   const [flights, hotels] = await Promise.all([
-    searchFlights(searchParams),
-    searchHotels(searchParams, nights),
+    wantsFlight ? searchFlights(searchParams) : Promise.resolve([]),
+    wantsHotel ? searchHotels(searchParams, nights) : Promise.resolve([]),
   ]);
 
   const flight = flights[0];
   const hotel = hotels[0];
-  if (!flight || !hotel) return null;
+  if (wantsFlight && !flight) return null;
+  if (wantsHotel && !hotel) return null;
 
-  const totalPrice = flight.price + hotel.totalPrice;
+  const totalPrice = (flight?.price ?? 0) + (hotel?.totalPrice ?? 0);
   return {
     destinationCode: destination.code,
     destinationNameAr: destination.nameAr,
@@ -63,9 +73,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const params: DiscoverParams = {
     origin: body.origin || "",
+    tripType: (body.tripType as TripType) || "both",
     budgetTotal: Number(body.budgetTotal || 0),
     currency: body.currency || "SAR",
     departDate: body.departDate || "",
+    returnDate: body.returnDate || "",
     nights: Math.min(Math.max(1, Number(body.nights || 5)), 21),
     adults: Math.max(1, Number(body.adults || 1)),
     directFlightsOnly: Boolean(body.directFlightsOnly),
@@ -73,13 +85,21 @@ export async function POST(req: NextRequest) {
     multiDestination: Boolean(body.multiDestination),
     baggageIncluded: Boolean(body.baggageIncluded),
     breakfastIncluded: Boolean(body.breakfastIncluded),
+    childrenAges: Array.isArray(body.childrenAges) ? body.childrenAges.map(Number).filter(Number.isFinite) : [],
+    infants: Number(body.infants || 0),
+    bedType: body.bedType || undefined,
+    preferenceCategory: body.preferenceCategory || undefined,
   };
 
   if (!params.origin || !params.departDate || !params.budgetTotal) {
     return NextResponse.json({ error: "Missing required params" }, { status: 400 });
   }
 
-  const candidates = DESTINATIONS.filter((d) => d.code !== params.origin.toUpperCase());
+  const candidates = DESTINATIONS.filter(
+    (d) =>
+      d.code !== params.origin.toUpperCase() &&
+      (!params.preferenceCategory || d.categories.includes(params.preferenceCategory))
+  );
 
   if (!params.multiDestination) {
     const results = (

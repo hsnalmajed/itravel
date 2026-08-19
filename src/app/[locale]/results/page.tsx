@@ -4,10 +4,11 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
+import type { BedType, FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
 import { buildCombos, sortCombos, type SortMode } from "@/lib/combine";
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import PackageCard from "@/components/PackageCard";
+import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function nightsBetween(a: string, b: string) {
   const t1 = new Date(a).getTime();
@@ -43,6 +44,9 @@ function ResultsContent() {
       minHotelStars: Number(sp.get("minStars") || 0),
       baggageIncluded: sp.get("baggageIncluded") === "true",
       breakfastIncluded: sp.get("breakfastIncluded") === "true",
+      childrenAges: parseChildrenAges(sp.get("childrenAges")),
+      infants: Number(sp.get("infants") || 0),
+      bedType: (sp.get("bedType") || undefined) as BedType | undefined,
     }),
     [sp]
   );
@@ -72,6 +76,8 @@ function ResultsContent() {
         currency: search.currency,
         directOnly: String(search.directFlightsOnly),
         baggageIncluded: String(Boolean(search.baggageIncluded)),
+        childrenAges: serializeChildrenAges(search.childrenAges || []),
+        infants: String(search.infants || 0),
       });
       if (search.returnDate) q.set("returnDate", search.returnDate);
       tasks.push(
@@ -90,6 +96,7 @@ function ResultsContent() {
         currency: search.currency,
         minStars: String(search.minHotelStars),
         breakfastIncluded: String(Boolean(search.breakfastIncluded)),
+        bedType: search.bedType || "",
       });
       tasks.push(
         fetch(`/api/hotels?${q.toString()}`)
@@ -129,6 +136,9 @@ function ResultsContent() {
       minStars: String(search.minHotelStars),
       baggageIncluded: String(Boolean(search.baggageIncluded)),
       breakfastIncluded: String(Boolean(search.breakfastIncluded)),
+      childrenAges: serializeChildrenAges(search.childrenAges || []),
+      infants: String(search.infants || 0),
+      bedType: search.bedType || "",
     });
     return p.toString();
   }, [search]);

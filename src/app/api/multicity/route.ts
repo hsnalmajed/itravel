@@ -28,6 +28,8 @@ async function bestFlight(origin: string, destination: string, departDate: strin
     directFlightsOnly: params.directFlightsOnly,
     minHotelStars: 0,
     baggageIncluded: params.baggageIncluded,
+    childrenAges: params.childrenAges,
+    infants: params.infants,
   };
   const flights = await searchFlights(searchParams);
   return flights[0] ?? null;
@@ -46,6 +48,7 @@ async function bestHotel(destination: string, departDate: string, nights: number
     directFlightsOnly: false,
     minHotelStars: params.minHotelStars,
     breakfastIncluded: params.breakfastIncluded,
+    bedType: params.bedType,
   };
   const hotels = await searchHotels(searchParams, nights);
   return hotels[0] ?? null;
@@ -70,6 +73,9 @@ export async function POST(req: NextRequest) {
     minHotelStars: Number(body.minHotelStars || 0),
     baggageIncluded: Boolean(body.baggageIncluded),
     breakfastIncluded: Boolean(body.breakfastIncluded),
+    childrenAges: Array.isArray(body.childrenAges) ? body.childrenAges.map(Number).filter(Number.isFinite) : [],
+    infants: Number(body.infants || 0),
+    bedType: body.bedType || undefined,
   };
 
   if (!params.origin || !params.departDate || params.legs.length < 2) {

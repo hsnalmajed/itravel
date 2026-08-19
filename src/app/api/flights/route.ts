@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchFlights } from "@/lib/flights";
 import type { SearchParams } from "@/lib/types";
+import { parseChildrenAges } from "@/lib/searchParamsUtil";
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
@@ -16,6 +17,8 @@ export async function GET(req: NextRequest) {
     directFlightsOnly: sp.get("directOnly") === "true",
     minHotelStars: 0,
     baggageIncluded: sp.get("baggageIncluded") === "true",
+    childrenAges: parseChildrenAges(sp.get("childrenAges")),
+    infants: Number(sp.get("infants") || 0),
   };
 
   if (!params.origin || !params.destination || !params.departDate) {

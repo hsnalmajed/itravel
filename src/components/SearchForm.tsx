@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { FlightRoute, Locale, TripType } from "@/lib/types";
+import type { BedType, FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
+import TravelersPicker from "@/components/TravelersPicker";
+import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function todayPlus(days: number) {
   const d = new Date();
@@ -34,21 +36,26 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   // field below is pre-filled from the query string instead of resetting
   // to defaults — the user edits their previous search rather than
   // starting over.
+  const [tripType, setTripType] = useState<TripType>((sp.get("tripType") as TripType) || "both");
   const [tripRoute, setTripRoute] = useState<FlightRoute>(
     (sp.get("tripRoute") as FlightRoute) || "roundtrip"
   );
-  const [tripType, setTripType] = useState<TripType>((sp.get("tripType") as TripType) || "both");
   const [origin, setOrigin] = useState(sp.get("origin") || (locale === "ar" ? "الرياض" : "Riyadh"));
   const [destination, setDestination] = useState(
     sp.get("destination") || (locale === "ar" ? "إسطنبول" : "Istanbul")
   );
   const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
   const [returnDate, setReturnDate] = useState(sp.get("returnDate") || todayPlus(35));
-  const [adults, setAdults] = useState(Number(sp.get("adults")) || 2);
+  const [travelers, setTravelers] = useState<TravelerCounts>({
+    adults: Number(sp.get("adults")) || 2,
+    childrenAges: parseChildrenAges(sp.get("childrenAges")),
+    infants: Number(sp.get("infants")) || 0,
+  });
   const [budget, setBudget] = useState(Number(sp.get("budget")) || 6000);
   const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
   const [directOnly, setDirectOnly] = useState(sp.get("directOnly") === "true");
   const [minStars, setMinStars] = useState(Number(sp.get("minStars")) || 0);
+  const [bedType, setBedType] = useState<BedType | "">((sp.get("bedType") as BedType) || "");
   const [baggageIncluded, setBaggageIncluded] = useState(sp.get("baggageIncluded") === "true");
   const [breakfastIncluded, setBreakfastIncluded] = useState(sp.get("breakfastIncluded") === "true");
   const [legs, setLegs] = useState<LegDraft[]>(() => {
@@ -63,6 +70,13 @@ export default function SearchForm({ locale }: { locale: Locale }) {
     }
     return locale === "ar" ? DEFAULT_LEGS_AR : DEFAULT_LEGS_EN;
   });
+
+  // Trip route (round-trip/one-way/multi-city) only makes sense when a
+  // flight is involved — hotel-only search has no "route".
+  const showTripRoute = tripType !== "hotel";
+  const showReturnDate = tripRoute === "multicity" ? false : tripType === "hotel" || tripRoute === "roundtrip";
+  const showHotelFields = tripRoute === "multicity" || tripType !== "flight";
+  const showFlightFields = tripRoute === "multicity" || tripType !== "hotel";
 
   function updateLeg(index: number, patch: Partial<LegDraft>) {
     setLegs((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
@@ -83,11 +97,14 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       const params = new URLSearchParams({
         origin,
         departDate,
-        adults: String(adults),
+        adults: String(travelers.adults),
+        childrenAges: serializeChildrenAges(travelers.childrenAges),
+        infants: String(travelers.infants),
         budget: String(budget),
         currency,
         directOnly: String(directOnly),
         minStars: String(minStars),
+        bedType,
         baggageIncluded: String(baggageIncluded),
         breakfastIncluded: String(breakfastIncluded),
         legs: JSON.stringify(validLegs),
@@ -102,12 +119,15 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       origin,
       destination,
       departDate,
-      returnDate: tripRoute === "oneway" ? "" : returnDate,
-      adults: String(adults),
+      returnDate: showReturnDate ? returnDate : "",
+      adults: String(travelers.adults),
+      childrenAges: serializeChildrenAges(travelers.childrenAges),
+      infants: String(travelers.infants),
       budget: String(budget),
       currency,
       directOnly: String(directOnly),
       minStars: String(minStars),
+      bedType,
       baggageIncluded: String(baggageIncluded),
       breakfastIncluded: String(breakfastIncluded),
     });
@@ -119,6 +139,12 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
   const checkboxLabelClass = "flex items-center gap-2 text-sm text-gray-700";
   const checkboxClass = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600";
+  const segmentClass = (active: boolean) =>
+    `rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+      active
+        ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
+        : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+    }`;
 
   return (
     <form
@@ -126,47 +152,42 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       className="relative z-10 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 p-5 sm:p-7"
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-        {(["roundtrip", "oneway", "multicity"] as FlightRoute[]).map((r) => (
+        {(["both", "flight", "hotel"] as TripType[]).map((t) => (
           <button
             type="button"
-            key={r}
-            onClick={() => setTripRoute(r)}
-            className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
-              tripRoute === r
-                ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
-                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-            }`}
+            key={t}
+            onClick={() => {
+              setTripType(t);
+              if (t === "hotel" && tripRoute === "multicity") setTripRoute("roundtrip");
+            }}
+            className={segmentClass(tripType === t)}
           >
-            {r === "roundtrip"
-              ? dict.form.tripRouteRoundtrip
-              : r === "oneway"
-              ? dict.form.tripRouteOneway
-              : dict.form.tripRouteMulticity}
+            {t === "both" ? dict.form.tripTypeBoth : t === "flight" ? dict.form.tripTypeFlight : dict.form.tripTypeHotel}
           </button>
         ))}
       </div>
 
-      {tripRoute !== "multicity" && (
+      {showTripRoute && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          {(["both", "flight", "hotel"] as TripType[]).map((t) => (
+          {(["roundtrip", "oneway", "multicity"] as FlightRoute[]).map((r) => (
             <button
               type="button"
-              key={t}
-              onClick={() => setTripType(t)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
-                tripType === t
-                  ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
-                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-              }`}
+              key={r}
+              onClick={() => setTripRoute(r)}
+              className={segmentClass(tripRoute === r)}
             >
-              {t === "both" ? dict.form.tripTypeBoth : t === "flight" ? dict.form.tripTypeFlight : dict.form.tripTypeHotel}
+              {r === "roundtrip"
+                ? dict.form.tripRouteRoundtrip
+                : r === "oneway"
+                ? dict.form.tripRouteOneway
+                : dict.form.tripRouteMulticity}
             </button>
           ))}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {(tripRoute === "multicity" || tripType !== "hotel") && (
+        {showFlightFields && (
           <div>
             <label className={labelClass}>{dict.form.origin}</label>
             <input
@@ -203,7 +224,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             required
           />
         </div>
-        {tripRoute === "roundtrip" && (
+        {showReturnDate && (
           <div>
             <label className={labelClass}>{dict.form.returnDate}</label>
             <input
@@ -217,15 +238,8 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         )}
 
         <div>
-          <label className={labelClass}>{dict.form.adults}</label>
-          <input
-            type="number"
-            min={1}
-            max={9}
-            className={inputClass}
-            value={adults}
-            onChange={(e) => setAdults(Number(e.target.value))}
-          />
+          <label className={labelClass}>{dict.travelers.label}</label>
+          <TravelersPicker locale={locale} value={travelers} onChange={setTravelers} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -252,7 +266,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </div>
         </div>
 
-        {(tripRoute === "multicity" || tripType !== "hotel") && (
+        {showFlightFields && (
           <label className={checkboxLabelClass}>
             <input
               type="checkbox"
@@ -264,7 +278,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </label>
         )}
 
-        {(tripRoute === "multicity" || tripType !== "flight") && (
+        {showHotelFields && (
           <div>
             <label className={labelClass}>{dict.form.minStars}</label>
             <select
@@ -282,7 +296,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </div>
         )}
 
-        {(tripRoute === "multicity" || tripType !== "hotel") && (
+        {showFlightFields && (
           <label className={checkboxLabelClass}>
             <input
               type="checkbox"
@@ -294,7 +308,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </label>
         )}
 
-        {(tripRoute === "multicity" || tripType !== "flight") && (
+        {showHotelFields && (
           <label className={checkboxLabelClass}>
             <input
               type="checkbox"
@@ -304,6 +318,28 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             />
             {dict.form.breakfastIncluded}
           </label>
+        )}
+
+        {showHotelFields && (
+          <div className="sm:col-span-2">
+            <label className={labelClass}>{dict.bedType.label}</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["", dict.bedType.any],
+                ["shared", dict.bedType.shared],
+                ["single", dict.bedType.single],
+              ] as [BedType | "", string][]).map(([val, label]) => (
+                <button
+                  type="button"
+                  key={val || "any"}
+                  onClick={() => setBedType(val)}
+                  className={segmentClass(bedType === val)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

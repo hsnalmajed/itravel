@@ -1,0 +1,152 @@
+import type { Locale } from "./types";
+
+export const dictionaries = {
+  ar: {
+    dir: "rtl",
+    siteName: "iTravel",
+    tagline: "خطّط رحلتك بالكامل حسب ميزانيتك — طيران، فنادق، وبرنامج سياحي في مكان واحد",
+    nav: {
+      home: "الرئيسية",
+      results: "النتائج",
+      itinerary: "الخطة السياحية",
+    },
+    hero: {
+      title: "رحلتك القادمة تبدأ بميزانيتك",
+      subtitle:
+        "أدخل ميزانيتك وتفضيلاتك، وسيقترح عليك iTravel أفضل خيارات الطيران والفنادق ضمن ميزانيتك، مع خطة سياحية جاهزة بالذكاء الاصطناعي.",
+    },
+    form: {
+      tripType: "نوع الرحلة",
+      tripTypeFlight: "طيران فقط",
+      tripTypeHotel: "فنادق فقط",
+      tripTypeBoth: "طيران + فنادق",
+      origin: "مدينة المغادرة",
+      destination: "الوجهة",
+      departDate: "تاريخ الذهاب",
+      returnDate: "تاريخ العودة",
+      adults: "عدد المسافرين",
+      budget: "الميزانية الإجمالية",
+      currency: "العملة",
+      directOnly: "طيران مباشر فقط (بدون توقف)",
+      minStars: "تصنيف الفندق (نجوم) الأدنى",
+      anyStars: "أي تصنيف",
+      submit: "ابحث عن رحلتي",
+      searching: "جاري البحث...",
+      originPlaceholder: "مثال: الرياض",
+      destinationPlaceholder: "مثال: إسطنبول",
+    },
+    results: {
+      title: "نتائج البحث",
+      subtitle: "أفضل الخيارات المطابقة لميزانيتك وتفضيلاتك",
+      noResults: "لم نجد خيارات ضمن هذه الميزانية، جرّب زيادة الميزانية أو تعديل الفلاتر.",
+      flightOption: "خيار الطيران",
+      hotelOption: "خيار الفندق",
+      totalPrice: "السعر الإجمالي",
+      remainingBudget: "المتبقي من الميزانية",
+      overBudget: "يتجاوز الميزانية",
+      withinBudget: "ضمن الميزانية",
+      stops: "توقف",
+      stopsNone: "مباشر",
+      perNight: "لليلة",
+      nights: "ليالي",
+      compareOn: "قارن أيضاً على",
+      viewItinerary: "اطلب خطة سياحية لهذه الرحلة",
+      mockNotice:
+        "هذه بيانات تجريبية (Demo) لأن مفاتيح واجهة Amadeus البرمجية غير مُفعّلة بعد. أضف مفاتيحك في ملف .env لعرض أسعار حقيقية.",
+      backToSearch: "تعديل البحث",
+    },
+    itinerary: {
+      title: "خطتك السياحية بالذكاء الاصطناعي",
+      subtitle: "خطة يومية مصممة حسب وجهتك ومدة رحلتك واهتماماتك",
+      generate: "أنشئ الخطة",
+      generating: "جاري إنشاء الخطة...",
+      interests: "اهتماماتك (اختياري)",
+      interestsPlaceholder: "مثال: تاريخ، طبيعة، تسوق، طعام محلي",
+      day: "اليوم",
+      tips: "نصائح عامة للرحلة",
+      mockNotice:
+        "هذه خطة نموذجية (Demo) لأن مفتاح الذكاء الاصطناعي غير مُفعّل بعد. أضف ANTHROPIC_API_KEY في ملف .env لتوليد خطط حقيقية بالذكاء الاصطناعي.",
+    },
+    footer: {
+      disclaimer:
+        "iTravel أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
+      rights: "جميع الحقوق محفوظة",
+    },
+  },
+  en: {
+    dir: "ltr",
+    siteName: "iTravel",
+    tagline: "Plan your whole trip around your budget — flights, hotels, and an itinerary in one place",
+    nav: {
+      home: "Home",
+      results: "Results",
+      itinerary: "Itinerary",
+    },
+    hero: {
+      title: "Your next trip starts with your budget",
+      subtitle:
+        "Enter your budget and preferences, and iTravel will suggest the best flight and hotel options that fit — plus an AI-generated itinerary.",
+    },
+    form: {
+      tripType: "Trip type",
+      tripTypeFlight: "Flights only",
+      tripTypeHotel: "Hotels only",
+      tripTypeBoth: "Flights + Hotels",
+      origin: "From",
+      destination: "Destination",
+      departDate: "Departure date",
+      returnDate: "Return date",
+      adults: "Travelers",
+      budget: "Total budget",
+      currency: "Currency",
+      directOnly: "Direct flights only (no stops)",
+      minStars: "Minimum hotel star rating",
+      anyStars: "Any rating",
+      submit: "Find my trip",
+      searching: "Searching...",
+      originPlaceholder: "e.g. Riyadh",
+      destinationPlaceholder: "e.g. Istanbul",
+    },
+    results: {
+      title: "Search results",
+      subtitle: "Best matches for your budget and preferences",
+      noResults: "No options found within this budget. Try increasing it or adjusting filters.",
+      flightOption: "Flight option",
+      hotelOption: "Hotel option",
+      totalPrice: "Total price",
+      remainingBudget: "Remaining budget",
+      overBudget: "Over budget",
+      withinBudget: "Within budget",
+      stops: "stop(s)",
+      stopsNone: "Direct",
+      perNight: "per night",
+      nights: "nights",
+      compareOn: "Also compare on",
+      viewItinerary: "Get an itinerary for this trip",
+      mockNotice:
+        "This is demo data because the Amadeus API keys aren't configured yet. Add your keys in .env to show live prices.",
+      backToSearch: "Edit search",
+    },
+    itinerary: {
+      title: "Your AI-generated itinerary",
+      subtitle: "A day-by-day plan based on your destination, trip length, and interests",
+      generate: "Generate itinerary",
+      generating: "Generating itinerary...",
+      interests: "Your interests (optional)",
+      interestsPlaceholder: "e.g. history, nature, shopping, local food",
+      day: "Day",
+      tips: "General trip tips",
+      mockNotice:
+        "This is a sample itinerary (demo) because the AI key isn't configured yet. Add ANTHROPIC_API_KEY in .env to generate real AI itineraries.",
+    },
+    footer: {
+      disclaimer:
+        "iTravel is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
+      rights: "All rights reserved",
+    },
+  },
+} as const;
+
+export function getDictionary(locale: Locale) {
+  return dictionaries[locale] ?? dictionaries.ar;
+}

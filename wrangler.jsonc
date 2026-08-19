@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "itravel",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets"
+  }
+  // After deploying, set real secrets with:
+  //   npx wrangler secret put AMADEUS_API_KEY
+  //   npx wrangler secret put AMADEUS_API_SECRET
+  //   npx wrangler secret put ANTHROPIC_API_KEY
+  // (Never put real secrets directly in this file.)
+}

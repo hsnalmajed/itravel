@@ -71,3 +71,37 @@ export interface ItineraryResult {
   tips: string[];
   isMock: boolean;
 }
+
+export interface DiscoverParams {
+  origin: string;
+  budgetTotal: number;
+  currency: string;
+  departDate: string; // YYYY-MM-DD
+  nights: number;
+  adults: number;
+  directFlightsOnly: boolean;
+  minHotelStars: number;
+  multiDestination: boolean;
+}
+
+export interface DestinationSuggestion {
+  destinationCode: string;
+  destinationNameAr: string;
+  destinationNameEn: string;
+  emoji: string;
+  flight: FlightOffer;
+  hotel: HotelOffer;
+  nights: number;
+  totalPrice: number;
+  currency: string;
+  withinBudget: boolean;
+  remainingBudget: number;
+}
+
+export interface DestinationPairSuggestion {
+  legs: [DestinationSuggestion, DestinationSuggestion];
+  totalPrice: number;
+  currency: string;
+  withinBudget: boolean;
+  remainingBudget: number;
+}

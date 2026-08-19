@@ -1,4 +1,5 @@
 import type { FlightOffer, HotelOffer, SearchParams } from "./types";
+import { DESTINATIONS } from "./destinations";
 
 // Minimal shapes for the parts of the raw Amadeus API responses we read.
 // The full Amadeus schemas are much larger; we only type what we consume.
@@ -93,6 +94,14 @@ const CITY_TO_IATA: Record<string, string> = {
   "جاكرتا": "JKT", jakarta: "JKT",
   "نيويورك": "NYC", "new york": "NYC",
 };
+
+// Merge in every discover-mode destination's ar/en names so cards built from
+// DestinationSuggestion always resolve back to the right IATA code, even for
+// cities (e.g. Baku, Tbilisi) not covered by the hand-written list above.
+for (const d of DESTINATIONS) {
+  CITY_TO_IATA[d.nameAr.toLowerCase()] = d.code;
+  CITY_TO_IATA[d.nameEn.toLowerCase()] = d.code;
+}
 
 export function resolveIata(input: string): string {
   const key = input.trim().toLowerCase();

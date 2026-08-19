@@ -1,6 +1,6 @@
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import SearchForm from "@/components/SearchForm";
+import SearchModeSwitcher from "@/components/SearchModeSwitcher";
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
@@ -22,7 +22,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       </section>
 
       <section className="relative -mt-24 sm:-mt-28 px-4 sm:px-6 pb-16">
-        <SearchForm locale={loc} />
+        <SearchModeSwitcher locale={loc} />
       </section>
 
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-20 grid grid-cols-1 sm:grid-cols-3 gap-6">

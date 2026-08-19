@@ -42,7 +42,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 outline-none transition";
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
 
   return (
@@ -143,7 +143,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
             type="checkbox"
             checked={directOnly}
             onChange={(e) => setDirectOnly(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
+            className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
           />
           {dict.discoverForm.directOnly}
         </label>
@@ -154,10 +154,10 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
             <button
               type="button"
               onClick={() => setMultiDestination(false)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
                 !multiDestination
-                  ? "bg-brand-blue text-white border-brand-blue shadow-sm"
-                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                  ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
+                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
               }`}
             >
               {dict.discoverForm.singleDestination}
@@ -165,10 +165,10 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
             <button
               type="button"
               onClick={() => setMultiDestination(true)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
                 multiDestination
-                  ? "bg-brand-blue text-white border-brand-blue shadow-sm"
-                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                  ? "bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20"
+                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
               }`}
             >
               {dict.discoverForm.multiDestination}
@@ -179,7 +179,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
       <button
         type="submit"
-        className="mt-6 w-full rounded-xl bg-gradient-to-r from-brand-green to-brand-green-dark px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-green/20 hover:brightness-105 active:scale-[0.99] transition"
+        className="mt-6 w-full rounded-xl bg-gradient-to-r from-accent-600 to-accent-700 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-accent-600/20 transition hover:brightness-105 hover:shadow-xl hover:shadow-accent-600/25 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2"
       >
         {dict.discoverForm.submit}
       </button>

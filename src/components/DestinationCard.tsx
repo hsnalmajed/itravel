@@ -42,8 +42,8 @@ export default function DestinationCard({
 
   return (
     <div
-      className={`rounded-2xl bg-white p-5 shadow-sm ring-1 transition hover:shadow-md ${
-        suggestion.withinBudget ? "ring-brand-blue/10" : "ring-red-100"
+      className={`rounded-2xl bg-white p-5 shadow-sm ring-1 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl ${
+        suggestion.withinBudget ? "ring-brand-100 hover:ring-brand-300" : "ring-red-100 hover:ring-red-200"
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -67,14 +67,14 @@ export default function DestinationCard({
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
         <span className="text-gray-500">{dict.results.remainingBudget}</span>
-        <span className={suggestion.remainingBudget >= 0 ? "text-brand-navy font-semibold" : "text-red-600 font-semibold"}>
+        <span className={suggestion.remainingBudget >= 0 ? "text-brand-900 font-semibold" : "text-red-600 font-semibold"}>
           {suggestion.remainingBudget.toLocaleString()} {suggestion.currency}
         </span>
       </div>
 
       <Link
         href={`/${locale}/results?${resultsParams.toString()}`}
-        className="mt-4 block w-full text-center rounded-xl bg-brand-blue px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-navy transition"
+        className="mt-4 block w-full text-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
       >
         {dict.discoverResults.viewDetails}
       </Link>

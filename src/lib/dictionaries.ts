@@ -11,6 +11,7 @@ export const dictionaries = {
       itinerary: "الخطة السياحية",
     },
     hero: {
+      badge: "تخطيط سفر ذكي بدون عمولات حجز",
       title: "رحلتك القادمة تبدأ بميزانيتك",
       subtitle:
         "أدخل ميزانيتك وتفضيلاتك، وسيقترح عليك iTravel أفضل خيارات الطيران والفنادق ضمن ميزانيتك، مع خطة سياحية جاهزة بالذكاء الاصطناعي.",
@@ -149,6 +150,7 @@ export const dictionaries = {
       itinerary: "Itinerary",
     },
     hero: {
+      badge: "Smart trip planning, zero booking fees",
       title: "Your next trip starts with your budget",
       subtitle:
         "Enter your budget and preferences, and iTravel will suggest the best flight and hotel options that fit — plus an AI-generated itinerary.",

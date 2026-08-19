@@ -19,7 +19,7 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
       <button
         onClick={() => switchTo("ar")}
         className={`px-3 py-1 rounded-full transition ${
-          locale === "ar" ? "bg-white text-brand-navy font-semibold" : "text-white/80 hover:text-white"
+          locale === "ar" ? "bg-white text-brand-900 font-semibold" : "text-white/80 hover:text-white"
         }`}
       >
         عربي
@@ -27,7 +27,7 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
       <button
         onClick={() => switchTo("en")}
         className={`px-3 py-1 rounded-full transition ${
-          locale === "en" ? "bg-white text-brand-navy font-semibold" : "text-white/80 hover:text-white"
+          locale === "en" ? "bg-white text-brand-900 font-semibold" : "text-white/80 hover:text-white"
         }`}
       >
         EN

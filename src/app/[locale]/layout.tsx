@@ -35,7 +35,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
 
   return (
     <html lang={loc} dir={dict.dir} className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#f7f8fb] text-[#111827]">
+      <body className="min-h-full flex flex-col bg-brand-50/40 text-[#111827]">
         <Header locale={loc} />
         <main className="flex-1">{children}</main>
         <Footer locale={loc} />

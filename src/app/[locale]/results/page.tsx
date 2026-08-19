@@ -121,7 +121,7 @@ function ResultsContent() {
         </div>
         <button
           onClick={() => router.back()}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
           {dict.results.backToSearch}
         </button>
@@ -163,7 +163,7 @@ function ResultsContent() {
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link
             href={`/${locale}/itinerary?destination=${encodeURIComponent(search.destination)}&nights=${nights || 3}&budget=${search.budgetTotal}&currency=${search.currency}`}
-            className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-bold text-white hover:bg-brand-navy transition"
+            className="rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-900 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
           >
             {dict.results.viewItinerary}
           </Link>
@@ -179,7 +179,7 @@ function ResultsContent() {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer nofollow sponsored"
-              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 hover:border-brand-blue/50 hover:text-brand-navy transition"
+              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
             >
               {link.name}
             </a>

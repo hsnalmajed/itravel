@@ -4,27 +4,69 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Brand palette sampled from the iTravel logo (globe/plane mark + wordmark). */
-  --brand-navy: #0a2f5c;
-  --brand-blue: #0d6fb8;
-  --brand-sky: #4fa8e0;
-  --brand-green: #3fa535;
-  --brand-green-dark: #2f7d29;
+  /*
+   * Full tonal scales derived from the iTravel logo's two hues (blue ~208°
+   * and green ~117°), generated the same way Tailwind builds its own
+   * palettes — so we get proper light tints and dark shades instead of
+   * flat colors + opacity tricks.
+   */
+  --brand-50: #f2f8fd;
+  --brand-100: #dfeefb;
+  --brand-200: #badbf7;
+  --brand-300: #7dbcf2;
+  --brand-400: #3b9aed;
+  --brand-500: #1179d4;
+  --brand-600: #0e64af;
+  --brand-700: #0d4e87;
+  --brand-800: #0c3e6a;
+  --brand-900: #0a3052;
+  --brand-950: #082035;
+
+  --accent-50: #f1f9f0;
+  --accent-100: #def3dd;
+  --accent-200: #bce8ba;
+  --accent-300: #8fda8b;
+  --accent-400: #62cc5c;
+  --accent-500: #3fb738;
+  --accent-600: #34982f;
+  --accent-700: #2a7826;
+  --accent-800: #236020;
+  --accent-900: #1d4b1b;
+  --accent-950: #143012;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-brand-navy: var(--brand-navy);
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-sky: var(--brand-sky);
-  --color-brand-green: var(--brand-green);
-  --color-brand-green-dark: var(--brand-green-dark);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-950: var(--accent-950);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

@@ -9,13 +9,17 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-navy via-brand-blue to-brand-sky pt-14 pb-32 sm:pt-20 sm:pb-40">
-        <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%),radial-gradient(circle_at_80%_0%,white,transparent_30%)]" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 pt-16 pb-32 sm:pt-24 sm:pb-40">
+        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%),radial-gradient(circle_at_80%_0%,theme(colors.accent.400),transparent_30%)]" />
+        <div className="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:32px_32px]" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 text-center text-white">
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-accent-300 ring-1 ring-white/15 backdrop-blur-sm">
+            ✈️ {dict.hero.badge}
+          </span>
+          <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
             {dict.hero.title}
           </h1>
-          <p className="mt-4 text-base sm:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
             {dict.hero.subtitle}
           </p>
         </div>

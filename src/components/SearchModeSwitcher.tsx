@@ -18,11 +18,11 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
           onClick={() => setMode("known")}
           className={`rounded-2xl px-5 py-4 text-start transition ring-1 ${
             mode === "known"
-              ? "bg-white ring-brand-blue/20 shadow-lg"
+              ? "bg-white ring-brand-200 shadow-lg"
               : "bg-white/10 ring-white/20 hover:bg-white/15"
           }`}
         >
-          <p className={`font-bold ${mode === "known" ? "text-brand-navy" : "text-white"}`}>
+          <p className={`font-bold ${mode === "known" ? "text-brand-900" : "text-white"}`}>
             🎯 {dict.modeSelect.knownTitle}
           </p>
           <p className={`text-sm mt-0.5 ${mode === "known" ? "text-gray-500" : "text-white/80"}`}>
@@ -35,11 +35,11 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
           onClick={() => setMode("discover")}
           className={`rounded-2xl px-5 py-4 text-start transition ring-1 ${
             mode === "discover"
-              ? "bg-white ring-brand-blue/20 shadow-lg"
+              ? "bg-white ring-brand-200 shadow-lg"
               : "bg-white/10 ring-white/20 hover:bg-white/15"
           }`}
         >
-          <p className={`font-bold ${mode === "discover" ? "text-brand-navy" : "text-white"}`}>
+          <p className={`font-bold ${mode === "discover" ? "text-brand-900" : "text-white"}`}>
             🧭 {dict.modeSelect.discoverTitle}
           </p>
           <p className={`text-sm mt-0.5 ${mode === "discover" ? "text-gray-500" : "text-white/80"}`}>

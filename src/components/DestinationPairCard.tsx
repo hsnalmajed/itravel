@@ -12,8 +12,8 @@ export default function DestinationPairCard({
 
   return (
     <div
-      className={`rounded-2xl bg-white p-5 shadow-sm ring-1 transition hover:shadow-md ${
-        pair.withinBudget ? "ring-brand-blue/10" : "ring-red-100"
+      className={`rounded-2xl bg-white p-5 shadow-sm ring-1 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl ${
+        pair.withinBudget ? "ring-brand-100 hover:ring-brand-300" : "ring-red-100 hover:ring-red-200"
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -46,7 +46,7 @@ export default function DestinationPairCard({
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
         <span className="text-gray-500">{dict.results.remainingBudget}</span>
-        <span className={pair.remainingBudget >= 0 ? "text-brand-navy font-semibold" : "text-red-600 font-semibold"}>
+        <span className={pair.remainingBudget >= 0 ? "text-brand-900 font-semibold" : "text-red-600 font-semibold"}>
           {pair.remainingBudget.toLocaleString()} {pair.currency}
         </span>
       </div>

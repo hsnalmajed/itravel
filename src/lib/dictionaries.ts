@@ -224,6 +224,10 @@ export const dictionaries = {
       restaurantsNotice:
         "لا نعرض أسماء مطاعم بعينها لأننا لا نملك مصدراً حياً يؤكد أنها ما زالت تعمل أو مناسبة — بدلاً من ذلك نعرض أشهر الأطباق والتجارب الغذائية في الوجهة.",
       viewCategory: "عرض القائمة",
+      tagAttraction: "معلم سياحي",
+      tagActivity: "نشاط سياحي",
+      tagCuisine: "طبق محلي",
+      backToList: "رجوع للقائمة",
     },
     footer: {
       disclaimer:
@@ -454,6 +458,10 @@ export const dictionaries = {
       restaurantsNotice:
         "We don't list specific restaurant names since we have no live source to confirm they're still open or a good fit — instead, here are the destination's best-known dishes and food experiences.",
       viewCategory: "View list",
+      tagAttraction: "Point of interest",
+      tagActivity: "Activity",
+      tagCuisine: "Local dish",
+      backToList: "Back to list",
     },
     footer: {
       disclaimer:

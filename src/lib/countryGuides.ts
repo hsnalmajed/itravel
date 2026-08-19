@@ -39,6 +39,16 @@ export const BOOKING_HINTS: Record<BookingKind, { ar: string; en: string }> = {
   },
 };
 
+// Compact one-line versions of the hint above, for the terse badge shown on
+// each ranked list card (TripAdvisor's cards say "From $45" / "Free entry",
+// not a full sentence — the full sentence still appears on the detail view).
+export const BOOKING_SHORT_LABELS: Record<BookingKind, { ar: string; en: string }> = {
+  official: { ar: "الحجز عبر الموقع الرسمي", en: "Book on official site" },
+  guide: { ar: "الحجز عبر مشغّل جولات", en: "Book via tour operator" },
+  phone: { ar: "بالاتصال أو عند الوصول", en: "By phone or on arrival" },
+  free: { ar: "دخول مجاني", en: "Free entry" },
+};
+
 // Deliberately qualitative ($ / $$ / $$$) rather than a specific currency
 // figure — actual prices move with season, operator, and group size, and a
 // precise number we can't keep current would mislead more than it helps.

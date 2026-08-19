@@ -206,7 +206,9 @@ export function findAirport(code: string): Airport | undefined {
 export function airportLabel(code: string, locale: "ar" | "en"): string {
   const a = findAirport(code);
   if (!a) return code;
-  return locale === "ar" ? `${a.nameAr} — ${a.cityAr}` : `${a.nameEn} — ${a.cityEn}`;
+  // IATA code first, so once an airport is picked the field itself confirms
+  // exactly which one — e.g. "RUH مطار الملك خالد الدولي - الرياض".
+  return locale === "ar" ? `${a.iata} ${a.nameAr} - ${a.cityAr}` : `${a.iata} ${a.nameEn} - ${a.cityEn}`;
 }
 
 // Matches by IATA code, airport name, city, or country (in either language)

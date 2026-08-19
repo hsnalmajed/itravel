@@ -6,6 +6,7 @@ import type { RoomType, DestinationCategory, FlightRoute, Locale, TravelerCounts
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
+import DateInput from "@/components/DateInput";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function todayPlus(days: number) {
@@ -46,8 +47,11 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   const [origin, setOrigin] = useState(sp.get("origin") || "");
   const [budget, setBudget] = useState(sp.get("budget") || "");
   const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
-  const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
-  const [returnDate, setReturnDate] = useState(sp.get("returnDate") || todayPlus(35));
+  // Empty by default (never a date pre-filled in as if the visitor had
+  // typed it themselves) — the field shows a plain DD/MM/YYYY placeholder
+  // until they actually pick one.
+  const [departDate, setDepartDate] = useState(sp.get("departDate") || "");
+  const [returnDate, setReturnDate] = useState(sp.get("returnDate") || "");
   // Only used in one-way mode, where there's no return date to derive a
   // hotel stay length from — the user sets it directly instead.
   const [oneWayNights, setOneWayNights] = useState(Number(sp.get("nights")) || 5);
@@ -223,12 +227,11 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
             <div>
               <label className={labelClass}>{dict.discoverForm.departDate}</label>
-              <input
-                type="date"
+              <DateInput
                 className={inputClass}
                 value={departDate}
                 min={todayPlus(0)}
-                onChange={(e) => setDepartDate(e.target.value)}
+                onChange={setDepartDate}
                 required
               />
             </div>
@@ -249,12 +252,11 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
             ) : (
               <div>
                 <label className={labelClass}>{dict.form.returnDate}</label>
-                <input
-                  type="date"
+                <DateInput
                   className={inputClass}
                   value={returnDate}
-                  min={departDate}
-                  onChange={(e) => setReturnDate(e.target.value)}
+                  min={departDate || todayPlus(0)}
+                  onChange={setReturnDate}
                   required
                 />
               </div>

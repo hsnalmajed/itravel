@@ -6,6 +6,7 @@ import type { RoomType, FlightRoute, Locale, TravelerCounts, TripType } from "@/
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
+import DateInput from "@/components/DateInput";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function todayPlus(days: number) {
@@ -39,8 +40,11 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   );
   const [origin, setOrigin] = useState(sp.get("origin") || "");
   const [destination, setDestination] = useState(sp.get("destination") || "");
-  const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
-  const [returnDate, setReturnDate] = useState(sp.get("returnDate") || todayPlus(35));
+  // Empty by default (never a date pre-filled in as if the visitor had
+  // typed it themselves) — the field shows a plain DD/MM/YYYY placeholder
+  // until they actually pick one.
+  const [departDate, setDepartDate] = useState(sp.get("departDate") || "");
+  const [returnDate, setReturnDate] = useState(sp.get("returnDate") || "");
   const [travelers, setTravelers] = useState<TravelerCounts>({
     adults: Number(sp.get("adults")) || 2,
     childrenAges: parseChildrenAges(sp.get("childrenAges")),
@@ -220,24 +224,22 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
             <div>
               <label className={labelClass}>{tripRoute === "multicity" ? dict.multicity.departDate : dict.form.departDate}</label>
-              <input
-                type="date"
+              <DateInput
                 className={inputClass}
                 value={departDate}
                 min={todayPlus(0)}
-                onChange={(e) => setDepartDate(e.target.value)}
+                onChange={setDepartDate}
                 required
               />
             </div>
             {showReturnDate && (
               <div>
                 <label className={labelClass}>{dict.form.returnDate}</label>
-                <input
-                  type="date"
+                <DateInput
                   className={inputClass}
                   value={returnDate}
-                  min={departDate}
-                  onChange={(e) => setReturnDate(e.target.value)}
+                  min={departDate || todayPlus(0)}
+                  onChange={setReturnDate}
                 />
               </div>
             )}

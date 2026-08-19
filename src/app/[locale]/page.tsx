@@ -11,7 +11,27 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     <div>
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-700 pt-16 pb-32 sm:pt-24 sm:pb-40">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%),radial-gradient(circle_at_80%_0%,theme(colors.accent.400),transparent_30%)]" />
-        <div className="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(white_1px,transparent_1px),linear-gradient(90deg,white_1px,transparent_1px)] [background-size:32px_32px]" />
+
+        {/* Decorative wireframe globe — echoes the logo's globe mark */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-[58%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 sm:top-[62%] sm:h-[820px] sm:w-[820px]"
+          aria-hidden="true"
+        >
+          <svg viewBox="0 0 200 200" fill="none" className="h-full w-full opacity-[0.16] sm:opacity-[0.18]">
+            <circle cx="100" cy="100" r="95" stroke="white" strokeWidth="1" />
+            <line x1="5" y1="100" x2="195" y2="100" stroke="white" strokeWidth="0.75" />
+            <line x1="100" y1="5" x2="100" y2="195" stroke="white" strokeWidth="0.75" />
+            <ellipse cx="100" cy="100" rx="78" ry="95" stroke="white" strokeWidth="0.75" />
+            <ellipse cx="100" cy="100" rx="45" ry="95" stroke="white" strokeWidth="0.75" />
+            <ellipse cx="100" cy="100" rx="95" ry="72" stroke="white" strokeWidth="0.75" />
+            <ellipse cx="100" cy="100" rx="95" ry="40" stroke="white" strokeWidth="0.75" />
+            <circle cx="60" cy="55" r="2.4" fill="#8fda8b" />
+            <circle cx="138" cy="72" r="2.4" fill="#8fda8b" />
+            <circle cx="112" cy="138" r="2.4" fill="#8fda8b" />
+            <circle cx="68" cy="122" r="1.8" fill="#8fda8b" opacity="0.75" />
+          </svg>
+        </div>
+
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 text-center text-white">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-accent-300 ring-1 ring-white/15 backdrop-blur-sm">
             ✈️ {dict.hero.badge}

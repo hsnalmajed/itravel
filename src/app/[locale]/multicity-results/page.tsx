@@ -124,9 +124,9 @@ function MultiCityResultsContent() {
 
           <div className="space-y-4">
             {result.legs.map((leg, i) => (
-              <div key={i} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-teal-100">
+              <div key={i} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-blue/10">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-blue text-xs font-bold text-white">
                     {i + 1}
                   </span>
                   <p className="font-bold text-gray-900">
@@ -187,7 +187,7 @@ function MultiCityResultsContent() {
               </div>
             ))}
 
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-teal-100">
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-blue/10">
               <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
                 {dict.multicity.returnFlight} {origin}
               </p>
@@ -216,7 +216,7 @@ function MultiCityResultsContent() {
 
           <div
             className={`mt-6 rounded-2xl p-5 shadow-sm ring-1 ${
-              result.withinBudget ? "bg-white ring-teal-100" : "bg-white ring-red-100"
+              result.withinBudget ? "bg-white ring-brand-blue/10" : "bg-white ring-red-100"
             }`}
           >
             <div className="flex items-center justify-between text-sm mb-2">
@@ -239,13 +239,13 @@ function MultiCityResultsContent() {
             </div>
             <div className="flex items-center justify-between text-sm mt-2">
               <span className="text-gray-500">{dict.results.remainingBudget}</span>
-              <span className={result.remainingBudget >= 0 ? "text-teal-700 font-semibold" : "text-red-600 font-semibold"}>
+              <span className={result.remainingBudget >= 0 ? "text-brand-navy font-semibold" : "text-red-600 font-semibold"}>
                 {result.remainingBudget.toLocaleString()} {result.currency}
               </span>
             </div>
             <span
               className={`mt-3 inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
-                result.withinBudget ? "bg-teal-50 text-teal-700" : "bg-red-50 text-red-600"
+                result.withinBudget ? "bg-brand-blue/5 text-brand-navy" : "bg-red-50 text-red-600"
               }`}
             >
               {result.withinBudget ? dict.results.withinBudget : dict.results.overBudget}

@@ -18,13 +18,13 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
   return (
     <div
       className={`rounded-2xl bg-white p-5 shadow-sm ring-1 transition hover:shadow-md ${
-        combo.withinBudget ? "ring-teal-100" : "ring-red-100"
+        combo.withinBudget ? "ring-brand-blue/10" : "ring-red-100"
       }`}
     >
       <div className="flex items-center justify-between mb-3">
         <span
           className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-            combo.withinBudget ? "bg-teal-50 text-teal-700" : "bg-red-50 text-red-600"
+            combo.withinBudget ? "bg-brand-blue/5 text-brand-navy" : "bg-red-50 text-red-600"
           }`}
         >
           {combo.withinBudget ? dict.results.withinBudget : dict.results.overBudget}
@@ -78,7 +78,7 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
 
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
         <span className="text-gray-500">{dict.results.remainingBudget}</span>
-        <span className={combo.remainingBudget >= 0 ? "text-teal-700 font-semibold" : "text-red-600 font-semibold"}>
+        <span className={combo.remainingBudget >= 0 ? "text-brand-navy font-semibold" : "text-red-600 font-semibold"}>
           {combo.remainingBudget.toLocaleString()} {combo.currency}
         </span>
       </div>

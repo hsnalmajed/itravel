@@ -17,6 +17,14 @@ export async function generateMetadata(
   return {
     title: `${dict.siteName} — ${dict.tagline}`,
     description: dict.tagline,
+    icons: {
+      icon: [
+        { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: "/favicon-192.png",
+      shortcut: "/favicon.ico",
+    },
   };
 }
 

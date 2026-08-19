@@ -9,7 +9,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-teal-700 via-teal-600 to-cyan-500 pt-14 pb-32 sm:pt-20 sm:pb-40">
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-navy via-brand-blue to-brand-sky pt-14 pb-32 sm:pt-20 sm:pb-40">
         <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_35%),radial-gradient(circle_at_80%_0%,white,transparent_30%)]" />
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 text-center text-white">
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">

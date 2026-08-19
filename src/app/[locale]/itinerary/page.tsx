@@ -44,7 +44,7 @@ function ItineraryContent() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none transition";
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 outline-none transition";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
 
   return (
@@ -105,7 +105,7 @@ function ItineraryContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-500/20 hover:brightness-105 active:scale-[0.99] transition disabled:opacity-60"
+            className="w-full rounded-xl bg-gradient-to-r from-brand-green to-brand-green-dark px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-green/20 hover:brightness-105 active:scale-[0.99] transition disabled:opacity-60"
           >
             {loading ? dict.itinerary.generating : dict.itinerary.generate}
           </button>
@@ -143,9 +143,9 @@ function ItineraryContent() {
             ))}
           </div>
 
-          <div className="rounded-2xl bg-teal-50 p-5 ring-1 ring-teal-100">
-            <h3 className="font-bold text-teal-800 mb-2">{dict.itinerary.tips}</h3>
-            <ul className="list-disc ps-5 space-y-1 text-sm text-teal-700">
+          <div className="rounded-2xl bg-brand-blue/5 p-5 ring-1 ring-brand-blue/10">
+            <h3 className="font-bold text-brand-navy mb-2">{dict.itinerary.tips}</h3>
+            <ul className="list-disc ps-5 space-y-1 text-sm text-brand-navy">
               {result.tips.map((t, idx) => (
                 <li key={idx}>{t}</li>
               ))}

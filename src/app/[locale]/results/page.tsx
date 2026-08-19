@@ -163,7 +163,7 @@ function ResultsContent() {
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link
             href={`/${locale}/itinerary?destination=${encodeURIComponent(search.destination)}&nights=${nights || 3}&budget=${search.budgetTotal}&currency=${search.currency}`}
-            className="rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition"
+            className="rounded-xl bg-brand-blue px-5 py-3 text-sm font-bold text-white hover:bg-brand-navy transition"
           >
             {dict.results.viewItinerary}
           </Link>
@@ -179,7 +179,7 @@ function ResultsContent() {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer nofollow sponsored"
-              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 hover:border-teal-400 hover:text-teal-700 transition"
+              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-gray-700 hover:border-brand-blue/50 hover:text-brand-navy transition"
             >
               {link.name}
             </a>

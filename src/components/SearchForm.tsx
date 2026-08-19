@@ -82,7 +82,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none transition";
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 outline-none transition";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
 
   return (
@@ -98,7 +98,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             onClick={() => setTripRoute(r)}
             className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
               tripRoute === r
-                ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                ? "bg-brand-blue text-white border-brand-blue shadow-sm"
                 : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
             }`}
           >
@@ -120,7 +120,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
               onClick={() => setTripType(t)}
               className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
                 tripType === t
-                  ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                  ? "bg-brand-blue text-white border-brand-blue shadow-sm"
                   : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
             >
@@ -223,7 +223,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
               type="checkbox"
               checked={directOnly}
               onChange={(e) => setDirectOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+              className="h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue"
             />
             {dict.form.directOnly}
           </label>
@@ -255,7 +255,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             <button
               type="button"
               onClick={addLeg}
-              className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-100 transition"
+              className="rounded-lg bg-brand-blue/5 px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-blue/10 transition"
             >
               + {dict.multicity.addLeg}
             </button>
@@ -264,7 +264,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           <div className="space-y-3">
             {legs.map((leg, i) => (
               <div key={i} className="flex items-center gap-2 rounded-xl border border-gray-200 p-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-blue text-xs font-bold text-white">
                   {i + 1}
                 </span>
                 <input
@@ -302,7 +302,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
       <button
         type="submit"
-        className="mt-6 w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-500/20 hover:brightness-105 active:scale-[0.99] transition"
+        className="mt-6 w-full rounded-xl bg-gradient-to-r from-brand-green to-brand-green-dark px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-green/20 hover:brightness-105 active:scale-[0.99] transition"
       >
         {tripRoute === "multicity" ? dict.multicity.submit : dict.form.submit}
       </button>

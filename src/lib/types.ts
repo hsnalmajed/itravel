@@ -105,3 +105,59 @@ export interface DestinationPairSuggestion {
   withinBudget: boolean;
   remainingBudget: number;
 }
+
+// --- Multi-city ("تعدد وجهات") trip planning ---
+// A user-specified sequence of destinations, each with a number of nights,
+// starting and ending at the same origin city — e.g. Riyadh -> Istanbul (3
+// nights) -> Paris (4 nights) -> Barcelona (2 nights) -> Riyadh.
+
+export type FlightRoute = "roundtrip" | "oneway" | "multicity";
+
+export interface MultiCityLegInput {
+  destination: string; // city name or IATA code
+  nights: number;
+}
+
+export interface MultiCitySearchParams {
+  origin: string;
+  legs: MultiCityLegInput[];
+  departDate: string; // YYYY-MM-DD, first leg's departure date
+  adults: number;
+  budgetTotal: number;
+  currency: string;
+  directFlightsOnly: boolean;
+  minHotelStars: number;
+}
+
+export interface MultiCityLegResult {
+  destination: string;
+  destinationIata: string;
+  nights: number;
+  departDate: string; // date of the flight arriving into this leg
+  flight: FlightOffer | null;
+  hotel: HotelOffer | null;
+}
+
+export interface MultiCityAdvice {
+  // Budget that would make this exact itinerary fit, rounded up.
+  suggestedBudget: number;
+  // Roughly how many total nights to cut across the trip to fit the current budget.
+  suggestedNightsToReduce: number;
+  // Whether dropping one destination is a reasonable suggestion (3+ legs only).
+  canRemoveDestination: boolean;
+}
+
+export interface MultiCityTripResult {
+  origin: string;
+  legs: MultiCityLegResult[];
+  returnFlight: FlightOffer | null;
+  totalFlightsPrice: number;
+  totalHotelsPrice: number;
+  totalPrice: number;
+  currency: string;
+  budgetTotal: number;
+  withinBudget: boolean;
+  remainingBudget: number;
+  advice: MultiCityAdvice | null;
+  isMock: boolean;
+}

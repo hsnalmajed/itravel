@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Locale, TripType } from "@/lib/types";
+import type { FlightRoute, Locale, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 
 function todayPlus(days: number) {
@@ -11,10 +11,16 @@ function todayPlus(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+interface LegDraft {
+  destination: string;
+  nights: number;
+}
+
 export default function SearchForm({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
   const router = useRouter();
 
+  const [tripRoute, setTripRoute] = useState<FlightRoute>("roundtrip");
   const [tripType, setTripType] = useState<TripType>("both");
   const [origin, setOrigin] = useState(locale === "ar" ? "الرياض" : "Riyadh");
   const [destination, setDestination] = useState(locale === "ar" ? "إسطنبول" : "Istanbul");
@@ -25,15 +31,47 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   const [currency, setCurrency] = useState("SAR");
   const [directOnly, setDirectOnly] = useState(false);
   const [minStars, setMinStars] = useState(0);
+  const [legs, setLegs] = useState<LegDraft[]>([
+    { destination: locale === "ar" ? "إسطنبول" : "Istanbul", nights: 3 },
+    { destination: locale === "ar" ? "باريس" : "Paris", nights: 4 },
+  ]);
+
+  function updateLeg(index: number, patch: Partial<LegDraft>) {
+    setLegs((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
+  }
+  function addLeg() {
+    setLegs((prev) => [...prev, { destination: "", nights: 2 }]);
+  }
+  function removeLeg(index: number) {
+    setLegs((prev) => (prev.length > 2 ? prev.filter((_, i) => i !== index) : prev));
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (tripRoute === "multicity") {
+      const validLegs = legs.filter((l) => l.destination.trim().length > 0);
+      if (validLegs.length < 2) return;
+      const params = new URLSearchParams({
+        origin,
+        departDate,
+        adults: String(adults),
+        budget: String(budget),
+        currency,
+        directOnly: String(directOnly),
+        minStars: String(minStars),
+        legs: JSON.stringify(validLegs),
+      });
+      router.push(`/${locale}/multicity-results?${params.toString()}`);
+      return;
+    }
+
     const params = new URLSearchParams({
       tripType,
       origin,
       destination,
       departDate,
-      returnDate: tripType === "flight" && !returnDate ? "" : returnDate,
+      returnDate: tripRoute === "oneway" ? "" : returnDate,
       adults: String(adults),
       budget: String(budget),
       currency,
@@ -52,25 +90,48 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       onSubmit={handleSubmit}
       className="relative z-10 w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl ring-1 ring-black/5 p-5 sm:p-7"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        {(["both", "flight", "hotel"] as TripType[]).map((t) => (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        {(["roundtrip", "oneway", "multicity"] as FlightRoute[]).map((r) => (
           <button
             type="button"
-            key={t}
-            onClick={() => setTripType(t)}
+            key={r}
+            onClick={() => setTripRoute(r)}
             className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
-              tripType === t
+              tripRoute === r
                 ? "bg-teal-600 text-white border-teal-600 shadow-sm"
                 : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
             }`}
           >
-            {t === "both" ? dict.form.tripTypeBoth : t === "flight" ? dict.form.tripTypeFlight : dict.form.tripTypeHotel}
+            {r === "roundtrip"
+              ? dict.form.tripRouteRoundtrip
+              : r === "oneway"
+              ? dict.form.tripRouteOneway
+              : dict.form.tripRouteMulticity}
           </button>
         ))}
       </div>
 
+      {tripRoute !== "multicity" && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          {(["both", "flight", "hotel"] as TripType[]).map((t) => (
+            <button
+              type="button"
+              key={t}
+              onClick={() => setTripType(t)}
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition border ${
+                tripType === t
+                  ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              {t === "both" ? dict.form.tripTypeBoth : t === "flight" ? dict.form.tripTypeFlight : dict.form.tripTypeHotel}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {tripType !== "hotel" && (
+        {(tripRoute === "multicity" || tripType !== "hotel") && (
           <div>
             <label className={labelClass}>{dict.form.origin}</label>
             <input
@@ -82,19 +143,22 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             />
           </div>
         )}
-        <div>
-          <label className={labelClass}>{dict.form.destination}</label>
-          <input
-            className={inputClass}
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            placeholder={dict.form.destinationPlaceholder}
-            required
-          />
-        </div>
+
+        {tripRoute !== "multicity" && (
+          <div>
+            <label className={labelClass}>{dict.form.destination}</label>
+            <input
+              className={inputClass}
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder={dict.form.destinationPlaceholder}
+              required
+            />
+          </div>
+        )}
 
         <div>
-          <label className={labelClass}>{dict.form.departDate}</label>
+          <label className={labelClass}>{tripRoute === "multicity" ? dict.multicity.departDate : dict.form.departDate}</label>
           <input
             type="date"
             className={inputClass}
@@ -104,16 +168,18 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             required
           />
         </div>
-        <div>
-          <label className={labelClass}>{dict.form.returnDate}</label>
-          <input
-            type="date"
-            className={inputClass}
-            value={returnDate}
-            min={departDate}
-            onChange={(e) => setReturnDate(e.target.value)}
-          />
-        </div>
+        {tripRoute === "roundtrip" && (
+          <div>
+            <label className={labelClass}>{dict.form.returnDate}</label>
+            <input
+              type="date"
+              className={inputClass}
+              value={returnDate}
+              min={departDate}
+              onChange={(e) => setReturnDate(e.target.value)}
+            />
+          </div>
+        )}
 
         <div>
           <label className={labelClass}>{dict.form.adults}</label>
@@ -151,7 +217,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </div>
         </div>
 
-        {tripType !== "hotel" && (
+        {(tripRoute === "multicity" || tripType !== "hotel") && (
           <label className="flex items-center gap-2 text-sm text-gray-700 mt-1">
             <input
               type="checkbox"
@@ -163,7 +229,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
           </label>
         )}
 
-        {tripType !== "flight" && (
+        {(tripRoute === "multicity" || tripType !== "flight") && (
           <div>
             <label className={labelClass}>{dict.form.minStars}</label>
             <select
@@ -182,11 +248,63 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         )}
       </div>
 
+      {tripRoute === "multicity" && (
+        <div className="mt-5 border-t border-gray-100 pt-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className={labelClass + " mb-0"}>{dict.multicity.title}</p>
+            <button
+              type="button"
+              onClick={addLeg}
+              className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-100 transition"
+            >
+              + {dict.multicity.addLeg}
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {legs.map((leg, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-xl border border-gray-200 p-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">
+                  {i + 1}
+                </span>
+                <input
+                  className={inputClass}
+                  value={leg.destination}
+                  onChange={(e) => updateLeg(i, { destination: e.target.value })}
+                  placeholder={dict.multicity.legDestination}
+                  required
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  className={inputClass + " w-28 shrink-0"}
+                  value={leg.nights}
+                  onChange={(e) => updateLeg(i, { nights: Number(e.target.value) })}
+                  title={dict.multicity.legNights}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeLeg(i)}
+                  disabled={legs.length <= 2}
+                  className="shrink-0 rounded-lg px-2 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                >
+                  {dict.multicity.removeLeg}
+                </button>
+              </div>
+            ))}
+          </div>
+          {legs.filter((l) => l.destination.trim()).length < 2 && (
+            <p className="mt-2 text-xs text-amber-600">{dict.multicity.minLegsNotice}</p>
+          )}
+        </div>
+      )}
+
       <button
         type="submit"
         className="mt-6 w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-orange-500/20 hover:brightness-105 active:scale-[0.99] transition"
       >
-        {dict.form.submit}
+        {tripRoute === "multicity" ? dict.multicity.submit : dict.form.submit}
       </button>
     </form>
   );

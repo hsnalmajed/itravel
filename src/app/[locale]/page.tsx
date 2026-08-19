@@ -26,10 +26,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <ellipse cx="100" cy="100" rx="45" ry="95" stroke="white" strokeWidth="0.75" />
             <ellipse cx="100" cy="100" rx="95" ry="72" stroke="white" strokeWidth="0.75" />
             <ellipse cx="100" cy="100" rx="95" ry="40" stroke="white" strokeWidth="0.75" />
-            <circle cx="60" cy="55" r="2.4" fill="#8fda8b" />
-            <circle cx="138" cy="72" r="2.4" fill="#8fda8b" />
-            <circle cx="112" cy="138" r="2.4" fill="#8fda8b" />
-            <circle cx="68" cy="122" r="1.8" fill="#8fda8b" opacity="0.75" />
+            <circle cx="60" cy="55" r="2.4" fill="#78cea8" />
+            <circle cx="138" cy="72" r="2.4" fill="#78cea8" />
+            <circle cx="112" cy="138" r="2.4" fill="#78cea8" />
+            <circle cx="68" cy="122" r="1.8" fill="#78cea8" opacity="0.75" />
           </svg>
         </div>
 

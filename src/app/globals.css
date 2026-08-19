@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Cairo: one professional, modern typeface with full native Arabic and
+   Latin coverage, so both locales share the same typographic voice instead
+   of Arabic falling back to whatever the OS happens to ship. Self-hosted
+   via @fontsource (no external font-CDN request at runtime) — only the
+   weights actually used in the UI are imported. */
+@import "@fontsource/cairo/400.css";
+@import "@fontsource/cairo/500.css";
+@import "@fontsource/cairo/600.css";
+@import "@fontsource/cairo/700.css";
+@import "@fontsource/cairo/800.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -22,17 +33,26 @@
   --brand-900: #0a3052;
   --brand-950: #082035;
 
-  --accent-50: #f1f9f0;
-  --accent-100: #def3dd;
-  --accent-200: #bce8ba;
-  --accent-300: #8fda8b;
-  --accent-400: #62cc5c;
-  --accent-500: #3fb738;
-  --accent-600: #34982f;
-  --accent-700: #2a7826;
-  --accent-800: #236020;
-  --accent-900: #1d4b1b;
-  --accent-950: #143012;
+  /*
+   * A refined, deeper emerald rather than the bright "grass" green this
+   * used to be — the logo's globe is photo-realistic (muted earth tones),
+   * so a saturated Kelly green never actually matched it and read as an
+   * unrelated second brand color. This scale sits closer to the logo's
+   * natural palette and pairs with the navy brand scale the way premium
+   * travel brands typically pair navy + emerald/gold, instead of navy +
+   * bright green.
+   */
+  --accent-50: #eefaf4;
+  --accent-100: #d5f2e3;
+  --accent-200: #ade4c9;
+  --accent-300: #78cea8;
+  --accent-400: #45b184;
+  --accent-500: #279367;
+  --accent-600: #1a7a54;
+  --accent-700: #146146;
+  --accent-800: #124d39;
+  --accent-900: #0f3f2f;
+  --accent-950: #08251b;
 }
 
 @theme inline {
@@ -67,6 +87,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

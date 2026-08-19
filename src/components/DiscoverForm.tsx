@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { RoomType, DestinationCategory, Locale, TravelerCounts, TripType } from "@/lib/types";
+import type { RoomType, DestinationCategory, FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
@@ -33,7 +33,13 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   // Trip type otherwise starts unselected — the rest of the form only
   // appears once it's actually chosen.
   const [tripType, setTripType] = useState<TripType | "">((sp.get("tripType") as TripType) || "");
-  const [multiDestination, setMultiDestination] = useState(sp.get("multiDestination") === "true");
+  // Mirrors SearchForm's round-trip / one-way / multi-city selector so both
+  // pages present the same trip-route concept in the same spot, right under
+  // the trip-type buttons. "multicity" here keeps its previous meaning —
+  // suggest a pair of destinations instead of one.
+  const [tripRoute, setTripRoute] = useState<FlightRoute>(
+    (sp.get("tripRoute") as FlightRoute) || "roundtrip"
+  );
   const [preferenceCategory, setPreferenceCategory] = useState<DestinationCategory | "">(
     (sp.get("preferenceCategory") as DestinationCategory) || ""
   );
@@ -42,6 +48,9 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
   const [departDate, setDepartDate] = useState(sp.get("departDate") || todayPlus(30));
   const [returnDate, setReturnDate] = useState(sp.get("returnDate") || todayPlus(35));
+  // Only used in one-way mode, where there's no return date to derive a
+  // hotel stay length from — the user sets it directly instead.
+  const [oneWayNights, setOneWayNights] = useState(Number(sp.get("nights")) || 5);
   const [travelers, setTravelers] = useState<TravelerCounts>({
     adults: Number(sp.get("adults")) || 2,
     childrenAges: parseChildrenAges(sp.get("childrenAges")),
@@ -63,7 +72,8 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!tripType) return;
-    const nights = nightsBetween(departDate, returnDate);
+    const isOneWay = tripRoute === "oneway";
+    const nights = isOneWay ? Math.max(1, oneWayNights) : nightsBetween(departDate, returnDate);
     const params = new URLSearchParams({
       mode: "discover",
       tripType,
@@ -71,7 +81,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
       budget: String(Number(budget) || 6000),
       currency,
       departDate,
-      returnDate,
+      returnDate: isOneWay ? "" : returnDate,
       nights: String(nights),
       adults: String(travelers.adults),
       childrenAges: serializeChildrenAges(travelers.childrenAges),
@@ -79,7 +89,9 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
       directOnly: String(directOnly),
       minStars: String(minStars),
       roomType,
-      multiDestination: String(multiDestination),
+      tripRoute,
+      multiDestination: String(tripRoute === "multicity"),
+      oneWayOnly: String(isOneWay),
       baggageIncluded: String(baggageIncluded),
       breakfastIncluded: String(breakfastIncluded),
       preferenceCategory,
@@ -119,29 +131,37 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
       {!tripType && <p className="mt-3 text-sm text-gray-400">{dict.form.chooseTripTypeFirst}</p>}
 
+      {/* Same round-trip / one-way / multi-city control as the main search
+          form, in the same spot right under the trip-type buttons. */}
       {tripType && (
-        <div className="mt-4">
-          <div>
-            <label className={labelClass}>{dict.discoverForm.destinationsCount}</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setMultiDestination(false)}
-                className={segmentClass(!multiDestination)}
-              >
-                {dict.discoverForm.singleDestination}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMultiDestination(true)}
-                className={segmentClass(multiDestination)}
-              >
-                {dict.discoverForm.multiDestination}
-              </button>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 mb-4">
+          {(["roundtrip", "oneway", "multicity"] as FlightRoute[]).map((r) => (
+            <button
+              type="button"
+              key={r}
+              onClick={() => setTripRoute(r)}
+              className={segmentClass(tripRoute === r)}
+            >
+              {r === "roundtrip"
+                ? dict.form.tripRouteRoundtrip
+                : r === "oneway"
+                ? dict.form.tripRouteOneway
+                : dict.form.tripRouteMulticity}
+            </button>
+          ))}
+        </div>
+      )}
 
-          <div className="mt-4">
+      {tripType && (
+        <div>
+          {tripRoute === "multicity" && (
+            <p className="text-xs text-gray-500 -mt-2 mb-4">{dict.discoverForm.multiDestinationHint}</p>
+          )}
+          {tripRoute === "oneway" && (
+            <p className="text-xs text-gray-500 -mt-2 mb-4">{dict.discoverForm.oneWayHint}</p>
+          )}
+
+          <div>
             <label className={labelClass}>{dict.categories.label}</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
@@ -213,17 +233,32 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
               />
             </div>
 
-            <div>
-              <label className={labelClass}>{dict.form.returnDate}</label>
-              <input
-                type="date"
-                className={inputClass}
-                value={returnDate}
-                min={departDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                required
-              />
-            </div>
+            {tripRoute === "oneway" ? (
+              <div>
+                <label className={labelClass}>{dict.discoverForm.nights}</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  className={inputClass}
+                  value={oneWayNights}
+                  onChange={(e) => setOneWayNights(Number(e.target.value))}
+                  required
+                />
+              </div>
+            ) : (
+              <div>
+                <label className={labelClass}>{dict.form.returnDate}</label>
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={returnDate}
+                  min={departDate}
+                  onChange={(e) => setReturnDate(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
             <div>
               <label className={labelClass}>{dict.travelers.label}</label>
@@ -231,44 +266,36 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
             </div>
 
             {showHotelFields && (
-              <div>
-                <label className={labelClass}>{dict.discoverForm.minStars}</label>
-                <select
-                  className={inputClass}
-                  value={minStars}
-                  onChange={(e) => setMinStars(Number(e.target.value))}
-                >
-                  <option value={0}>{dict.discoverForm.anyStars}</option>
-                  {[2, 3, 4, 5].map((s) => (
-                    <option key={s} value={s}>
-                      {"★".repeat(s)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {showHotelFields && (
-              <div className="sm:col-span-2">
-                <label className={labelClass}>{dict.roomType.label}</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRoomType("")}
-                    className={segmentClass(roomType === "")}
+              <div className="sm:col-span-2 grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>{dict.discoverForm.minStars}</label>
+                  <select
+                    className={inputClass}
+                    value={minStars}
+                    onChange={(e) => setMinStars(Number(e.target.value))}
                   >
-                    {dict.roomType.any}
-                  </button>
-                  {ROOM_TYPE_OPTIONS.map((rt) => (
-                    <button
-                      type="button"
-                      key={rt}
-                      onClick={() => setRoomType(rt)}
-                      className={segmentClass(roomType === rt)}
-                    >
-                      {dict.roomType[rt]}
-                    </button>
-                  ))}
+                    <option value={0}>{dict.discoverForm.anyStars}</option>
+                    {[2, 3, 4, 5].map((s) => (
+                      <option key={s} value={s}>
+                        {"★".repeat(s)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>{dict.roomType.label}</label>
+                  <select
+                    className={inputClass}
+                    value={roomType}
+                    onChange={(e) => setRoomType(e.target.value as RoomType | "")}
+                  >
+                    <option value="">{dict.roomType.any}</option>
+                    {ROOM_TYPE_OPTIONS.map((rt) => (
+                      <option key={rt} value={rt}>
+                        {dict.roomType[rt]}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}

@@ -1,31 +1,54 @@
 // Deeper, hand-curated content for a first tier of well-known tourist
-// countries. Attractions reference a real Wikipedia article title so the
-// photo and short description shown on the page are fetched live (real,
-// verifiable) rather than invented. Activities and cuisine highlights are
-// general, well-known facts (dish names, common tourist activities) rather
-// than specific unverifiable businesses — deliberately not naming specific
-// restaurants, since we have no reliable live source to confirm a real
-// restaurant is still open, well-rated, or bookable.
+// countries, styled after a TripAdvisor-style destination guide: a country
+// hero photo, then three browsable categories (attractions / activities /
+// restaurants). Every entry that carries a `wikiTitle` gets its photo and
+// short description fetched live from Wikipedia at request time — real and
+// verifiable, never invented. Entries without a confident `wikiTitle` match
+// simply render with their emoji instead of a photo (the same honest
+// fallback used everywhere else on this page when a live fetch comes back
+// empty) rather than risk a made-up image.
+//
+// We do not list specific restaurant businesses — there's no reliable live
+// source to confirm a given restaurant is still open, well-rated, or
+// bookable. The "restaurants" category instead surfaces the dishes and food
+// experiences the country is actually known for, each with a real,
+// verifiable photo where a matching Wikipedia article exists.
 //
 // Countries not listed here still appear in the full country directory and
 // get a live country-level photo/summary — they just don't have this
 // deeper breakdown yet. See src/app/[locale]/attractions/[code]/page.tsx.
 
-export type BookingKind = "official" | "guide" | "free";
+export type BookingKind = "official" | "guide" | "phone" | "free";
 
 export const BOOKING_HINTS: Record<BookingKind, { ar: string; en: string }> = {
   official: {
-    ar: "احجز التذاكر مسبقاً عبر الموقع الرسمي للمعلم لتفادي الطوابير.",
-    en: "Book tickets in advance on the official site to skip the lines.",
+    ar: "احجز مسبقاً عبر الموقع الرسمي لتفادي الطوابير.",
+    en: "Book in advance on the official website to skip the lines.",
   },
   guide: {
-    ar: "يُفضّل حجزها كجولة مرشدة عبر منصات مثل GetYourGuide أو Viator.",
-    en: "Best booked as a guided tour via platforms like GetYourGuide or Viator.",
+    ar: "يُفضّل حجزها عبر منصات الجولات مثل GetYourGuide أو Viator.",
+    en: "Best booked online via tour platforms like GetYourGuide or Viator.",
+  },
+  phone: {
+    ar: "تُحجز عادة بالاتصال المباشر بالمشغّل المحلي أو عند الوصول.",
+    en: "Usually arranged by calling the local operator directly, or on arrival.",
   },
   free: {
     ar: "الدخول مجاني ومفتوح للزوار، لا حاجة لحجز مسبق.",
     en: "Free and open to visitors — no booking required.",
   },
+};
+
+// Deliberately qualitative ($ / $$ / $$$) rather than a specific currency
+// figure — actual prices move with season, operator, and group size, and a
+// precise number we can't keep current would mislead more than it helps.
+export type CostTier = "free" | "$" | "$$" | "$$$";
+
+export const COST_TIER_LABELS: Record<CostTier, { ar: string; en: string }> = {
+  free: { ar: "مجاني", en: "Free" },
+  $: { ar: "اقتصادي", en: "Budget" },
+  $$: { ar: "متوسط", en: "Mid-range" },
+  $$$: { ar: "مرتفع", en: "Premium" },
 };
 
 export interface LandmarkEntry {
@@ -35,7 +58,17 @@ export interface LandmarkEntry {
   booking: BookingKind;
 }
 
-export interface TagEntry {
+export interface ActivityEntry {
+  wikiTitle?: string;
+  emoji: string;
+  nameAr: string;
+  nameEn: string;
+  costTier: CostTier;
+  booking: BookingKind;
+}
+
+export interface CuisineEntry {
+  wikiTitle?: string;
   emoji: string;
   nameAr: string;
   nameEn: string;
@@ -45,8 +78,8 @@ export interface CountryGuide {
   bestMonthsAr: string;
   bestMonthsEn: string;
   attractions: LandmarkEntry[];
-  activities: TagEntry[];
-  cuisine: TagEntry[];
+  activities: ActivityEntry[];
+  cuisine: CuisineEntry[];
 }
 
 export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
@@ -60,13 +93,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Diriyah", nameAr: "الدرعية التاريخية", nameEn: "Historic Diriyah", booking: "official" },
     ],
     activities: [
-      { emoji: "🏜️", nameAr: "رحلات السفاري الصحراوية", nameEn: "Desert safari trips" },
-      { emoji: "🤿", nameAr: "الغوص في البحر الأحمر", nameEn: "Red Sea diving" },
-      { emoji: "🎡", nameAr: "فعاليات موسم الرياض", nameEn: "Riyadh Season events" },
+      { wikiTitle: "Desert safari", emoji: "🏜️", nameAr: "رحلات السفاري الصحراوية", nameEn: "Desert safari trips", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Scuba diving", emoji: "🤿", nameAr: "الغوص في البحر الأحمر", nameEn: "Red Sea diving", costTier: "$$", booking: "guide" },
+      { emoji: "🎡", nameAr: "فعاليات موسم الرياض", nameEn: "Riyadh Season events", costTier: "$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🍛", nameAr: "الكبسة", nameEn: "Kabsa" },
-      { emoji: "🥙", nameAr: "الجريش والمرقوق", nameEn: "Jareesh & Margooq" },
+      { wikiTitle: "Kabsa", emoji: "🍛", nameAr: "الكبسة", nameEn: "Kabsa" },
+      { wikiTitle: "Jareesh", emoji: "🥙", nameAr: "الجريش والمرقوق", nameEn: "Jareesh & Margooq" },
       { emoji: "☕", nameAr: "القهوة السعودية والتمر", nameEn: "Saudi coffee & dates" },
     ],
   },
@@ -80,14 +113,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Grand Bazaar, Istanbul", nameAr: "البازار الكبير", nameEn: "Grand Bazaar", booking: "free" },
     ],
     activities: [
-      { emoji: "🎈", nameAr: "رحلة منطاد في كابادوكيا", nameEn: "Hot air balloon ride in Cappadocia" },
-      { emoji: "🛥️", nameAr: "جولة بحرية في البوسفور", nameEn: "Bosphorus boat cruise" },
-      { emoji: "♨️", nameAr: "حمّام تركي تقليدي", nameEn: "Traditional Turkish hammam" },
+      { wikiTitle: "Hot air balloon", emoji: "🎈", nameAr: "رحلة منطاد في كابادوكيا", nameEn: "Hot air balloon ride in Cappadocia", costTier: "$$$", booking: "guide" },
+      { emoji: "🛥️", nameAr: "جولة بحرية في البوسفور", nameEn: "Bosphorus boat cruise", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Hamam", emoji: "♨️", nameAr: "حمّام تركي تقليدي", nameEn: "Traditional Turkish hammam", costTier: "$$", booking: "phone" },
     ],
     cuisine: [
-      { emoji: "🥙", nameAr: "الكباب التركي", nameEn: "Turkish kebab" },
-      { emoji: "🍰", nameAr: "البقلاوة", nameEn: "Baklava" },
-      { emoji: "🫓", nameAr: "الفطور التركي والسيميت", nameEn: "Turkish breakfast & simit" },
+      { wikiTitle: "Kebab", emoji: "🥙", nameAr: "الكباب التركي", nameEn: "Turkish kebab" },
+      { wikiTitle: "Baklava", emoji: "🍰", nameAr: "البقلاوة", nameEn: "Baklava" },
+      { wikiTitle: "Simit", emoji: "🫓", nameAr: "الفطور التركي والسيميت", nameEn: "Turkish breakfast & simit" },
     ],
   },
   AE: {
@@ -100,14 +133,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Louvre Abu Dhabi", nameAr: "متحف اللوفر أبوظبي", nameEn: "Louvre Abu Dhabi", booking: "official" },
     ],
     activities: [
-      { emoji: "🏜️", nameAr: "سفاري صحراوي وتزلج على الرمال", nameEn: "Desert safari & sandboarding" },
-      { emoji: "🎿", nameAr: "التزلج الداخلي في سكي دبي", nameEn: "Indoor skiing at Ski Dubai" },
-      { emoji: "🛍️", nameAr: "التسوق وسوق الذهب", nameEn: "Shopping & the Gold Souk" },
+      { wikiTitle: "Desert safari", emoji: "🏜️", nameAr: "سفاري صحراوي وتزلج على الرمال", nameEn: "Desert safari & sandboarding", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Ski Dubai", emoji: "🎿", nameAr: "التزلج الداخلي في سكي دبي", nameEn: "Indoor skiing at Ski Dubai", costTier: "$$$", booking: "official" },
+      { wikiTitle: "Gold Souk", emoji: "🛍️", nameAr: "التسوق وسوق الذهب", nameEn: "Shopping & the Gold Souk", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍚", nameAr: "المجبوس", nameEn: "Machboos" },
-      { emoji: "🥘", nameAr: "الهريس والثريد", nameEn: "Harees & Thareed" },
-      { emoji: "🍡", nameAr: "اللقيمات", nameEn: "Luqaimat" },
+      { wikiTitle: "Machboos", emoji: "🍚", nameAr: "المجبوس", nameEn: "Machboos" },
+      { wikiTitle: "Harees", emoji: "🥘", nameAr: "الهريس والثريد", nameEn: "Harees & Thareed" },
+      { wikiTitle: "Luqaimat", emoji: "🍡", nameAr: "اللقيمات", nameEn: "Luqaimat" },
     ],
   },
   QA: {
@@ -119,14 +152,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "The Pearl-Qatar", nameAr: "جزيرة اللؤلؤة", nameEn: "The Pearl-Qatar", booking: "free" },
     ],
     activities: [
-      { emoji: "🏜️", nameAr: "رحلة الكثبان الداخلية", nameEn: "Inland Sea desert trip" },
-      { emoji: "🐫", nameAr: "ركوب الهجن", nameEn: "Camel riding" },
-      { emoji: "🛍️", nameAr: "جولة تسوق في سوق واقف", nameEn: "Shopping at Souq Waqif" },
+      { emoji: "🏜️", nameAr: "رحلة الكثبان الداخلية", nameEn: "Inland Sea desert trip", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Camel", emoji: "🐫", nameAr: "ركوب الهجن", nameEn: "Camel riding", costTier: "$", booking: "phone" },
+      { emoji: "🛍️", nameAr: "جولة تسوق في سوق واقف", nameEn: "Shopping at Souq Waqif", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍚", nameAr: "المجبوس القطري", nameEn: "Qatari Machboos" },
+      { wikiTitle: "Machboos", emoji: "🍚", nameAr: "المجبوس القطري", nameEn: "Qatari Machboos" },
       { emoji: "🥟", nameAr: "الثريد", nameEn: "Thareed" },
-      { emoji: "☕", nameAr: "القهوة العربية والكرك", nameEn: "Arabic coffee & karak tea" },
+      { wikiTitle: "Karak chai", emoji: "☕", nameAr: "القهوة العربية والكرك", nameEn: "Arabic coffee & karak tea" },
     ],
   },
   KW: {
@@ -138,14 +171,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "The Avenues Mall", nameAr: "مجمع الأفنيوز", nameEn: "The Avenues Mall", booking: "free" },
     ],
     activities: [
-      { emoji: "🛥️", nameAr: "جولة بحرية على الخليج", nameEn: "Gulf waterfront cruise" },
-      { emoji: "🏝️", nameAr: "رحلة إلى جزيرة فيلكا", nameEn: "Day trip to Failaka Island" },
-      { emoji: "🛍️", nameAr: "التسوق في الأسواق التقليدية", nameEn: "Shopping the old souqs" },
+      { emoji: "🛥️", nameAr: "جولة بحرية على الخليج", nameEn: "Gulf waterfront cruise", costTier: "$$", booking: "phone" },
+      { wikiTitle: "Failaka Island", emoji: "🏝️", nameAr: "رحلة إلى جزيرة فيلكا", nameEn: "Day trip to Failaka Island", costTier: "$$", booking: "guide" },
+      { emoji: "🛍️", nameAr: "التسوق في الأسواق التقليدية", nameEn: "Shopping the old souqs", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍚", nameAr: "المجبوس الكويتي", nameEn: "Kuwaiti Machboos" },
+      { wikiTitle: "Machboos", emoji: "🍚", nameAr: "المجبوس الكويتي", nameEn: "Kuwaiti Machboos" },
       { emoji: "🍲", nameAr: "المرقوق", nameEn: "Margooga" },
-      { emoji: "🥐", nameAr: "الجريش", nameEn: "Jireesh" },
+      { wikiTitle: "Jareesh", emoji: "🥐", nameAr: "الجريش", nameEn: "Jireesh" },
     ],
   },
   BH: {
@@ -157,13 +190,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Al Fateh Grand Mosque", nameAr: "مسجد الفاتح الكبير", nameEn: "Al Fateh Grand Mosque", booking: "free" },
     ],
     activities: [
-      { emoji: "🏎️", nameAr: "حلبة البحرين الدولية", nameEn: "Bahrain International Circuit" },
-      { emoji: "🦪", nameAr: "رحلة الغوص عن اللؤلؤ", nameEn: "Pearl diving excursion" },
-      { emoji: "🛍️", nameAr: "سوق المنامة القديم", nameEn: "Manama old souq" },
+      { wikiTitle: "Bahrain International Circuit", emoji: "🏎️", nameAr: "حلبة البحرين الدولية", nameEn: "Bahrain International Circuit", costTier: "$$$", booking: "official" },
+      { wikiTitle: "Pearl hunting", emoji: "🦪", nameAr: "رحلة الغوص عن اللؤلؤ", nameEn: "Pearl diving excursion", costTier: "$$", booking: "phone" },
+      { emoji: "🛍️", nameAr: "سوق المنامة القديم", nameEn: "Manama old souq", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍚", nameAr: "المجبوس البحريني", nameEn: "Bahraini Machboos" },
-      { emoji: "🐟", nameAr: "سمك الهامور المشوي", nameEn: "Grilled hammour fish" },
+      { wikiTitle: "Machboos", emoji: "🍚", nameAr: "المجبوس البحريني", nameEn: "Bahraini Machboos" },
+      { wikiTitle: "Hammour", emoji: "🐟", nameAr: "سمك الهامور المشوي", nameEn: "Grilled hammour fish" },
       { emoji: "🍮", nameAr: "حلوى البحرين", nameEn: "Bahraini halwa" },
     ],
   },
@@ -176,9 +209,9 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Wadi Shab", nameAr: "وادي شاب", nameEn: "Wadi Shab", booking: "free" },
     ],
     activities: [
-      { emoji: "🏔️", nameAr: "التنزه في الأودية الجبلية", nameEn: "Wadi hiking" },
-      { emoji: "🐬", nameAr: "مشاهدة الدلافين", nameEn: "Dolphin watching trip" },
-      { emoji: "🏜️", nameAr: "التخييم في صحراء الشرقية", nameEn: "Camping in the Sharqiya desert" },
+      { wikiTitle: "Hiking", emoji: "🏔️", nameAr: "التنزه في الأودية الجبلية", nameEn: "Wadi hiking", costTier: "free", booking: "free" },
+      { wikiTitle: "Dolphin watching", emoji: "🐬", nameAr: "مشاهدة الدلافين", nameEn: "Dolphin watching trip", costTier: "$$", booking: "guide" },
+      { emoji: "🏜️", nameAr: "التخييم في صحراء الشرقية", nameEn: "Camping in the Sharqiya desert", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
       { emoji: "🍚", nameAr: "قبولي عماني", nameEn: "Omani Qabooli" },
@@ -196,14 +229,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Abu Simbel temples", nameAr: "معابد أبو سمبل", nameEn: "Abu Simbel", booking: "guide" },
     ],
     activities: [
-      { emoji: "🤿", nameAr: "الغوص في البحر الأحمر", nameEn: "Red Sea diving in Hurghada" },
-      { emoji: "🚤", nameAr: "رحلة نيلية بالفلوكة", nameEn: "Felucca ride on the Nile" },
-      { emoji: "🐫", nameAr: "ركوب الجمال عند الأهرامات", nameEn: "Camel ride at the pyramids" },
+      { wikiTitle: "Scuba diving", emoji: "🤿", nameAr: "الغوص في البحر الأحمر", nameEn: "Red Sea diving in Hurghada", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Felucca", emoji: "🚤", nameAr: "رحلة نيلية بالفلوكة", nameEn: "Felucca ride on the Nile", costTier: "$", booking: "phone" },
+      { wikiTitle: "Camel", emoji: "🐫", nameAr: "ركوب الجمال عند الأهرامات", nameEn: "Camel ride at the pyramids", costTier: "$", booking: "phone" },
     ],
     cuisine: [
-      { emoji: "🍲", nameAr: "الكشري", nameEn: "Koshari" },
-      { emoji: "🫘", nameAr: "الفول والطعمية", nameEn: "Ful medames & taameya" },
-      { emoji: "🍬", nameAr: "أم علي", nameEn: "Om Ali" },
+      { wikiTitle: "Kushari", emoji: "🍲", nameAr: "الكشري", nameEn: "Koshari" },
+      { wikiTitle: "Ful medames", emoji: "🫘", nameAr: "الفول والطعمية", nameEn: "Ful medames & taameya" },
+      { wikiTitle: "Om Ali", emoji: "🍬", nameAr: "أم علي", nameEn: "Om Ali" },
     ],
   },
   MA: {
@@ -215,14 +248,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Chefchaouen", nameAr: "شفشاون الزرقاء", nameEn: "Chefchaouen", booking: "free" },
     ],
     activities: [
-      { emoji: "🐪", nameAr: "رحلة الجمال في الصحراء الكبرى", nameEn: "Camel trek in the Sahara" },
-      { emoji: "🛍️", nameAr: "التسوق في أسواق مراكش", nameEn: "Shopping the Marrakesh souks" },
-      { emoji: "🧖", nameAr: "الحمام المغربي التقليدي", nameEn: "Traditional Moroccan hammam" },
+      { wikiTitle: "Camel", emoji: "🐪", nameAr: "رحلة الجمال في الصحراء الكبرى", nameEn: "Camel trek in the Sahara", costTier: "$$", booking: "guide" },
+      { emoji: "🛍️", nameAr: "التسوق في أسواق مراكش", nameEn: "Shopping the Marrakesh souks", costTier: "free", booking: "free" },
+      { wikiTitle: "Hammam", emoji: "🧖", nameAr: "الحمام المغربي التقليدي", nameEn: "Traditional Moroccan hammam", costTier: "$$", booking: "phone" },
     ],
     cuisine: [
-      { emoji: "🍲", nameAr: "الطاجين المغربي", nameEn: "Moroccan tagine" },
-      { emoji: "🍝", nameAr: "الكسكس", nameEn: "Couscous" },
-      { emoji: "🍵", nameAr: "أتاي (الشاي بالنعناع)", nameEn: "Mint tea (Atay)" },
+      { wikiTitle: "Tajine", emoji: "🍲", nameAr: "الطاجين المغربي", nameEn: "Moroccan tagine" },
+      { wikiTitle: "Couscous", emoji: "🍝", nameAr: "الكسكس", nameEn: "Couscous" },
+      { wikiTitle: "Maghrebi mint tea", emoji: "🍵", nameAr: "أتاي (الشاي بالنعناع)", nameEn: "Mint tea (Atay)" },
     ],
   },
   JO: {
@@ -234,14 +267,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Dead Sea", nameAr: "البحر الميت", nameEn: "Dead Sea", booking: "free" },
     ],
     activities: [
-      { emoji: "🐫", nameAr: "سفاري في وادي رم", nameEn: "Wadi Rum jeep safari" },
-      { emoji: "🧴", nameAr: "الطفو والاستجمام في البحر الميت", nameEn: "Floating & spa at the Dead Sea" },
-      { emoji: "🚶", nameAr: "المشي الطويل داخل البتراء", nameEn: "Long hike through Petra" },
+      { wikiTitle: "Wadi Rum", emoji: "🐫", nameAr: "سفاري في وادي رم", nameEn: "Wadi Rum jeep safari", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Dead Sea", emoji: "🧴", nameAr: "الطفو والاستجمام في البحر الميت", nameEn: "Floating & spa at the Dead Sea", costTier: "free", booking: "free" },
+      { wikiTitle: "Petra", emoji: "🚶", nameAr: "المشي الطويل داخل البتراء", nameEn: "Long hike through Petra", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍚", nameAr: "المنسف الأردني", nameEn: "Jordanian Mansaf" },
-      { emoji: "🥙", nameAr: "الفلافل والحمص", nameEn: "Falafel & hummus" },
-      { emoji: "🍮", nameAr: "الكنافة النابلسية", nameEn: "Nabulsi kunafa" },
+      { wikiTitle: "Mansaf", emoji: "🍚", nameAr: "المنسف الأردني", nameEn: "Jordanian Mansaf" },
+      { wikiTitle: "Falafel", emoji: "🥙", nameAr: "الفلافل والحمص", nameEn: "Falafel & hummus" },
+      { wikiTitle: "Kanafeh", emoji: "🍮", nameAr: "الكنافة النابلسية", nameEn: "Nabulsi kunafa" },
     ],
   },
   GB: {
@@ -254,14 +287,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "London Eye", nameAr: "عين لندن", nameEn: "London Eye", booking: "official" },
     ],
     activities: [
-      { emoji: "🚇", nameAr: "جولة بالمترو التاريخي والحافلات ذات الطابقين", nameEn: "Double-decker bus & Tube tour" },
-      { emoji: "🎭", nameAr: "مشاهدة عرض مسرحي في ويست إند", nameEn: "West End theatre show" },
-      { emoji: "🛍️", nameAr: "التسوق في أكسفورد ستريت", nameEn: "Shopping on Oxford Street" },
+      { wikiTitle: "London Underground", emoji: "🚇", nameAr: "جولة بالمترو التاريخي والحافلات ذات الطابقين", nameEn: "Double-decker bus & Tube tour", costTier: "$", booking: "free" },
+      { wikiTitle: "West End theatre", emoji: "🎭", nameAr: "مشاهدة عرض مسرحي في ويست إند", nameEn: "West End theatre show", costTier: "$$$", booking: "official" },
+      { emoji: "🛍️", nameAr: "التسوق في أكسفورد ستريت", nameEn: "Shopping on Oxford Street", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍟", nameAr: "فيش آند تشيبس", nameEn: "Fish and chips" },
-      { emoji: "🫖", nameAr: "الشاي الإنجليزي بعد الظهر", nameEn: "Afternoon tea" },
-      { emoji: "🥧", nameAr: "فطيرة اللحم", nameEn: "Meat pie" },
+      { wikiTitle: "Fish and chips", emoji: "🍟", nameAr: "فيش آند تشيبس", nameEn: "Fish and chips" },
+      { wikiTitle: "Afternoon tea", emoji: "🫖", nameAr: "الشاي الإنجليزي بعد الظهر", nameEn: "Afternoon tea" },
+      { wikiTitle: "Meat pie", emoji: "🥧", nameAr: "فطيرة اللحم", nameEn: "Meat pie" },
     ],
   },
   FR: {
@@ -274,14 +307,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Notre-Dame de Paris", nameAr: "كاتدرائية نوتردام", nameEn: "Notre-Dame de Paris", booking: "free" },
     ],
     activities: [
-      { emoji: "🛳️", nameAr: "جولة نهرية على السين", nameEn: "Seine river cruise" },
-      { emoji: "🚲", nameAr: "استكشاف باريس بالدراجة", nameEn: "Cycling around Paris" },
-      { emoji: "🍷", nameAr: "جولة تذوق النبيذ", nameEn: "Wine tasting tour" },
+      { wikiTitle: "Seine", emoji: "🛳️", nameAr: "جولة نهرية على السين", nameEn: "Seine river cruise", costTier: "$$", booking: "official" },
+      { emoji: "🚲", nameAr: "استكشاف باريس بالدراجة", nameEn: "Cycling around Paris", costTier: "$", booking: "guide" },
+      { wikiTitle: "Wine tasting", emoji: "🍷", nameAr: "جولة تذوق النبيذ", nameEn: "Wine tasting tour", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🥐", nameAr: "الكرواسون والمعجنات الفرنسية", nameEn: "Croissants & French pastries" },
-      { emoji: "🧀", nameAr: "الجبن الفرنسي", nameEn: "French cheese" },
-      { emoji: "🍲", nameAr: "الراتاتوي", nameEn: "Ratatouille" },
+      { wikiTitle: "Croissant", emoji: "🥐", nameAr: "الكرواسون والمعجنات الفرنسية", nameEn: "Croissants & French pastries" },
+      { wikiTitle: "French cheese", emoji: "🧀", nameAr: "الجبن الفرنسي", nameEn: "French cheese" },
+      { wikiTitle: "Ratatouille", emoji: "🍲", nameAr: "الراتاتوي", nameEn: "Ratatouille" },
     ],
   },
   ES: {
@@ -293,14 +326,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Park Güell", nameAr: "حديقة غويل", nameEn: "Park Güell", booking: "official" },
     ],
     activities: [
-      { emoji: "💃", nameAr: "مشاهدة عرض فلامنكو", nameEn: "Flamenco show" },
-      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ برشلونة", nameEn: "Relaxing on Barcelona's beaches" },
-      { emoji: "🍽️", nameAr: "جولة تباس مسائية", nameEn: "Evening tapas crawl" },
+      { wikiTitle: "Flamenco", emoji: "💃", nameAr: "مشاهدة عرض فلامنكو", nameEn: "Flamenco show", costTier: "$$", booking: "official" },
+      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ برشلونة", nameEn: "Relaxing on Barcelona's beaches", costTier: "free", booking: "free" },
+      { wikiTitle: "Tapas", emoji: "🍽️", nameAr: "جولة تباس مسائية", nameEn: "Evening tapas crawl", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🥘", nameAr: "الباييا", nameEn: "Paella" },
-      { emoji: "🍢", nameAr: "التاباس الإسبانية", nameEn: "Spanish tapas" },
-      { emoji: "🍮", nameAr: "الكريمة الكاتالانية", nameEn: "Crema Catalana" },
+      { wikiTitle: "Paella", emoji: "🥘", nameAr: "الباييا", nameEn: "Paella" },
+      { wikiTitle: "Tapas", emoji: "🍢", nameAr: "التاباس الإسبانية", nameEn: "Spanish tapas" },
+      { wikiTitle: "Crema catalana", emoji: "🍮", nameAr: "الكريمة الكاتالانية", nameEn: "Crema Catalana" },
     ],
   },
   IT: {
@@ -313,14 +346,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Vatican Museums", nameAr: "متاحف الفاتيكان", nameEn: "Vatican Museums", booking: "official" },
     ],
     activities: [
-      { emoji: "🚣", nameAr: "جولة بالغندول في البندقية", nameEn: "Gondola ride in Venice" },
-      { emoji: "🍝", nameAr: "دورة طبخ إيطالية", nameEn: "Italian cooking class" },
-      { emoji: "🚗", nameAr: "قيادة ساحل أمالفي", nameEn: "Drive along the Amalfi Coast" },
+      { wikiTitle: "Gondola", emoji: "🚣", nameAr: "جولة بالغندول في البندقية", nameEn: "Gondola ride in Venice", costTier: "$$$", booking: "phone" },
+      { wikiTitle: "Italian cuisine", emoji: "🍝", nameAr: "دورة طبخ إيطالية", nameEn: "Italian cooking class", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Amalfi Coast", emoji: "🚗", nameAr: "قيادة ساحل أمالفي", nameEn: "Drive along the Amalfi Coast", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍕", nameAr: "البيتزا النابولية", nameEn: "Neapolitan pizza" },
-      { emoji: "🍝", nameAr: "الباستا الإيطالية", nameEn: "Italian pasta" },
-      { emoji: "🍦", nameAr: "الجيلاتو", nameEn: "Gelato" },
+      { wikiTitle: "Neapolitan pizza", emoji: "🍕", nameAr: "البيتزا النابولية", nameEn: "Neapolitan pizza" },
+      { wikiTitle: "Pasta", emoji: "🍝", nameAr: "الباستا الإيطالية", nameEn: "Italian pasta" },
+      { wikiTitle: "Gelato", emoji: "🍦", nameAr: "الجيلاتو", nameEn: "Gelato" },
     ],
   },
   GR: {
@@ -332,14 +365,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Meteora", nameAr: "ميتيورا", nameEn: "Meteora", booking: "guide" },
     ],
     activities: [
-      { emoji: "⛵", nameAr: "جولة بحرية بين الجزر اليونانية", nameEn: "Greek islands boat tour" },
-      { emoji: "🌅", nameAr: "مشاهدة الغروب في أويا", nameEn: "Sunset watching in Oia" },
-      { emoji: "🏛️", nameAr: "استكشاف المواقع الأثرية", nameEn: "Exploring ancient ruins" },
+      { emoji: "⛵", nameAr: "جولة بحرية بين الجزر اليونانية", nameEn: "Greek islands boat tour", costTier: "$$$", booking: "guide" },
+      { wikiTitle: "Oia", emoji: "🌅", nameAr: "مشاهدة الغروب في أويا", nameEn: "Sunset watching in Oia", costTier: "free", booking: "free" },
+      { emoji: "🏛️", nameAr: "استكشاف المواقع الأثرية", nameEn: "Exploring ancient ruins", costTier: "$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🥙", nameAr: "الجيروس اليوناني", nameEn: "Greek gyros" },
-      { emoji: "🥗", nameAr: "السلطة اليونانية", nameEn: "Greek salad" },
-      { emoji: "🍯", nameAr: "البقلاوة اليونانية", nameEn: "Greek baklava" },
+      { wikiTitle: "Gyro", emoji: "🥙", nameAr: "الجيروس اليوناني", nameEn: "Greek gyros" },
+      { wikiTitle: "Greek salad", emoji: "🥗", nameAr: "السلطة اليونانية", nameEn: "Greek salad" },
+      { wikiTitle: "Baklava", emoji: "🍯", nameAr: "البقلاوة اليونانية", nameEn: "Greek baklava" },
     ],
   },
   CH: {
@@ -351,14 +384,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Lake Lucerne", nameAr: "بحيرة لوسيرن", nameEn: "Lake Lucerne", booking: "free" },
     ],
     activities: [
-      { emoji: "🚡", nameAr: "ركوب القطار الجبلي", nameEn: "Scenic mountain train ride" },
-      { emoji: "⛷️", nameAr: "التزلج في جبال الألب", nameEn: "Skiing in the Alps" },
-      { emoji: "🧀", nameAr: "تذوق الفوندو السويسري", nameEn: "Swiss fondue tasting" },
+      { wikiTitle: "Jungfraubahn", emoji: "🚡", nameAr: "ركوب القطار الجبلي", nameEn: "Scenic mountain train ride", costTier: "$$$", booking: "official" },
+      { wikiTitle: "Skiing", emoji: "⛷️", nameAr: "التزلج في جبال الألب", nameEn: "Skiing in the Alps", costTier: "$$$", booking: "official" },
+      { wikiTitle: "Fondue", emoji: "🧀", nameAr: "تذوق الفوندو السويسري", nameEn: "Swiss fondue tasting", costTier: "$$", booking: "phone" },
     ],
     cuisine: [
-      { emoji: "🧀", nameAr: "الفوندو السويسري", nameEn: "Swiss fondue" },
-      { emoji: "🍫", nameAr: "الشوكولاتة السويسرية", nameEn: "Swiss chocolate" },
-      { emoji: "🥔", nameAr: "الروستي", nameEn: "Rösti" },
+      { wikiTitle: "Fondue", emoji: "🧀", nameAr: "الفوندو السويسري", nameEn: "Swiss fondue" },
+      { wikiTitle: "Swiss chocolate", emoji: "🍫", nameAr: "الشوكولاتة السويسرية", nameEn: "Swiss chocolate" },
+      { wikiTitle: "Rösti", emoji: "🥔", nameAr: "الروستي", nameEn: "Rösti" },
     ],
   },
   AT: {
@@ -370,13 +403,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Vienna State Opera", nameAr: "دار أوبرا فيينا", nameEn: "Vienna State Opera", booking: "official" },
     ],
     activities: [
-      { emoji: "🎻", nameAr: "حضور حفل موسيقى كلاسيكية", nameEn: "Classical music concert" },
-      { emoji: "🚶", nameAr: "التنزه في جبال الألب النمساوية", nameEn: "Hiking the Austrian Alps" },
-      { emoji: "☕", nameAr: "زيارة مقهى فيينا التقليدي", nameEn: "Traditional Vienna coffeehouse" },
+      { wikiTitle: "Vienna State Opera", emoji: "🎻", nameAr: "حضور حفل موسيقى كلاسيكية", nameEn: "Classical music concert", costTier: "$$$", booking: "official" },
+      { wikiTitle: "Hiking", emoji: "🚶", nameAr: "التنزه في جبال الألب النمساوية", nameEn: "Hiking the Austrian Alps", costTier: "free", booking: "free" },
+      { wikiTitle: "Viennese coffee house", emoji: "☕", nameAr: "زيارة مقهى فيينا التقليدي", nameEn: "Traditional Vienna coffeehouse", costTier: "$", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍖", nameAr: "شنيتزل فيينا", nameEn: "Wiener schnitzel" },
-      { emoji: "🍰", nameAr: "كعكة زاخر", nameEn: "Sachertorte" },
+      { wikiTitle: "Wiener schnitzel", emoji: "🍖", nameAr: "شنيتزل فيينا", nameEn: "Wiener schnitzel" },
+      { wikiTitle: "Sachertorte", emoji: "🍰", nameAr: "كعكة زاخر", nameEn: "Sachertorte" },
       { emoji: "🥨", nameAr: "المخبوزات النمساوية", nameEn: "Austrian pastries" },
     ],
   },
@@ -389,14 +422,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Anne Frank House", nameAr: "بيت آن فرانك", nameEn: "Anne Frank House", booking: "official" },
     ],
     activities: [
-      { emoji: "🚴", nameAr: "استكشاف أمستردام بالدراجة", nameEn: "Cycling around Amsterdam" },
-      { emoji: "🛶", nameAr: "جولة بالقارب في القنوات", nameEn: "Canal boat tour" },
-      { emoji: "🌷", nameAr: "زيارة حقول التوليب", nameEn: "Tulip fields visit" },
+      { wikiTitle: "Cycling", emoji: "🚴", nameAr: "استكشاف أمستردام بالدراجة", nameEn: "Cycling around Amsterdam", costTier: "$", booking: "guide" },
+      { emoji: "🛶", nameAr: "جولة بالقارب في القنوات", nameEn: "Canal boat tour", costTier: "$$", booking: "official" },
+      { wikiTitle: "Keukenhof", emoji: "🌷", nameAr: "زيارة حقول التوليب", nameEn: "Tulip fields visit", costTier: "$$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🧀", nameAr: "الجبن الهولندي", nameEn: "Dutch cheese" },
-      { emoji: "🍟", nameAr: "البطاطا الهولندية (فريتس)", nameEn: "Dutch fries (frites)" },
-      { emoji: "🥞", nameAr: "الستروبوافل", nameEn: "Stroopwafel" },
+      { wikiTitle: "Dutch cheese", emoji: "🧀", nameAr: "الجبن الهولندي", nameEn: "Dutch cheese" },
+      { wikiTitle: "Frites", emoji: "🍟", nameAr: "البطاطا الهولندية (فريتس)", nameEn: "Dutch fries (frites)" },
+      { wikiTitle: "Stroopwafel", emoji: "🥞", nameAr: "الستروبوافل", nameEn: "Stroopwafel" },
     ],
   },
   DE: {
@@ -408,14 +441,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Cologne Cathedral", nameAr: "كاتدرائية كولونيا", nameEn: "Cologne Cathedral", booking: "free" },
     ],
     activities: [
-      { emoji: "🍺", nameAr: "زيارة مهرجان أوكتوبرفست", nameEn: "Oktoberfest visit" },
-      { emoji: "🏰", nameAr: "جولة قلاع بافاريا", nameEn: "Bavarian castle tour" },
-      { emoji: "🚄", nameAr: "التنقل بالقطارات السريعة", nameEn: "High-speed train travel" },
+      { wikiTitle: "Oktoberfest", emoji: "🍺", nameAr: "زيارة مهرجان أوكتوبرفست", nameEn: "Oktoberfest visit", costTier: "$$", booking: "free" },
+      { wikiTitle: "Neuschwanstein Castle", emoji: "🏰", nameAr: "جولة قلاع بافاريا", nameEn: "Bavarian castle tour", costTier: "$$", booking: "guide" },
+      { emoji: "🚄", nameAr: "التنقل بالقطارات السريعة", nameEn: "High-speed train travel", costTier: "$$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🌭", nameAr: "النقانق الألمانية", nameEn: "German sausages" },
-      { emoji: "🍺", nameAr: "البيرة الألمانية", nameEn: "German beer" },
-      { emoji: "🥨", nameAr: "البريتزل", nameEn: "Pretzel" },
+      { wikiTitle: "Sausage", emoji: "🌭", nameAr: "النقانق الألمانية", nameEn: "German sausages" },
+      { wikiTitle: "Beer in Germany", emoji: "🍺", nameAr: "البيرة الألمانية", nameEn: "German beer" },
+      { wikiTitle: "Pretzel", emoji: "🥨", nameAr: "البريتزل", nameEn: "Pretzel" },
     ],
   },
   PT: {
@@ -427,13 +460,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Porto", nameAr: "مدينة بورتو", nameEn: "Porto", booking: "free" },
     ],
     activities: [
-      { emoji: "🚋", nameAr: "ركوب الترام التاريخي في لشبونة", nameEn: "Historic tram ride in Lisbon" },
-      { emoji: "🍷", nameAr: "جولة تذوق نبيذ البورتو", nameEn: "Port wine tasting tour" },
-      { emoji: "🏄", nameAr: "ركوب الأمواج في نازاريه", nameEn: "Surfing in Nazaré" },
+      { wikiTitle: "Trams in Lisbon", emoji: "🚋", nameAr: "ركوب الترام التاريخي في لشبونة", nameEn: "Historic tram ride in Lisbon", costTier: "$", booking: "free" },
+      { wikiTitle: "Port wine", emoji: "🍷", nameAr: "جولة تذوق نبيذ البورتو", nameEn: "Port wine tasting tour", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Surfing", emoji: "🏄", nameAr: "ركوب الأمواج في نازاريه", nameEn: "Surfing in Nazaré", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🐟", nameAr: "سمك القدّ (باكالياو)", nameEn: "Bacalhau (codfish)" },
-      { emoji: "🥧", nameAr: "حلوى الباستيل دي ناتا", nameEn: "Pastel de nata" },
+      { wikiTitle: "Bacalhau", emoji: "🐟", nameAr: "سمك القدّ (باكالياو)", nameEn: "Bacalhau (codfish)" },
+      { wikiTitle: "Pastel de nata", emoji: "🥧", nameAr: "حلوى الباستيل دي ناتا", nameEn: "Pastel de nata" },
       { emoji: "🐙", nameAr: "الأخطبوط البرتغالي", nameEn: "Portuguese octopus dishes" },
     ],
   },
@@ -445,9 +478,9 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Maldives", nameAr: "المنتجعات الجزرية", nameEn: "Overwater villas & atolls", booking: "guide" },
     ],
     activities: [
-      { emoji: "🤿", nameAr: "الغطس ومشاهدة الشعاب المرجانية", nameEn: "Snorkeling the coral reefs" },
-      { emoji: "🛥️", nameAr: "رحلة بحرية لمشاهدة الدلافين", nameEn: "Dolphin-watching cruise" },
-      { emoji: "🏝️", nameAr: "الاسترخاء على جزيرة خاصة", nameEn: "Private island relaxation" },
+      { wikiTitle: "Snorkeling", emoji: "🤿", nameAr: "الغطس ومشاهدة الشعاب المرجانية", nameEn: "Snorkeling the coral reefs", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Dolphin watching", emoji: "🛥️", nameAr: "رحلة بحرية لمشاهدة الدلافين", nameEn: "Dolphin-watching cruise", costTier: "$$", booking: "guide" },
+      { emoji: "🏝️", nameAr: "الاسترخاء على جزيرة خاصة", nameEn: "Private island relaxation", costTier: "$$$", booking: "official" },
     ],
     cuisine: [
       { emoji: "🐟", nameAr: "التونة المالديفية", nameEn: "Maldivian tuna dishes" },
@@ -464,14 +497,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Nuwara Eliya", nameAr: "نوارا إليا ومزارع الشاي", nameEn: "Nuwara Eliya tea country", booking: "guide" },
     ],
     activities: [
-      { emoji: "🚂", nameAr: "رحلة القطار عبر مزارع الشاي", nameEn: "Scenic train ride through tea country" },
-      { emoji: "🐘", nameAr: "زيارة محمية الفيلة", nameEn: "Elephant sanctuary visit" },
-      { emoji: "🏄", nameAr: "ركوب الأمواج على الساحل الجنوبي", nameEn: "Surfing on the south coast" },
+      { wikiTitle: "Sri Lanka Railways", emoji: "🚂", nameAr: "رحلة القطار عبر مزارع الشاي", nameEn: "Scenic train ride through tea country", costTier: "$", booking: "official" },
+      { emoji: "🐘", nameAr: "زيارة محمية الفيلة", nameEn: "Elephant sanctuary visit", costTier: "$$", booking: "official" },
+      { wikiTitle: "Surfing", emoji: "🏄", nameAr: "ركوب الأمواج على الساحل الجنوبي", nameEn: "Surfing on the south coast", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
       { emoji: "🍛", nameAr: "الكاري السريلانكي", nameEn: "Sri Lankan curry" },
-      { emoji: "🥞", nameAr: "الهوبرز", nameEn: "Hoppers" },
-      { emoji: "🍵", nameAr: "شاي سيلان", nameEn: "Ceylon tea" },
+      { wikiTitle: "Hopper (food)", emoji: "🥞", nameAr: "الهوبرز", nameEn: "Hoppers" },
+      { wikiTitle: "Ceylon tea", emoji: "🍵", nameAr: "شاي سيلان", nameEn: "Ceylon tea" },
     ],
   },
   ID: {
@@ -483,14 +516,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Tanah Lot", nameAr: "معبد تانه لوت", nameEn: "Tanah Lot", booking: "free" },
     ],
     activities: [
-      { emoji: "🏄", nameAr: "ركوب الأمواج في بالي", nameEn: "Surfing in Bali" },
-      { emoji: "🧘", nameAr: "دورة يوغا واسترخاء", nameEn: "Yoga & wellness retreat" },
-      { emoji: "🌋", nameAr: "تسلق بركان برومو", nameEn: "Mount Bromo sunrise trek" },
+      { wikiTitle: "Surfing", emoji: "🏄", nameAr: "ركوب الأمواج في بالي", nameEn: "Surfing in Bali", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Yoga", emoji: "🧘", nameAr: "دورة يوغا واسترخاء", nameEn: "Yoga & wellness retreat", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Mount Bromo", emoji: "🌋", nameAr: "تسلق بركان برومو", nameEn: "Mount Bromo sunrise trek", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍢", nameAr: "الساتيه الإندونيسي", nameEn: "Indonesian satay" },
-      { emoji: "🍛", nameAr: "الناسي غورينغ", nameEn: "Nasi goreng" },
-      { emoji: "🥥", nameAr: "الرندانغ", nameEn: "Rendang" },
+      { wikiTitle: "Satay", emoji: "🍢", nameAr: "الساتيه الإندونيسي", nameEn: "Indonesian satay" },
+      { wikiTitle: "Nasi goreng", emoji: "🍛", nameAr: "الناسي غورينغ", nameEn: "Nasi goreng" },
+      { wikiTitle: "Rendang", emoji: "🥥", nameAr: "الرندانغ", nameEn: "Rendang" },
     ],
   },
   TH: {
@@ -502,14 +535,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Phi Phi Islands", nameAr: "جزر بي بي", nameEn: "Phi Phi Islands", booking: "guide" },
     ],
     activities: [
-      { emoji: "🛶", nameAr: "جولة بالقارب بين الجزر", nameEn: "Island-hopping boat tour" },
-      { emoji: "🐘", nameAr: "زيارة ملاذ الأفيال الأخلاقي", nameEn: "Ethical elephant sanctuary visit" },
-      { emoji: "🌃", nameAr: "التسوق في أسواق بانكوك الليلية", nameEn: "Bangkok night markets" },
+      { emoji: "🛶", nameAr: "جولة بالقارب بين الجزر", nameEn: "Island-hopping boat tour", costTier: "$$", booking: "guide" },
+      { emoji: "🐘", nameAr: "زيارة ملاذ الأفيال الأخلاقي", nameEn: "Ethical elephant sanctuary visit", costTier: "$$", booking: "official" },
+      { emoji: "🌃", nameAr: "التسوق في أسواق بانكوك الليلية", nameEn: "Bangkok night markets", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍜", nameAr: "التوم يام", nameEn: "Tom yum soup" },
-      { emoji: "🍝", nameAr: "الباد تاي", nameEn: "Pad Thai" },
-      { emoji: "🥭", nameAr: "الأرز اللزج بالمانجو", nameEn: "Mango sticky rice" },
+      { wikiTitle: "Tom yum", emoji: "🍜", nameAr: "التوم يام", nameEn: "Tom yum soup" },
+      { wikiTitle: "Pad thai", emoji: "🍝", nameAr: "الباد تاي", nameEn: "Pad Thai" },
+      { wikiTitle: "Mango sticky rice", emoji: "🥭", nameAr: "الأرز اللزج بالمانجو", nameEn: "Mango sticky rice" },
     ],
   },
   MY: {
@@ -521,14 +554,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Langkawi", nameAr: "لنكاوي", nameEn: "Langkawi", booking: "guide" },
     ],
     activities: [
-      { emoji: "🚡", nameAr: "التلفريك في لنكاوي", nameEn: "Langkawi Sky Cable" },
-      { emoji: "🛍️", nameAr: "التسوق في كوالالمبور", nameEn: "Shopping in Kuala Lumpur" },
-      { emoji: "🌴", nameAr: "استكشاف الغابات المطيرة", nameEn: "Rainforest exploration" },
+      { wikiTitle: "Langkawi Sky Cab", emoji: "🚡", nameAr: "التلفريك في لنكاوي", nameEn: "Langkawi Sky Cable", costTier: "$$", booking: "official" },
+      { emoji: "🛍️", nameAr: "التسوق في كوالالمبور", nameEn: "Shopping in Kuala Lumpur", costTier: "free", booking: "free" },
+      { emoji: "🌴", nameAr: "استكشاف الغابات المطيرة", nameEn: "Rainforest exploration", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍛", nameAr: "ناسي ليماك", nameEn: "Nasi lemak" },
-      { emoji: "🍢", nameAr: "الساتيه الماليزي", nameEn: "Malaysian satay" },
-      { emoji: "🍜", nameAr: "لاكسا", nameEn: "Laksa" },
+      { wikiTitle: "Nasi lemak", emoji: "🍛", nameAr: "ناسي ليماك", nameEn: "Nasi lemak" },
+      { wikiTitle: "Satay", emoji: "🍢", nameAr: "الساتيه الماليزي", nameEn: "Malaysian satay" },
+      { wikiTitle: "Laksa", emoji: "🍜", nameAr: "لاكسا", nameEn: "Laksa" },
     ],
   },
   SG: {
@@ -540,14 +573,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Sentosa Island", nameAr: "جزيرة سنتوسا", nameEn: "Sentosa Island", booking: "official" },
     ],
     activities: [
-      { emoji: "🎡", nameAr: "ركوب عجلة سنغافورة الطائرة", nameEn: "Singapore Flyer ride" },
-      { emoji: "🦁", nameAr: "زيارة حديقة الحيوان الليلية", nameEn: "Night Safari zoo visit" },
-      { emoji: "🍜", nameAr: "جولة طعام الشارع في هوكر سنتر", nameEn: "Hawker centre food tour" },
+      { wikiTitle: "Singapore Flyer", emoji: "🎡", nameAr: "ركوب عجلة سنغافورة الطائرة", nameEn: "Singapore Flyer ride", costTier: "$$", booking: "official" },
+      { wikiTitle: "Night Safari", emoji: "🦁", nameAr: "زيارة حديقة الحيوان الليلية", nameEn: "Night Safari zoo visit", costTier: "$$", booking: "official" },
+      { wikiTitle: "Hawker centre", emoji: "🍜", nameAr: "جولة طعام الشارع في هوكر سنتر", nameEn: "Hawker centre food tour", costTier: "$", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🦀", nameAr: "سلطعون الفلفل الأسود والحار", nameEn: "Chilli & pepper crab" },
-      { emoji: "🍚", nameAr: "أرز الدجاج الهاييني", nameEn: "Hainanese chicken rice" },
-      { emoji: "🍧", nameAr: "حلوى الآيس كاتشانغ", nameEn: "Ice kacang dessert" },
+      { wikiTitle: "Chilli crab", emoji: "🦀", nameAr: "سلطعون الفلفل الأسود والحار", nameEn: "Chilli & pepper crab" },
+      { wikiTitle: "Hainanese chicken rice", emoji: "🍚", nameAr: "أرز الدجاج الهاييني", nameEn: "Hainanese chicken rice" },
+      { wikiTitle: "Ice kacang", emoji: "🍧", nameAr: "حلوى الآيس كاتشانغ", nameEn: "Ice kacang dessert" },
     ],
   },
   JP: {
@@ -559,14 +592,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Tokyo Skytree", nameAr: "برج طوكيو سكاي تري", nameEn: "Tokyo Skytree", booking: "official" },
     ],
     activities: [
-      { emoji: "🌸", nameAr: "مشاهدة أزهار الكرز", nameEn: "Cherry blossom viewing" },
-      { emoji: "♨️", nameAr: "الاستحمام في الينابيع الحارة", nameEn: "Onsen hot spring bathing" },
-      { emoji: "🚄", nameAr: "ركوب قطار الشينكانسن السريع", nameEn: "Shinkansen bullet train ride" },
+      { wikiTitle: "Cherry blossom", emoji: "🌸", nameAr: "مشاهدة أزهار الكرز", nameEn: "Cherry blossom viewing", costTier: "free", booking: "free" },
+      { wikiTitle: "Onsen", emoji: "♨️", nameAr: "الاستحمام في الينابيع الحارة", nameEn: "Onsen hot spring bathing", costTier: "$$", booking: "phone" },
+      { wikiTitle: "Shinkansen", emoji: "🚄", nameAr: "ركوب قطار الشينكانسن السريع", nameEn: "Shinkansen bullet train ride", costTier: "$$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🍣", nameAr: "السوشي الياباني", nameEn: "Japanese sushi" },
-      { emoji: "🍜", nameAr: "الرامن", nameEn: "Ramen" },
-      { emoji: "🍢", nameAr: "التيمبورا", nameEn: "Tempura" },
+      { wikiTitle: "Sushi", emoji: "🍣", nameAr: "السوشي الياباني", nameEn: "Japanese sushi" },
+      { wikiTitle: "Ramen", emoji: "🍜", nameAr: "الرامن", nameEn: "Ramen" },
+      { wikiTitle: "Tempura", emoji: "🍢", nameAr: "التيمبورا", nameEn: "Tempura" },
     ],
   },
   KR: {
@@ -578,14 +611,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Jeju Island", nameAr: "جزيرة جيجو", nameEn: "Jeju Island", booking: "guide" },
     ],
     activities: [
-      { emoji: "👘", nameAr: "تجربة ارتداء الهانبوك", nameEn: "Hanbok traditional dress experience" },
-      { emoji: "🛍️", nameAr: "التسوق في ميونغدونغ", nameEn: "Shopping in Myeongdong" },
-      { emoji: "🎤", nameAr: "جولة ثقافة الكي بوب", nameEn: "K-pop culture tour" },
+      { wikiTitle: "Hanbok", emoji: "👘", nameAr: "تجربة ارتداء الهانبوك", nameEn: "Hanbok traditional dress experience", costTier: "$", booking: "phone" },
+      { emoji: "🛍️", nameAr: "التسوق في ميونغدونغ", nameEn: "Shopping in Myeongdong", costTier: "free", booking: "free" },
+      { wikiTitle: "K-pop", emoji: "🎤", nameAr: "جولة ثقافة الكي بوب", nameEn: "K-pop culture tour", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍗", nameAr: "الدجاج الكوري المقلي", nameEn: "Korean fried chicken" },
-      { emoji: "🥘", nameAr: "البيبيمباب", nameEn: "Bibimbap" },
-      { emoji: "🥬", nameAr: "الكيمتشي", nameEn: "Kimchi" },
+      { wikiTitle: "Korean fried chicken", emoji: "🍗", nameAr: "الدجاج الكوري المقلي", nameEn: "Korean fried chicken" },
+      { wikiTitle: "Bibimbap", emoji: "🥘", nameAr: "البيبيمباب", nameEn: "Bibimbap" },
+      { wikiTitle: "Kimchi", emoji: "🥬", nameAr: "الكيمتشي", nameEn: "Kimchi" },
     ],
   },
   CN: {
@@ -597,14 +630,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Terracotta Army", nameAr: "جيش الطين", nameEn: "Terracotta Army", booking: "official" },
     ],
     activities: [
-      { emoji: "🚶", nameAr: "المشي على سور الصين", nameEn: "Walking the Great Wall" },
-      { emoji: "🐼", nameAr: "زيارة محمية الباندا", nameEn: "Panda reserve visit" },
-      { emoji: "🍵", nameAr: "حفل شاي تقليدي", nameEn: "Traditional tea ceremony" },
+      { wikiTitle: "Great Wall of China", emoji: "🚶", nameAr: "المشي على سور الصين", nameEn: "Walking the Great Wall", costTier: "$", booking: "official" },
+      { wikiTitle: "Giant panda", emoji: "🐼", nameAr: "زيارة محمية الباندا", nameEn: "Panda reserve visit", costTier: "$$", booking: "official" },
+      { wikiTitle: "Chinese tea ceremony", emoji: "🍵", nameAr: "حفل شاي تقليدي", nameEn: "Traditional tea ceremony", costTier: "$", booking: "phone" },
     ],
     cuisine: [
-      { emoji: "🦆", nameAr: "بط بكين", nameEn: "Peking duck" },
-      { emoji: "🥟", nameAr: "الدمبلينغ الصيني", nameEn: "Chinese dumplings" },
-      { emoji: "🍜", nameAr: "نودلز يد السحب", nameEn: "Hand-pulled noodles" },
+      { wikiTitle: "Peking duck", emoji: "🦆", nameAr: "بط بكين", nameEn: "Peking duck" },
+      { wikiTitle: "Dumpling", emoji: "🥟", nameAr: "الدمبلينغ الصيني", nameEn: "Chinese dumplings" },
+      { wikiTitle: "Lamian", emoji: "🍜", nameAr: "نودلز يد السحب", nameEn: "Hand-pulled noodles" },
     ],
   },
   VN: {
@@ -616,14 +649,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Cu Chi tunnels", nameAr: "أنفاق كوتشي", nameEn: "Cu Chi Tunnels", booking: "official" },
     ],
     activities: [
-      { emoji: "🛥️", nameAr: "رحلة بحرية في خليج هالونغ", nameEn: "Ha Long Bay cruise" },
-      { emoji: "🚴", nameAr: "جولة دراجة في الريف", nameEn: "Countryside cycling tour" },
-      { emoji: "🏮", nameAr: "التجول بين فوانيس هوي آن", nameEn: "Hoi An lantern old town walk" },
+      { wikiTitle: "Ha Long Bay", emoji: "🛥️", nameAr: "رحلة بحرية في خليج هالونغ", nameEn: "Ha Long Bay cruise", costTier: "$$", booking: "guide" },
+      { emoji: "🚴", nameAr: "جولة دراجة في الريف", nameEn: "Countryside cycling tour", costTier: "$", booking: "guide" },
+      { wikiTitle: "Hoi An", emoji: "🏮", nameAr: "التجول بين فوانيس هوي آن", nameEn: "Hoi An lantern old town walk", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍜", nameAr: "الفو (شوربة الفيتنامية)", nameEn: "Phở noodle soup" },
-      { emoji: "🥖", nameAr: "بان مي", nameEn: "Bánh mì" },
-      { emoji: "☕", nameAr: "القهوة الفيتنامية", nameEn: "Vietnamese coffee" },
+      { wikiTitle: "Pho", emoji: "🍜", nameAr: "الفو (شوربة الفيتنامية)", nameEn: "Phở noodle soup" },
+      { wikiTitle: "Banh mi", emoji: "🥖", nameAr: "بان مي", nameEn: "Bánh mì" },
+      { wikiTitle: "Vietnamese coffee", emoji: "☕", nameAr: "القهوة الفيتنامية", nameEn: "Vietnamese coffee" },
     ],
   },
   IN: {
@@ -635,14 +668,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Kerala backwaters", nameAr: "برك كيرلا المائية", nameEn: "Kerala backwaters", booking: "guide" },
     ],
     activities: [
-      { emoji: "🛶", nameAr: "رحلة بيت عائم في كيرلا", nameEn: "Kerala houseboat cruise" },
-      { emoji: "🐘", nameAr: "زيارة محمية النمور", nameEn: "Tiger reserve safari" },
-      { emoji: "🕌", nameAr: "جولة معالم المثلث الذهبي", nameEn: "Golden Triangle heritage tour" },
+      { wikiTitle: "Kerala backwaters", emoji: "🛶", nameAr: "رحلة بيت عائم في كيرلا", nameEn: "Kerala houseboat cruise", costTier: "$$", booking: "guide" },
+      { emoji: "🐘", nameAr: "زيارة محمية النمور", nameEn: "Tiger reserve safari", costTier: "$$", booking: "official" },
+      { wikiTitle: "Golden Triangle (India)", emoji: "🕌", nameAr: "جولة معالم المثلث الذهبي", nameEn: "Golden Triangle heritage tour", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍛", nameAr: "الكاري الهندي", nameEn: "Indian curry" },
-      { emoji: "🫓", nameAr: "خبز النان", nameEn: "Naan bread" },
-      { emoji: "🍚", nameAr: "البرياني", nameEn: "Biryani" },
+      { wikiTitle: "Curry", emoji: "🍛", nameAr: "الكاري الهندي", nameEn: "Indian curry" },
+      { wikiTitle: "Naan", emoji: "🫓", nameAr: "خبز النان", nameEn: "Naan bread" },
+      { wikiTitle: "Biryani", emoji: "🍚", nameAr: "البرياني", nameEn: "Biryani" },
     ],
   },
   US: {
@@ -654,14 +687,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Walt Disney World", nameAr: "والت ديزني وورلد", nameEn: "Walt Disney World", booking: "official" },
     ],
     activities: [
-      { emoji: "🎢", nameAr: "زيارة مدن الملاهي", nameEn: "Theme park day" },
-      { emoji: "🚕", nameAr: "استكشاف مدينة نيويورك", nameEn: "Exploring New York City" },
-      { emoji: "🏞️", nameAr: "زيارة الحدائق الوطنية", nameEn: "National park road trip" },
+      { wikiTitle: "Walt Disney World", emoji: "🎢", nameAr: "زيارة مدن الملاهي", nameEn: "Theme park day", costTier: "$$$", booking: "official" },
+      { emoji: "🚕", nameAr: "استكشاف مدينة نيويورك", nameEn: "Exploring New York City", costTier: "$", booking: "free" },
+      { wikiTitle: "Grand Canyon", emoji: "🏞️", nameAr: "زيارة الحدائق الوطنية", nameEn: "National park road trip", costTier: "$$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🍔", nameAr: "البرغر الأمريكي", nameEn: "American burger" },
-      { emoji: "🍕", nameAr: "بيتزا نيويورك", nameEn: "New York-style pizza" },
-      { emoji: "🥞", nameAr: "فطور البانكيك الأمريكي", nameEn: "American pancake breakfast" },
+      { wikiTitle: "Hamburger", emoji: "🍔", nameAr: "البرغر الأمريكي", nameEn: "American burger" },
+      { wikiTitle: "New York-style pizza", emoji: "🍕", nameAr: "بيتزا نيويورك", nameEn: "New York-style pizza" },
+      { wikiTitle: "Pancake", emoji: "🥞", nameAr: "فطور البانكيك الأمريكي", nameEn: "American pancake breakfast" },
     ],
   },
   AZ: {
@@ -669,17 +702,17 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
     bestMonthsEn: "April – June, September – October",
     attractions: [
       { wikiTitle: "Flame Towers", nameAr: "أبراج اللهب", nameEn: "Flame Towers", booking: "free" },
-      { wikiTitle: "Old City, Baku", nameAr: "المدينة القديمة في باكو", nameEn: "Old City (Icherisheher)", booking: "free" },
+      { wikiTitle: "Old City (Baku)", nameAr: "المدينة القديمة في باكو", nameEn: "Old City (Icherisheher)", booking: "free" },
       { wikiTitle: "Gobustan National Park", nameAr: "حديقة غوبوستان الوطنية", nameEn: "Gobustan National Park", booking: "guide" },
     ],
     activities: [
-      { emoji: "🚡", nameAr: "التلفريك في منتجع شاهدغ", nameEn: "Shahdag ski resort cable car" },
-      { emoji: "🌋", nameAr: "زيارة براكين الطين", nameEn: "Mud volcano visit" },
-      { emoji: "🚶", nameAr: "التجول في المدينة القديمة", nameEn: "Old City walking tour" },
+      { emoji: "🚡", nameAr: "التلفريك في منتجع شاهدغ", nameEn: "Shahdag ski resort cable car", costTier: "$$", booking: "official" },
+      { wikiTitle: "Mud volcano", emoji: "🌋", nameAr: "زيارة براكين الطين", nameEn: "Mud volcano visit", costTier: "$", booking: "guide" },
+      { emoji: "🚶", nameAr: "التجول في المدينة القديمة", nameEn: "Old City walking tour", costTier: "free", booking: "free" },
     ],
     cuisine: [
       { emoji: "🍢", nameAr: "الكباب الأذربيجاني", nameEn: "Azerbaijani kebab" },
-      { emoji: "🍚", nameAr: "البلوف (بيلاف)", nameEn: "Plov (pilaf)" },
+      { wikiTitle: "Pilaf", emoji: "🍚", nameAr: "البلوف (بيلاف)", nameEn: "Plov (pilaf)" },
       { emoji: "🍵", nameAr: "الشاي الأذربيجاني", nameEn: "Azerbaijani tea culture" },
     ],
   },
@@ -692,14 +725,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Kazbegi District", nameAr: "منطقة كازبيغي", nameEn: "Kazbegi (Stepantsminda)", booking: "guide" },
     ],
     activities: [
-      { emoji: "♨️", nameAr: "الحمامات الكبريتية التقليدية", nameEn: "Traditional sulfur baths" },
-      { emoji: "🏔️", nameAr: "التنزه في جبال القوقاز", nameEn: "Caucasus mountain hiking" },
-      { emoji: "🍷", nameAr: "جولة تذوق نبيذ كاخيتي", nameEn: "Kakheti wine tasting tour" },
+      { emoji: "♨️", nameAr: "الحمامات الكبريتية التقليدية", nameEn: "Traditional sulfur baths", costTier: "$$", booking: "phone" },
+      { wikiTitle: "Caucasus Mountains", emoji: "🏔️", nameAr: "التنزه في جبال القوقاز", nameEn: "Caucasus mountain hiking", costTier: "free", booking: "free" },
+      { wikiTitle: "Kakheti", emoji: "🍷", nameAr: "جولة تذوق نبيذ كاخيتي", nameEn: "Kakheti wine tasting tour", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🥟", nameAr: "الخينكالي", nameEn: "Khinkali dumplings" },
-      { emoji: "🧀", nameAr: "خبز الخاتشابوري بالجبن", nameEn: "Khachapuri cheese bread" },
-      { emoji: "🍷", nameAr: "النبيذ الجورجي", nameEn: "Georgian wine" },
+      { wikiTitle: "Khinkali", emoji: "🥟", nameAr: "الخينكالي", nameEn: "Khinkali dumplings" },
+      { wikiTitle: "Khachapuri", emoji: "🧀", nameAr: "خبز الخاتشابوري بالجبن", nameEn: "Khachapuri cheese bread" },
+      { wikiTitle: "Georgian wine", emoji: "🍷", nameAr: "النبيذ الجورجي", nameEn: "Georgian wine" },
     ],
   },
   ZA: {
@@ -711,14 +744,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Kruger National Park", nameAr: "حديقة كروجر الوطنية", nameEn: "Kruger National Park", booking: "guide" },
     ],
     activities: [
-      { emoji: "🦁", nameAr: "رحلة سفاري لمشاهدة الحياة البرية", nameEn: "Wildlife safari" },
-      { emoji: "🚡", nameAr: "التلفريك إلى قمة جبل الطاولة", nameEn: "Table Mountain cable car" },
-      { emoji: "🍷", nameAr: "جولة تذوق نبيذ ستيلينبوش", nameEn: "Stellenbosch wine tasting" },
+      { wikiTitle: "Safari", emoji: "🦁", nameAr: "رحلة سفاري لمشاهدة الحياة البرية", nameEn: "Wildlife safari", costTier: "$$$", booking: "guide" },
+      { wikiTitle: "Table Mountain Aerial Cableway", emoji: "🚡", nameAr: "التلفريك إلى قمة جبل الطاولة", nameEn: "Table Mountain cable car", costTier: "$$", booking: "official" },
+      { wikiTitle: "Stellenbosch", emoji: "🍷", nameAr: "جولة تذوق نبيذ ستيلينبوش", nameEn: "Stellenbosch wine tasting", costTier: "$$", booking: "guide" },
     ],
     cuisine: [
-      { emoji: "🍖", nameAr: "شواء البرايي الجنوب أفريقي", nameEn: "South African braai (BBQ)" },
-      { emoji: "🥟", nameAr: "البوبوتي", nameEn: "Bobotie" },
-      { emoji: "🍷", nameAr: "نبيذ ستيلينبوش", nameEn: "Stellenbosch wine" },
+      { wikiTitle: "Braai", emoji: "🍖", nameAr: "شواء البرايي الجنوب أفريقي", nameEn: "South African braai (BBQ)" },
+      { wikiTitle: "Bobotie", emoji: "🥟", nameAr: "البوبوتي", nameEn: "Bobotie" },
+      { wikiTitle: "Stellenbosch", emoji: "🍷", nameAr: "نبيذ ستيلينبوش", nameEn: "Stellenbosch wine" },
     ],
   },
   KE: {
@@ -729,13 +762,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Nairobi National Park", nameAr: "حديقة نيروبي الوطنية", nameEn: "Nairobi National Park", booking: "official" },
     ],
     activities: [
-      { emoji: "🦓", nameAr: "رحلة سفاري لمشاهدة الهجرة الكبرى", nameEn: "Great Migration safari" },
-      { emoji: "🎈", nameAr: "رحلة منطاد فوق السافانا", nameEn: "Hot air balloon safari" },
-      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ ممباسا", nameEn: "Relaxing on Mombasa beaches" },
+      { wikiTitle: "Wildebeest migration", emoji: "🦓", nameAr: "رحلة سفاري لمشاهدة الهجرة الكبرى", nameEn: "Great Migration safari", costTier: "$$$", booking: "guide" },
+      { wikiTitle: "Hot air balloon", emoji: "🎈", nameAr: "رحلة منطاد فوق السافانا", nameEn: "Hot air balloon safari", costTier: "$$$", booking: "guide" },
+      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ ممباسا", nameEn: "Relaxing on Mombasa beaches", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍖", nameAr: "النيوما تشوما (اللحم المشوي)", nameEn: "Nyama choma (grilled meat)" },
-      { emoji: "🌽", nameAr: "الأوغالي", nameEn: "Ugali" },
+      { wikiTitle: "Nyama choma", emoji: "🍖", nameAr: "النيوما تشوما (اللحم المشوي)", nameEn: "Nyama choma (grilled meat)" },
+      { wikiTitle: "Ugali", emoji: "🌽", nameAr: "الأوغالي", nameEn: "Ugali" },
       { emoji: "☕", nameAr: "قهوة كينيا", nameEn: "Kenyan coffee" },
     ],
   },
@@ -748,14 +781,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Mexico City", nameAr: "مكسيكو سيتي", nameEn: "Mexico City", booking: "free" },
     ],
     activities: [
-      { emoji: "🏖️", nameAr: "الغطس في الحفر الطبيعية (سينوتيه)", nameEn: "Cenote snorkeling" },
-      { emoji: "🏛️", nameAr: "استكشاف أهرامات المايا", nameEn: "Mayan pyramid exploration" },
-      { emoji: "🎉", nameAr: "تجربة مهرجان يوم الموتى", nameEn: "Day of the Dead festivities" },
+      { wikiTitle: "Cenote", emoji: "🏖️", nameAr: "الغطس في الحفر الطبيعية (سينوتيه)", nameEn: "Cenote snorkeling", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Chichen Itza", emoji: "🏛️", nameAr: "استكشاف أهرامات المايا", nameEn: "Mayan pyramid exploration", costTier: "$$", booking: "official" },
+      { wikiTitle: "Day of the Dead", emoji: "🎉", nameAr: "تجربة مهرجان يوم الموتى", nameEn: "Day of the Dead festivities", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🌮", nameAr: "التاكو المكسيكي", nameEn: "Mexican tacos" },
-      { emoji: "🫓", nameAr: "الغواكامولي", nameEn: "Guacamole" },
-      { emoji: "🌶️", nameAr: "صلصة المولي", nameEn: "Mole sauce" },
+      { wikiTitle: "Taco", emoji: "🌮", nameAr: "التاكو المكسيكي", nameEn: "Mexican tacos" },
+      { wikiTitle: "Guacamole", emoji: "🫓", nameAr: "الغواكامولي", nameEn: "Guacamole" },
+      { wikiTitle: "Mole (sauce)", emoji: "🌶️", nameAr: "صلصة المولي", nameEn: "Mole sauce" },
     ],
   },
   BR: {
@@ -767,14 +800,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Copacabana Beach", nameAr: "شاطئ كوباكابانا", nameEn: "Copacabana Beach", booking: "free" },
     ],
     activities: [
-      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ ريو", nameEn: "Rio de Janeiro beach time" },
-      { emoji: "💃", nameAr: "حضور عرض سامبا", nameEn: "Samba show" },
-      { emoji: "🚡", nameAr: "التلفريك إلى قمة السكر", nameEn: "Sugarloaf Mountain cable car" },
+      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ ريو", nameEn: "Rio de Janeiro beach time", costTier: "free", booking: "free" },
+      { wikiTitle: "Samba", emoji: "💃", nameAr: "حضور عرض سامبا", nameEn: "Samba show", costTier: "$$", booking: "official" },
+      { wikiTitle: "Sugarloaf Mountain", emoji: "🚡", nameAr: "التلفريك إلى قمة السكر", nameEn: "Sugarloaf Mountain cable car", costTier: "$$", booking: "official" },
     ],
     cuisine: [
-      { emoji: "🥩", nameAr: "الشوربراسكو البرازيلي", nameEn: "Brazilian churrasco (BBQ)" },
-      { emoji: "🍲", nameAr: "الفيجوادا", nameEn: "Feijoada" },
-      { emoji: "🍹", nameAr: "الكايبيرينيا", nameEn: "Caipirinha" },
+      { wikiTitle: "Churrasco", emoji: "🥩", nameAr: "الشوربراسكو البرازيلي", nameEn: "Brazilian churrasco (BBQ)" },
+      { wikiTitle: "Feijoada", emoji: "🍲", nameAr: "الفيجوادا", nameEn: "Feijoada" },
+      { wikiTitle: "Caipirinha", emoji: "🍹", nameAr: "الكايبيرينيا", nameEn: "Caipirinha" },
     ],
   },
   AU: {
@@ -786,9 +819,9 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Uluru", nameAr: "صخرة أولورو", nameEn: "Uluru", booking: "official" },
     ],
     activities: [
-      { emoji: "🤿", nameAr: "الغطس في الحاجز المرجاني", nameEn: "Great Barrier Reef diving" },
-      { emoji: "🏄", nameAr: "ركوب الأمواج في بوندي بيتش", nameEn: "Surfing at Bondi Beach" },
-      { emoji: "🦘", nameAr: "زيارة محمية الحياة البرية", nameEn: "Wildlife sanctuary visit" },
+      { wikiTitle: "Great Barrier Reef", emoji: "🤿", nameAr: "الغطس في الحاجز المرجاني", nameEn: "Great Barrier Reef diving", costTier: "$$$", booking: "guide" },
+      { wikiTitle: "Bondi Beach", emoji: "🏄", nameAr: "ركوب الأمواج في بوندي بيتش", nameEn: "Surfing at Bondi Beach", costTier: "$$", booking: "guide" },
+      { emoji: "🦘", nameAr: "زيارة محمية الحياة البرية", nameEn: "Wildlife sanctuary visit", costTier: "$$", booking: "official" },
     ],
     cuisine: [
       { emoji: "🥧", nameAr: "فطيرة اللحم الأسترالية", nameEn: "Australian meat pie" },
@@ -805,14 +838,14 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Amphitheatre of El Jem", nameAr: "مدرج الجم", nameEn: "Amphitheatre of El Jem", booking: "official" },
     ],
     activities: [
-      { emoji: "🏜️", nameAr: "رحلة صحراوية إلى الصحراء الكبرى", nameEn: "Sahara desert excursion" },
-      { emoji: "🏖️", nameAr: "الاسترخاء في شواطئ الحمامات", nameEn: "Relaxing in Hammamet" },
-      { emoji: "🛍️", nameAr: "التسوق في أسواق تونس القديمة", nameEn: "Shopping the Tunis medina" },
+      { wikiTitle: "Sahara", emoji: "🏜️", nameAr: "رحلة صحراوية إلى الصحراء الكبرى", nameEn: "Sahara desert excursion", costTier: "$$", booking: "guide" },
+      { wikiTitle: "Hammamet", emoji: "🏖️", nameAr: "الاسترخاء في شواطئ الحمامات", nameEn: "Relaxing in Hammamet", costTier: "free", booking: "free" },
+      { emoji: "🛍️", nameAr: "التسوق في أسواق تونس القديمة", nameEn: "Shopping the Tunis medina", costTier: "free", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🍲", nameAr: "الكسكسي التونسي", nameEn: "Tunisian couscous" },
-      { emoji: "🌶️", nameAr: "الهريسة", nameEn: "Harissa" },
-      { emoji: "🥙", nameAr: "البريك", nameEn: "Brik" },
+      { wikiTitle: "Couscous", emoji: "🍲", nameAr: "الكسكسي التونسي", nameEn: "Tunisian couscous" },
+      { wikiTitle: "Harissa", emoji: "🌶️", nameAr: "الهريسة", nameEn: "Harissa" },
+      { wikiTitle: "Brik", emoji: "🥙", nameAr: "البريك", nameEn: "Brik" },
     ],
   },
   LB: {
@@ -824,13 +857,13 @@ export const COUNTRY_GUIDES: Record<string, CountryGuide> = {
       { wikiTitle: "Beirut", nameAr: "وسط بيروت", nameEn: "Beirut", booking: "free" },
     ],
     activities: [
-      { emoji: "⛷️", nameAr: "التزلج في جبال لبنان", nameEn: "Skiing in the Lebanese mountains" },
-      { emoji: "🍷", nameAr: "جولة تذوق نبيذ وادي البقاع", nameEn: "Bekaa Valley wine tasting" },
-      { emoji: "🌃", nameAr: "السهر في شارع الحمرا", nameEn: "Nightlife on Hamra Street" },
+      { wikiTitle: "Skiing", emoji: "⛷️", nameAr: "التزلج في جبال لبنان", nameEn: "Skiing in the Lebanese mountains", costTier: "$$", booking: "official" },
+      { wikiTitle: "Bekaa Valley", emoji: "🍷", nameAr: "جولة تذوق نبيذ وادي البقاع", nameEn: "Bekaa Valley wine tasting", costTier: "$$", booking: "guide" },
+      { emoji: "🌃", nameAr: "السهر في شارع الحمرا", nameEn: "Nightlife on Hamra Street", costTier: "$$", booking: "free" },
     ],
     cuisine: [
-      { emoji: "🥙", nameAr: "المقبلات اللبنانية (مازة)", nameEn: "Lebanese mezze" },
-      { emoji: "🧆", nameAr: "الفلافل والحمص", nameEn: "Falafel & hummus" },
+      { wikiTitle: "Mezze", emoji: "🥙", nameAr: "المقبلات اللبنانية (مازة)", nameEn: "Lebanese mezze" },
+      { wikiTitle: "Falafel", emoji: "🧆", nameAr: "الفلافل والحمص", nameEn: "Falafel & hummus" },
       { emoji: "🍢", nameAr: "الكباب اللبناني", nameEn: "Lebanese kebab" },
     ],
   },

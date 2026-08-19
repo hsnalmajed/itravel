@@ -25,7 +25,10 @@ async function suggestForDestination(
     origin: params.origin,
     destination: destination.code,
     departDate: params.departDate,
-    returnDate: addDays(params.departDate, nights),
+    // A one-way discover search prices only the outbound flight — the
+    // hotel stay length still comes from `nights` (entered directly by the
+    // user when there's no return date to derive it from).
+    returnDate: params.oneWayOnly ? undefined : addDays(params.departDate, nights),
     adults: params.adults,
     budgetTotal: params.budgetTotal,
     currency: params.currency,
@@ -83,6 +86,7 @@ export async function POST(req: NextRequest) {
     directFlightsOnly: Boolean(body.directFlightsOnly),
     minHotelStars: Number(body.minHotelStars || 0),
     multiDestination: Boolean(body.multiDestination),
+    oneWayOnly: Boolean(body.oneWayOnly),
     baggageIncluded: Boolean(body.baggageIncluded),
     breakfastIncluded: Boolean(body.breakfastIncluded),
     childrenAges: Array.isArray(body.childrenAges) ? body.childrenAges.map(Number).filter(Number.isFinite) : [],

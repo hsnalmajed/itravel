@@ -120,6 +120,7 @@ export interface DiscoverParams {
   directFlightsOnly: boolean;
   minHotelStars: number;
   multiDestination: boolean;
+  oneWayOnly?: boolean;
   baggageIncluded?: boolean;
   breakfastIncluded?: boolean;
   childrenAges?: number[];

@@ -8,7 +8,7 @@ export default function Footer({ locale }: { locale: Locale }) {
 
   return (
     <footer className="mt-16 bg-brand-950">
-      <div className="h-1 bg-gradient-to-r from-accent-500 via-brand-400 to-accent-500" />
+      <div className="h-[3px] bg-accent-500" />
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 text-sm text-white/60">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 pb-6 border-b border-white/10">
           <div className="max-w-md space-y-2">

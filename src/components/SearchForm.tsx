@@ -273,44 +273,36 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             </div>
 
             {showHotelFields && (
-              <div>
-                <label className={labelClass}>{dict.form.minStars}</label>
-                <select
-                  className={inputClass}
-                  value={minStars}
-                  onChange={(e) => setMinStars(Number(e.target.value))}
-                >
-                  <option value={0}>{dict.form.anyStars}</option>
-                  {[2, 3, 4, 5].map((s) => (
-                    <option key={s} value={s}>
-                      {"★".repeat(s)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {showHotelFields && (
-              <div className="sm:col-span-2">
-                <label className={labelClass}>{dict.roomType.label}</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRoomType("")}
-                    className={segmentClass(roomType === "")}
+              <div className="sm:col-span-2 grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>{dict.form.minStars}</label>
+                  <select
+                    className={inputClass}
+                    value={minStars}
+                    onChange={(e) => setMinStars(Number(e.target.value))}
                   >
-                    {dict.roomType.any}
-                  </button>
-                  {ROOM_TYPE_OPTIONS.map((rt) => (
-                    <button
-                      type="button"
-                      key={rt}
-                      onClick={() => setRoomType(rt)}
-                      className={segmentClass(roomType === rt)}
-                    >
-                      {dict.roomType[rt]}
-                    </button>
-                  ))}
+                    <option value={0}>{dict.form.anyStars}</option>
+                    {[2, 3, 4, 5].map((s) => (
+                      <option key={s} value={s}>
+                        {"★".repeat(s)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>{dict.roomType.label}</label>
+                  <select
+                    className={inputClass}
+                    value={roomType}
+                    onChange={(e) => setRoomType(e.target.value as RoomType | "")}
+                  >
+                    <option value="">{dict.roomType.any}</option>
+                    {ROOM_TYPE_OPTIONS.map((rt) => (
+                      <option key={rt} value={rt}>
+                        {dict.roomType[rt]}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}

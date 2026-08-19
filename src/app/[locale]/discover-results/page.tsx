@@ -37,6 +37,7 @@ function DiscoverResultsContent() {
   const minStars = sp.get("minStars") || "0";
   const roomType = (sp.get("roomType") || undefined) as RoomType | undefined;
   const multiDestination = sp.get("multiDestination") === "true";
+  const oneWayOnly = sp.get("oneWayOnly") === "true";
   const baggageIncluded = sp.get("baggageIncluded") === "true";
   const breakfastIncluded = sp.get("breakfastIncluded") === "true";
   const preferenceCategory = (sp.get("preferenceCategory") || undefined) as DestinationCategory | undefined;
@@ -72,6 +73,7 @@ function DiscoverResultsContent() {
         minHotelStars: Number(minStars),
         roomType,
         multiDestination,
+        oneWayOnly,
         baggageIncluded,
         breakfastIncluded,
         preferenceCategory,
@@ -102,6 +104,7 @@ function DiscoverResultsContent() {
     minStars,
     roomType,
     multiDestination,
+    oneWayOnly,
     baggageIncluded,
     breakfastIncluded,
     preferenceCategory,

@@ -6,7 +6,9 @@ import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
-import AttractionsMap, { type MapPin } from "@/components/AttractionsMap";
+import { buildLegend, pinsAroundCities, type MapPin } from "@/lib/mapPins";
+import { PIN_STYLES } from "@/lib/pinStyles";
+import AttractionsMap from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
 
 export const dynamic = "force-dynamic";
@@ -22,16 +24,28 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
   const guide = COUNTRY_GUIDES[country.code];
   if (!guide) notFound();
 
+  const countryName = loc === "ar" ? country.nameAr : country.nameEn;
+  const cities = COUNTRY_CITIES[country.code] ?? [];
+
   const landmarkTitles = guide.attractions.map((a) => a.wikiTitle);
   const activityTitles = guide.activities
     .map((a) => a.wikiTitle)
     .filter((t): t is string => Boolean(t));
-  const summaries = await fetchWikiSummaries([...landmarkTitles, ...activityTitles]);
+
+  // The country map is built from two sources at once, fetched together:
+  //   1. the hand-written guide, whose entries carry proper Arabic names and
+  //      a photo we've already looked up;
+  //   2. every documented place around each of the country's tourist cities,
+  //      which is what turns a handful of pins into hundreds.
+  const [summaries, cityPins] = await Promise.all([
+    fetchWikiSummaries([...landmarkTitles, ...activityTitles]),
+    pinsAroundCities(cities),
+  ]);
 
   // Only places Wikipedia actually gives coordinates for get a pin. An
   // approximate or guessed position would be worse than no pin at all.
-  const pins: MapPin[] = [
-    ...guide.attractions.map((a) => ({ entry: a, category: "attraction" as const, title: a.wikiTitle })),
+  const guidePins: MapPin[] = [
+    ...guide.attractions.map((a) => ({ entry: a, category: "historic" as const, title: a.wikiTitle })),
     ...guide.activities
       .filter((a) => a.wikiTitle)
       .map((a) => ({ entry: a, category: "activity" as const, title: a.wikiTitle as string })),
@@ -52,8 +66,20 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
     })
     .filter((p): p is MapPin => p !== null);
 
-  const countryName = loc === "ar" ? country.nameAr : country.nameEn;
-  const cities = COUNTRY_CITIES[country.code] ?? [];
+  // A curated landmark usually also turns up in its city's GeoSearch. The
+  // guide's version wins, because it has the Arabic name and the photo.
+  const guideTitles = new Set(guidePins.map((p) => p.nameEn));
+  const pins: MapPin[] = [
+    ...guidePins,
+    ...cityPins.filter((p) => !guideTitles.has(p.nameEn)),
+  ];
+
+  const legend = buildLegend(pins, {
+    historic: dict.maps.legendHistoric,
+    food: dict.maps.legendFood,
+    activity: dict.maps.legendCityActivity,
+    place: dict.maps.legendPlace,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -70,19 +96,25 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
           <span className="text-2xl leading-none">{flagEmoji(country.code)}</span>
           {dict.maps.countryMapTitle.replace("{country}", countryName)}
         </h1>
-        {pins.length > 0 && (
-          <div className="flex items-center gap-3 text-xs font-semibold">
-            <span className="inline-flex items-center gap-1.5 text-gray-600">
-              <span className="inline-block h-3 w-3 rounded-full bg-[#0f5132]" aria-hidden="true" />
-              {dict.maps.legendAttractions}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-gray-600">
-              <span className="inline-block h-3 w-3 rounded-full bg-[#c2410c]" aria-hidden="true" />
-              {dict.maps.legendActivities}
-            </span>
-          </div>
-        )}
       </div>
+
+      {legend.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {legend.map((l) => (
+            <span key={l.category} className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600">
+              <span
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px]"
+                style={{ backgroundColor: PIN_STYLES[l.category].color }}
+                aria-hidden="true"
+              >
+                {PIN_STYLES[l.category].glyph}
+              </span>
+              {l.label}
+              <span className="font-normal text-gray-400">({l.count})</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {pins.length === 0 ? (
         <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-5 text-sm text-amber-800 leading-relaxed">

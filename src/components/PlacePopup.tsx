@@ -64,11 +64,9 @@ export default function PlacePopup({
   }, [pin.wikiTitle, loaded]);
 
   const LABELS: Record<typeof pin.category, string> = {
-    attraction: dict.attractionsHeading,
-    activity: dict.activitiesHeading,
     historic: dict.historicHeading,
     food: dict.foodHeading,
-    cityActivity: dict.activitiesHeading,
+    activity: dict.activitiesHeading,
     place: dict.nearbyHeading,
   };
   const label = LABELS[pin.category];

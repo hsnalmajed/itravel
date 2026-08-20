@@ -8,25 +8,10 @@ import "leaflet/dist/leaflet.css";
 import type { Locale } from "@/lib/types";
 import PlacePopup from "@/components/PlacePopup";
 import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
+import type { MapPin } from "@/lib/mapPins";
 
 export type { PinCategory } from "@/lib/pinStyles";
-
-export interface MapPin {
-  key: string;
-  nameAr: string;
-  nameEn: string;
-  lat: number;
-  lon: number;
-  photo?: string;
-  extract?: string;
-  category: PinCategory;
-  /**
-   * Wikipedia article title. Present on pins discovered by GeoSearch, where
-   * we deliberately don't pre-fetch a photo for every one of several hundred
-   * places — the popup loads it on demand instead.
-   */
-  wikiTitle?: string;
-}
+export type { MapPin } from "@/lib/mapPins";
 
 interface MapDict {
   attractionsHeading: string;

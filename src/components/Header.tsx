@@ -14,6 +14,7 @@ export default function Header({ locale }: { locale: Locale }) {
   const navLinks = [
     { href: `/${locale}`, label: dict.nav.home },
     { href: `/${locale}/attractions`, label: dict.nav.attractions },
+    { href: `/${locale}/maps`, label: dict.nav.maps },
     { href: `/${locale}/itinerary`, label: dict.nav.itinerary },
   ];
 

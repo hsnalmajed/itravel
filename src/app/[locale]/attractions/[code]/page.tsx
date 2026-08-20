@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
-import { COUNTRY_GUIDES } from "@/lib/countryGuides";
+import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
 import { fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
 
@@ -31,6 +31,14 @@ export default async function CountryAttractionsPage({
     fetchWikiSummaries([...landmarkTitles, ...activityTitles, ...cuisineTitles]),
   ]);
 
+  // Real bookable items (official tickets / guided tours) get a genuine
+  // outbound link to search results on an actual global tour marketplace —
+  // the visitor books directly there, iTravel is never in that flow. Items
+  // that are free or arranged by phone/on arrival have nothing to "book"
+  // through a third party, so they get no link.
+  const bookableViator = (nameEn: string, booking: string) =>
+    booking === "official" || booking === "guide" ? viatorSearchUrl(`${nameEn} ${country.nameEn}`) : undefined;
+
   const attractionItems: GuideItem[] = (guide?.attractions ?? []).map((landmark) => {
     const summary = summaries.get(landmark.wikiTitle);
     return {
@@ -40,6 +48,7 @@ export default async function CountryAttractionsPage({
       photo: summary?.thumbnail,
       extract: summary?.extract,
       booking: landmark.booking,
+      bookingUrl: bookableViator(landmark.nameEn, landmark.booking),
     };
   });
 
@@ -54,6 +63,7 @@ export default async function CountryAttractionsPage({
       extract: summary?.extract,
       booking: activity.booking,
       costTier: activity.costTier,
+      bookingUrl: bookableViator(activity.nameEn, activity.booking),
     };
   });
 

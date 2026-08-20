@@ -7,16 +7,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Locale } from "@/lib/types";
 import PlacePopup from "@/components/PlacePopup";
+import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
 
-export type PinCategory =
-  // From the curated country guide.
-  | "attraction"
-  | "activity"
-  // Discovered on a city map, sorted by what Wikipedia says the place is.
-  | "historic"
-  | "food"
-  | "cityActivity"
-  | "place";
+export type { PinCategory } from "@/lib/pinStyles";
 
 export interface MapPin {
   key: string;
@@ -49,17 +42,6 @@ interface MapDict {
 // Leaflet's default marker icons are resolved from relative image paths that
 // don't survive bundling, so we draw the pin ourselves.
 //
-// Each kind of place gets its own colour *and* its own glyph — colour alone
-// would leave the categories indistinguishable to anyone with colour vision
-// deficiency, and unreadable in a printed screenshot.
-export const PIN_STYLES: Record<PinCategory, { color: string; glyph: string }> = {
-  attraction: { color: "#0f5132", glyph: "🏛" },
-  activity: { color: "#c2410c", glyph: "🎟" },
-  historic: { color: "#0f5132", glyph: "🏛" },
-  food: { color: "#b91c1c", glyph: "🍽" },
-  cityActivity: { color: "#c2410c", glyph: "🎟" },
-  place: { color: "#1e50a2", glyph: "📍" },
-};
 
 function pinIcon(category: PinCategory) {
   const { color, glyph } = PIN_STYLES[category];

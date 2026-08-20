@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Locale } from "@/lib/types";
 import type { BookingKind, CostTier } from "@/lib/countryGuides";
-import { BOOKING_HINTS, BOOKING_SHORT_LABELS, COST_TIER_LABELS } from "@/lib/countryGuides";
+import { BOOKING_HINTS, BOOKING_SHORT_LABELS, COST_TIER_ESTIMATE, COST_TIER_ESTIMATE_SHORT } from "@/lib/countryGuides";
 
 export interface GuideItem {
   key: string;
@@ -14,6 +14,7 @@ export interface GuideItem {
   extract?: string;
   booking?: BookingKind;
   costTier?: CostTier;
+  bookingUrl?: string;
 }
 
 type CategoryKey = "attractions" | "activities" | "cuisine";
@@ -35,6 +36,8 @@ interface ExplorerDict {
   tagActivity: string;
   tagCuisine: string;
   backToList: string;
+  bookNow: string;
+  bookingExternalNote: string;
 }
 
 // Styled after the TripAdvisor app's own destination page: a strip of tabs
@@ -140,9 +143,12 @@ export default function CountryGuideExplorer({
           )}
 
           {selected.costTier && (
-            <div className="mt-4 flex items-center justify-between rounded-xl bg-accent-50 ring-1 ring-accent-100 px-4 py-3.5">
-              <span className="text-sm font-semibold text-accent-900">{dict.cost}</span>
-              <span className="text-sm font-bold text-accent-800">{COST_TIER_LABELS[selected.costTier][locale]}</span>
+            <div className="mt-4 flex items-center gap-3 rounded-xl bg-accent-50 ring-1 ring-accent-100 px-4 py-3.5">
+              <span className="text-2xl leading-none" aria-hidden="true">🏷️</span>
+              <div>
+                <p className="text-xs font-semibold text-accent-700">{dict.cost}</p>
+                <p className="text-sm font-bold text-accent-900">{COST_TIER_ESTIMATE[selected.costTier][locale]}</p>
+              </div>
             </div>
           )}
 
@@ -150,6 +156,20 @@ export default function CountryGuideExplorer({
             <div className="mt-3 rounded-xl bg-brand-50 ring-1 ring-brand-100 px-4 py-3.5">
               <p className="text-sm font-semibold text-brand-900 mb-1">{dict.howToBook}</p>
               <p className="text-sm text-brand-800 leading-relaxed">{BOOKING_HINTS[selected.booking][locale]}</p>
+            </div>
+          )}
+
+          {selected.bookingUrl && (
+            <div className="mt-3">
+              <a
+                href={selected.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-700 to-brand-900 px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5"
+              >
+                🎟️ {dict.bookNow}
+              </a>
+              <p className="mt-1.5 text-center text-xs text-gray-400 leading-relaxed">{dict.bookingExternalNote}</p>
             </div>
           )}
 
@@ -164,11 +184,18 @@ export default function CountryGuideExplorer({
           )}
           <div className="flex flex-col gap-3">
             {category.items.map((item, i) => (
-              <button
+              <div
                 key={item.key}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelected(item)}
-                className="flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 text-start transition hover:shadow-md hover:ring-brand-200"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(item);
+                  }
+                }}
+                className="flex items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 text-start transition hover:shadow-md hover:ring-brand-200 cursor-pointer"
               >
                 <div className="relative w-28 sm:w-36 min-h-28 shrink-0">
                   {item.photo ? (
@@ -198,10 +225,10 @@ export default function CountryGuideExplorer({
                     <p className="mt-1.5 text-sm text-gray-500 leading-snug line-clamp-2">{item.extract}</p>
                   )}
                   {(item.costTier || item.booking) && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       {item.costTier && (
-                        <span className="text-[11px] font-semibold text-accent-800 bg-accent-50 rounded-full px-2 py-0.5">
-                          {COST_TIER_LABELS[item.costTier][locale]}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent-800 bg-accent-50 rounded-full px-2 py-0.5">
+                          <span aria-hidden="true">🏷️</span> {COST_TIER_ESTIMATE_SHORT[item.costTier][locale]}
                         </span>
                       )}
                       {item.booking && (
@@ -209,10 +236,21 @@ export default function CountryGuideExplorer({
                           {BOOKING_SHORT_LABELS[item.booking][locale]}
                         </span>
                       )}
+                      {item.bookingUrl && (
+                        <a
+                          href={item.bookingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow sponsored"
+                          onClick={(e) => e.stopPropagation()}
+                          className="ms-auto inline-flex items-center gap-1 text-[11px] font-bold text-white bg-gradient-to-r from-brand-700 to-brand-900 rounded-full px-2.5 py-1 transition hover:shadow-sm hover:-translate-y-0.5"
+                        >
+                          🎟️ {dict.bookNow}
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

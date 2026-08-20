@@ -10,9 +10,14 @@ import DiscoverForm from "@/components/DiscoverForm";
 export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
   const sp = useSearchParams();
-  // "Edit search" links from the discover-results page set mode=discover so
-  // the right form (with its own fields pre-filled) opens by default.
-  const [mode, setMode] = useState<"known" | "discover">(sp.get("mode") === "discover" ? "discover" : "known");
+  // "Edit search" links from the results pages always set mode=known or
+  // mode=discover explicitly, so returning to edit a previous search opens
+  // the right form right away, pre-filled. On a fresh visit there's no mode
+  // param at all — nothing has actually been chosen yet, so neither form
+  // (and none of their fields, like the flight/hotel type buttons) should
+  // render until the visitor picks one of the two cards below.
+  const initialMode = sp.get("mode") === "discover" ? "discover" : sp.get("mode") === "known" ? "known" : null;
+  const [mode, setMode] = useState<"known" | "discover" | null>(initialMode);
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -73,7 +78,16 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
         </button>
       </div>
 
-      {mode === "known" ? <SearchForm locale={locale} /> : <DiscoverForm locale={locale} />}
+      {mode === "known" && <SearchForm locale={locale} />}
+      {mode === "discover" && <DiscoverForm locale={locale} />}
+      {mode === null && (
+        // Self-contained opaque pill, not a plain text color — this sits
+        // right across the hero/white-page seam (see the note on the mode
+        // cards above), so it can't assume what's behind it either.
+        <p className="mx-auto w-fit rounded-full bg-white/95 px-4 py-2 text-center text-sm font-semibold text-gray-500 shadow-sm ring-1 ring-black/5">
+          {dict.modeSelect.chooseModeFirst}
+        </p>
+      )}
     </div>
   );
 }

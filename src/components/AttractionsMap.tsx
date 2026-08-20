@@ -22,6 +22,8 @@ export default function AttractionsMap(props: {
   dict: {
     attractionsHeading: string;
     activitiesHeading: string;
+    nearbyHeading: string;
+    readMore: string;
     viewTours: string;
     mapAttribution: string;
   };

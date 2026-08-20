@@ -6,6 +6,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Locale } from "@/lib/types";
+import PlacePopup from "@/components/PlacePopup";
 
 export interface MapPin {
   key: string;
@@ -15,12 +16,20 @@ export interface MapPin {
   lon: number;
   photo?: string;
   extract?: string;
-  category: "attraction" | "activity";
+  category: "attraction" | "activity" | "nearby";
+  /**
+   * Wikipedia article title. Present on pins discovered by GeoSearch, where
+   * we deliberately don't pre-fetch a photo for every one of several hundred
+   * places — the popup loads it on demand instead.
+   */
+  wikiTitle?: string;
 }
 
 interface MapDict {
   attractionsHeading: string;
   activitiesHeading: string;
+  nearbyHeading: string;
+  readMore: string;
   viewTours: string;
   mapAttribution: string;
 }
@@ -29,18 +38,27 @@ interface MapDict {
 // don't survive bundling, so we draw the pin ourselves. Doing it this way
 // also lets attractions and activities read differently at a glance without
 // shipping two image assets.
+const PIN_COLORS: Record<MapPin["category"], string> = {
+  activity: "#c2410c",
+  attraction: "#0f5132",
+  // Discovered places are the bulk of a city map, so they get a quieter
+  // colour and a smaller pin — the curated highlights stay dominant.
+  nearby: "#1e50a2",
+};
+
 function pinIcon(category: MapPin["category"]) {
-  const color = category === "activity" ? "#c2410c" : "#0f5132";
+  const color = PIN_COLORS[category];
+  const size = category === "nearby" ? 18 : 26;
   return L.divIcon({
     className: "",
     html: `<span style="
-      display:block;width:26px;height:26px;border-radius:50% 50% 50% 0;
+      display:block;width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;
       background:${color};transform:rotate(-45deg);
       border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);
     "></span>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 26],
-    popupAnchor: [0, -26],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
   });
 }
 
@@ -85,26 +103,8 @@ export default function MapCanvas({
         {pins.map((pin) => (
           <Marker key={pin.key} position={[pin.lat, pin.lon]} icon={pinIcon(pin.category)}>
             <Popup>
-              <div className="w-56" dir={locale === "ar" ? "rtl" : "ltr"}>
-                {pin.photo && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={pin.photo}
-                    alt=""
-                    className="mb-2 h-24 w-full rounded-lg object-cover"
-                  />
-                )}
-                <p className="text-[11px] font-semibold text-gray-400">
-                  {pin.category === "activity" ? dict.activitiesHeading : dict.attractionsHeading}
-                </p>
-                <p className="font-bold text-gray-900 leading-snug">
-                  {locale === "ar" ? pin.nameAr : pin.nameEn}
-                </p>
-                {pin.extract && (
-                  <p className="mt-1 text-xs text-gray-500 leading-snug line-clamp-3" dir="ltr">
-                    {pin.extract}
-                  </p>
-                )}
+              <div>
+                <PlacePopup pin={pin} locale={locale} dict={dict} />
                 <Link
                   href={`/${locale}/attractions/${countryCode}`}
                   className="mt-2 block rounded-lg bg-brand-800 px-3 py-1.5 text-center text-xs font-bold text-white no-underline"

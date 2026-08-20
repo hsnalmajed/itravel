@@ -6,7 +6,7 @@ import { findCountry, flagEmoji } from "@/lib/countries";
 import { findCity } from "@/lib/cities";
 import { fetchDescriptions, fetchNearbyPlaces, fetchWikiSummary } from "@/lib/wikipedia";
 import { categorisePlace } from "@/lib/placeCategory";
-import { PIN_STYLES, type PinCategory } from "@/components/MapCanvas";
+import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
 import AttractionsMap, { type MapPin } from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
 

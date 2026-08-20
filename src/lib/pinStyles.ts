@@ -6,24 +6,26 @@
 // server bundle and crash the request. Keeping them in a plain module with no
 // browser dependencies lets both sides share one definition.
 
+// The four kinds of place a traveller cares about telling apart on a map.
+// These are the same four buckets `categorisePlace` sorts a Wikipedia
+// description into, so a place's category never has to be translated between
+// vocabularies on its way to a pin.
 export type PinCategory =
-  // From the curated country guide.
-  | "attraction"
-  | "activity"
-  // Discovered on a city map, sorted by what Wikipedia says the place is.
+  /** Landmarks, museums, mosques, palaces, ruins. */
   | "historic"
+  /** Restaurants, cafés, bakeries. */
   | "food"
-  | "cityActivity"
+  /** Parks, markets, beaches, theatres, hammams. */
+  | "activity"
+  /** Documented, but not confidently any of the above. */
   | "place";
 
 // Each kind of place gets its own colour *and* its own glyph — colour alone
 // would leave the categories indistinguishable to anyone with colour vision
 // deficiency, and unreadable in a printed screenshot.
 export const PIN_STYLES: Record<PinCategory, { color: string; glyph: string }> = {
-  attraction: { color: "#0f5132", glyph: "🏛" },
-  activity: { color: "#c2410c", glyph: "🎟" },
   historic: { color: "#0f5132", glyph: "🏛" },
   food: { color: "#b91c1c", glyph: "🍽" },
-  cityActivity: { color: "#c2410c", glyph: "🎟" },
+  activity: { color: "#c2410c", glyph: "🎟" },
   place: { color: "#1e50a2", glyph: "📍" },
 };

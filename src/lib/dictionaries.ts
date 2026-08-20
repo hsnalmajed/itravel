@@ -63,6 +63,7 @@ export const dictionaries = {
       knownSubtitle: "أعرف إلى أين أريد السفر، أبحث عن أفضل رحلة وفندق ضمن ميزانيتي",
       discoverTitle: "اقترح لي وجهة ضمن ميزانيتي",
       discoverSubtitle: "لم أحدد وجهة بعد — أخبرني بما يناسب ميزانيتي من الوجهات",
+      chooseModeFirst: "اختر أحد الخيارين أعلاه للمتابعة",
     },
     home: {
       stepsEyebrow: "كيف يعمل iTravel",
@@ -214,6 +215,9 @@ export const dictionaries = {
       title: "المعالم السياحية",
       subtitle: "اختر دولة لاستكشاف أبرز معالمها وأنشطتها ومأكولاتها",
       searchPlaceholder: "ابحث عن دولة...",
+      featuredTitle: "وجهات مميزة",
+      featuredSubtitle: "دليل مفصّل بالمعالم والأنشطة والمطاعم — بالصور والوصف والسعر التقريبي",
+      moreDestinations: "جميع الدول",
       continents: {
         africa: "أفريقيا",
         asia: "آسيا",
@@ -243,6 +247,8 @@ export const dictionaries = {
       tagActivity: "نشاط سياحي",
       tagCuisine: "طبق محلي",
       backToList: "رجوع للقائمة",
+      bookNow: "احجز الآن",
+      bookingExternalNote: "الحجز والدفع يتمّان مباشرة عبر الموقع، خارج iTravel.",
     },
     footer: {
       disclaimer:
@@ -314,6 +320,7 @@ export const dictionaries = {
       knownSubtitle: "I know where I want to go — find the best flight and hotel within my budget",
       discoverTitle: "Suggest a destination within my budget",
       discoverSubtitle: "I haven't picked a destination yet — show me what fits my budget",
+      chooseModeFirst: "Choose one of the options above to continue",
     },
     home: {
       stepsEyebrow: "How iTravel works",
@@ -468,6 +475,9 @@ export const dictionaries = {
       title: "Tourist Attractions",
       subtitle: "Pick a country to explore its top attractions, activities, and local cuisine",
       searchPlaceholder: "Search for a country...",
+      featuredTitle: "Featured destinations",
+      featuredSubtitle: "A detailed guide with attractions, activities, and restaurants — photos, descriptions, and an approximate price",
+      moreDestinations: "All countries",
       continents: {
         africa: "Africa",
         asia: "Asia",
@@ -497,6 +507,8 @@ export const dictionaries = {
       tagActivity: "Activity",
       tagCuisine: "Local dish",
       backToList: "Back to list",
+      bookNow: "Book now",
+      bookingExternalNote: "Booking and payment happen directly on that site, outside iTravel.",
     },
     footer: {
       disclaimer:

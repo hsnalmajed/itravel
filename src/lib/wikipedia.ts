@@ -12,6 +12,12 @@ export interface WikiSummary {
   extract: string;
   thumbnail?: string;
   wikipediaUrl?: string;
+  // Real coordinates for places that have them. Wikipedia already returns
+  // these in the same summary payload we fetch for the photo and blurb, so
+  // the maps feature costs no extra requests — and the position of a pin is
+  // as verifiable as everything else we show.
+  lat?: number;
+  lon?: number;
 }
 
 // Cloudflare Workers reuse isolates across some requests, so this in-memory
@@ -43,6 +49,7 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
       thumbnail?: { source?: string };
       originalimage?: { source?: string };
       content_urls?: { desktop?: { page?: string } };
+      coordinates?: { lat?: number; lon?: number };
       type?: string;
     };
     if (data.type === "disambiguation") {
@@ -54,6 +61,8 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
       extract: data.extract || "",
       thumbnail: data.originalimage?.source || data.thumbnail?.source,
       wikipediaUrl: data.content_urls?.desktop?.page,
+      lat: typeof data.coordinates?.lat === "number" ? data.coordinates.lat : undefined,
+      lon: typeof data.coordinates?.lon === "number" ? data.coordinates.lon : undefined,
     };
     summaryCache.set(title, summary);
     return summary;

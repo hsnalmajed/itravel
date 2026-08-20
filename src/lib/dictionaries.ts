@@ -26,6 +26,13 @@ export const dictionaries = {
       noPins:
         "لا تتوفر إحداثيات دقيقة لمعالم هذه الدولة حتى الآن، لذلك لا نعرض خريطة لها بدل عرض مواقع غير مؤكدة.",
       sourceNote: "المواقع على الخريطة مأخوذة من إحداثيات ويكيبيديا الرسمية لكل معلم.",
+      downloadHeading: "حمّل الخريطة على جوالك",
+      downloadHint:
+        "نزّل كل المواقع كملف واحد وافتحه في تطبيق خرائط على جوالك — يشتغل بدون إنترنت أثناء تجوالك في الوجهة.",
+      downloadGpx: "تحميل GPX",
+      downloadGpxHint: "للملاحة وبدون إنترنت — Organic Maps، OsmAnd، Maps.me، Guru Maps",
+      downloadKml: "تحميل KML",
+      downloadKmlHint: "لـ Google Earth، ولاستيراد المواقع إلى خرائط Google My Maps",
     },
     travelers: {
       label: "المسافرون",
@@ -316,6 +323,13 @@ export const dictionaries = {
       noPins:
         "We don't have verified coordinates for this country's landmarks yet, so we're not showing a map rather than placing pins we can't confirm.",
       sourceNote: "Map positions come from each landmark's official Wikipedia coordinates.",
+      downloadHeading: "Take this map on your phone",
+      downloadHint:
+        "Download every place as a single file and open it in a maps app on your phone — it works offline while you're out exploring.",
+      downloadGpx: "Download GPX",
+      downloadGpxHint: "For offline navigation — Organic Maps, OsmAnd, Maps.me, Guru Maps",
+      downloadKml: "Download KML",
+      downloadKmlHint: "For Google Earth, and importing into Google My Maps",
     },
     travelers: {
       label: "Travelers",

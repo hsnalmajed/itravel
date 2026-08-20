@@ -64,14 +64,28 @@ function pinIcon(category: MapPin["category"]) {
 
 // Frames the map on the pins it actually has, rather than a hard-coded
 // centre that would sit in the sea for some countries.
+//
+// The breathing room is a fraction of how far the pins actually spread, not
+// a fixed number of degrees: a country map spans hundreds of kilometres and
+// wants a wide margin, while a city map spans a few kilometres and would be
+// squeezed into an unreadable dot by that same margin.
 function boundsOf(pins: MapPin[]): [[number, number], [number, number]] | null {
   if (pins.length === 0) return null;
   const lats = pins.map((p) => p.lat);
   const lons = pins.map((p) => p.lon);
-  const pad = 0.35;
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+
+  // A floor keeps a single pin (or several almost on top of each other) from
+  // collapsing to a zero-size box, which Leaflet would zoom to maximum on.
+  const padLat = Math.max((maxLat - minLat) * 0.12, 0.01);
+  const padLon = Math.max((maxLon - minLon) * 0.12, 0.01);
+
   return [
-    [Math.min(...lats) - pad, Math.min(...lons) - pad],
-    [Math.max(...lats) + pad, Math.max(...lons) + pad],
+    [minLat - padLat, minLon - padLon],
+    [maxLat + padLat, maxLon + padLon],
   ];
 }
 

@@ -106,6 +106,8 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
               attractionsHeading: dict.maps.legendAttractions,
               activitiesHeading: dict.maps.legendActivities,
               nearbyHeading: dict.maps.nearbyHeading,
+              foodHeading: dict.maps.foodHeading,
+              historicHeading: dict.maps.historicHeading,
               readMore: dict.maps.readMore,
               viewTours: dict.maps.viewTours,
               mapAttribution: dict.maps.mapAttribution,

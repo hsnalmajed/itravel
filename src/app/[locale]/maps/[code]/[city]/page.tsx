@@ -4,10 +4,9 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { findCity } from "@/lib/cities";
-import { fetchDescriptions, fetchNearbyPlaces, fetchWikiSummary } from "@/lib/wikipedia";
-import { categorisePlace } from "@/lib/placeCategory";
-import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
-import AttractionsMap, { type MapPin } from "@/components/AttractionsMap";
+import { buildLegend, pinsAroundCities } from "@/lib/mapPins";
+import { PIN_STYLES } from "@/lib/pinStyles";
+import AttractionsMap from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
 
 export const dynamic = "force-dynamic";
@@ -25,47 +24,15 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
 
   // The city's own Wikipedia article gives us its real centre point; every
   // pin is then a documented article within 10 km of it.
-  const citySummary = await fetchWikiSummary(cityEntry.wikiTitle);
-  const places =
-    typeof citySummary?.lat === "number" && typeof citySummary?.lon === "number"
-      ? await fetchNearbyPlaces(citySummary.lat, citySummary.lon, { radius: 10000, limit: 300 })
-      : [];
-
-  // Each place is sorted into its pin by Wikipedia's own one-line
-  // description of it, fetched 50 at a time.
-  const descriptions = await fetchDescriptions(places.map((p) => p.pageId));
-
-  const CATEGORY_PIN: Record<ReturnType<typeof categorisePlace>, PinCategory> = {
-    historic: "historic",
-    food: "food",
-    activity: "cityActivity",
-    place: "place",
-  };
-
-  const pins: MapPin[] = places.map((p) => ({
-    key: String(p.pageId),
-    // GeoSearch returns English article titles only, so both locales show the
-    // same name here rather than us inventing an Arabic one. The popup's
-    // "read more" link goes to the article itself.
-    nameAr: p.title,
-    nameEn: p.title,
-    lat: p.lat,
-    lon: p.lon,
-    category: CATEGORY_PIN[categorisePlace(descriptions.get(p.pageId))],
-    wikiTitle: p.title,
-  }));
+  const pins = await pinsAroundCities([cityEntry]);
 
   // Only show a legend entry for a kind of place this city actually has.
-  const legend: { category: PinCategory; label: string }[] = (
-    [
-      { category: "historic", label: dict.maps.legendHistoric },
-      { category: "food", label: dict.maps.legendFood },
-      { category: "cityActivity", label: dict.maps.legendCityActivity },
-      { category: "place", label: dict.maps.legendPlace },
-    ] as const
-  )
-    .filter((l) => pins.some((p) => p.category === l.category))
-    .map((l) => ({ category: l.category as PinCategory, label: l.label }));
+  const legend = buildLegend(pins, {
+    historic: dict.maps.legendHistoric,
+    food: dict.maps.legendFood,
+    activity: dict.maps.legendCityActivity,
+    place: dict.maps.legendPlace,
+  });
 
   const cityName = loc === "ar" ? cityEntry.nameAr : cityEntry.nameEn;
   const pageTitle = dict.maps.cityMapTitle.replace("{city}", cityName);
@@ -107,9 +74,7 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
                   {PIN_STYLES[l.category].glyph}
                 </span>
                 {l.label}
-                <span className="font-normal text-gray-400">
-                  ({pins.filter((p) => p.category === l.category).length})
-                </span>
+                <span className="font-normal text-gray-400">({l.count})</span>
               </span>
             ))}
           </div>

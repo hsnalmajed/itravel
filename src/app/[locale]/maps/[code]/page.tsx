@@ -4,6 +4,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
+import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
 import AttractionsMap, { type MapPin } from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
@@ -52,6 +53,7 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
     .filter((p): p is MapPin => p !== null);
 
   const countryName = loc === "ar" ? country.nameAr : country.nameEn;
+  const cities = COUNTRY_CITIES[country.code] ?? [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -91,6 +93,11 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
           <p className="mb-3 text-sm text-gray-500">
             📍 {dict.maps.pinsCount.replace("{count}", String(pins.length))}
           </p>
+          {cities.length > 0 && (
+            <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-800 ring-1 ring-brand-100">
+              {dict.maps.countryOverviewNote}
+            </p>
+          )}
           <AttractionsMap
             locale={loc}
             countryCode={country.code}
@@ -98,6 +105,8 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
             dict={{
               attractionsHeading: dict.maps.legendAttractions,
               activitiesHeading: dict.maps.legendActivities,
+              nearbyHeading: dict.maps.nearbyHeading,
+              readMore: dict.maps.readMore,
               viewTours: dict.maps.viewTours,
               mapAttribution: dict.maps.mapAttribution,
             }}
@@ -114,6 +123,31 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
           </p>
         </>
       )}
+
+      {cities.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
+            <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+            {dict.maps.citiesHeading}
+          </h2>
+          <p className="text-sm text-gray-500 mb-4 ms-3">{dict.maps.citiesSubtitle}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {cities.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/${loc}/maps/${country.code}/${c.slug}`}
+                className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-3 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:ring-brand-200 hover:shadow-md"
+              >
+                <span className="text-base leading-none" aria-hidden="true">🗺️</span>
+                <span className="text-sm font-semibold text-gray-800 truncate">
+                  {loc === "ar" ? c.nameAr : c.nameEn}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
     </div>
   );
 }

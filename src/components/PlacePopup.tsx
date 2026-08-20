@@ -8,6 +8,8 @@ interface PopupDict {
   attractionsHeading: string;
   activitiesHeading: string;
   nearbyHeading: string;
+  foodHeading: string;
+  historicHeading: string;
   readMore: string;
 }
 
@@ -61,12 +63,15 @@ export default function PlacePopup({
     };
   }, [pin.wikiTitle, loaded]);
 
-  const label =
-    pin.category === "activity"
-      ? dict.activitiesHeading
-      : pin.category === "nearby"
-      ? dict.nearbyHeading
-      : dict.attractionsHeading;
+  const LABELS: Record<typeof pin.category, string> = {
+    attraction: dict.attractionsHeading,
+    activity: dict.activitiesHeading,
+    historic: dict.historicHeading,
+    food: dict.foodHeading,
+    cityActivity: dict.activitiesHeading,
+    place: dict.nearbyHeading,
+  };
+  const label = LABELS[pin.category];
 
   return (
     <div className="w-56" dir={locale === "ar" ? "rtl" : "ltr"}>

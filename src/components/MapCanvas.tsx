@@ -8,6 +8,16 @@ import "leaflet/dist/leaflet.css";
 import type { Locale } from "@/lib/types";
 import PlacePopup from "@/components/PlacePopup";
 
+export type PinCategory =
+  // From the curated country guide.
+  | "attraction"
+  | "activity"
+  // Discovered on a city map, sorted by what Wikipedia says the place is.
+  | "historic"
+  | "food"
+  | "cityActivity"
+  | "place";
+
 export interface MapPin {
   key: string;
   nameAr: string;
@@ -16,7 +26,7 @@ export interface MapPin {
   lon: number;
   photo?: string;
   extract?: string;
-  category: "attraction" | "activity" | "nearby";
+  category: PinCategory;
   /**
    * Wikipedia article title. Present on pins discovered by GeoSearch, where
    * we deliberately don't pre-fetch a photo for every one of several hundred
@@ -29,33 +39,40 @@ interface MapDict {
   attractionsHeading: string;
   activitiesHeading: string;
   nearbyHeading: string;
+  foodHeading: string;
+  historicHeading: string;
   readMore: string;
   viewTours: string;
   mapAttribution: string;
 }
 
 // Leaflet's default marker icons are resolved from relative image paths that
-// don't survive bundling, so we draw the pin ourselves. Doing it this way
-// also lets attractions and activities read differently at a glance without
-// shipping two image assets.
-const PIN_COLORS: Record<MapPin["category"], string> = {
-  activity: "#c2410c",
-  attraction: "#0f5132",
-  // Discovered places are the bulk of a city map, so they get a quieter
-  // colour and a smaller pin — the curated highlights stay dominant.
-  nearby: "#1e50a2",
+// don't survive bundling, so we draw the pin ourselves.
+//
+// Each kind of place gets its own colour *and* its own glyph — colour alone
+// would leave the categories indistinguishable to anyone with colour vision
+// deficiency, and unreadable in a printed screenshot.
+export const PIN_STYLES: Record<PinCategory, { color: string; glyph: string }> = {
+  attraction: { color: "#0f5132", glyph: "🏛" },
+  activity: { color: "#c2410c", glyph: "🎟" },
+  historic: { color: "#0f5132", glyph: "🏛" },
+  food: { color: "#b91c1c", glyph: "🍽" },
+  cityActivity: { color: "#c2410c", glyph: "🎟" },
+  place: { color: "#1e50a2", glyph: "📍" },
 };
 
-function pinIcon(category: MapPin["category"]) {
-  const color = PIN_COLORS[category];
-  const size = category === "nearby" ? 18 : 26;
+function pinIcon(category: PinCategory) {
+  const { color, glyph } = PIN_STYLES[category];
+  const size = 26;
   return L.divIcon({
     className: "",
+    // The glyph is counter-rotated so it sits upright inside the teardrop.
     html: `<span style="
-      display:block;width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;
+      display:flex;align-items:center;justify-content:center;
+      width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;
       background:${color};transform:rotate(-45deg);
       border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);
-    "></span>`,
+    "><span style="transform:rotate(45deg);font-size:12px;line-height:1">${glyph}</span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],

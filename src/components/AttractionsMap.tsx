@@ -23,6 +23,8 @@ export default function AttractionsMap(props: {
     attractionsHeading: string;
     activitiesHeading: string;
     nearbyHeading: string;
+    foodHeading: string;
+    historicHeading: string;
     readMore: string;
     viewTours: string;
     mapAttribution: string;

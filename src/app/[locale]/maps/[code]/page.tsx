@@ -6,6 +6,7 @@ import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
 import AttractionsMap, { type MapPin } from "@/components/AttractionsMap";
+import MapDownloads from "@/components/MapDownloads";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,13 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
               viewTours: dict.maps.viewTours,
               mapAttribution: dict.maps.mapAttribution,
             }}
+          />
+          <MapDownloads
+            locale={loc}
+            pins={pins}
+            title={dict.maps.countryMapTitle.replace("{country}", countryName)}
+            fileBase={`iTravel-${country.nameEn}-map`}
+            dict={dict.maps}
           />
           <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-gray-500">
             {dict.maps.sourceNote}

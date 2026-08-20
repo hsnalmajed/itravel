@@ -33,6 +33,15 @@ export const dictionaries = {
       downloadGpxHint: "للملاحة وبدون إنترنت — Organic Maps، OsmAnd، Maps.me، Guru Maps",
       downloadKml: "تحميل KML",
       downloadKmlHint: "لـ Google Earth، ولاستيراد المواقع إلى خرائط Google My Maps",
+      nearbyHeading: "مكان موثّق",
+      readMore: "اقرأ المزيد على ويكيبيديا ←",
+      citiesHeading: "خرائط المدن",
+      citiesSubtitle: "خريطة مفصّلة لكل مدينة بمئات المواقع الموثّقة",
+      cityMapTitle: "خريطة {city} السياحية",
+      backToCountryMap: "خريطة الدولة",
+      countryOverviewNote:
+        "هذه نظرة عامة على أبرز معالم الدولة. للحصول على مئات المواقع بالتفصيل، افتح خريطة المدينة أدناه.",
+      cityNoPlaces: "تعذّر جلب مواقع هذه المدينة حالياً. حاول بعد قليل.",
     },
     travelers: {
       label: "المسافرون",
@@ -330,6 +339,15 @@ export const dictionaries = {
       downloadGpxHint: "For offline navigation — Organic Maps, OsmAnd, Maps.me, Guru Maps",
       downloadKml: "Download KML",
       downloadKmlHint: "For Google Earth, and importing into Google My Maps",
+      nearbyHeading: "Documented place",
+      readMore: "Read more on Wikipedia →",
+      citiesHeading: "City maps",
+      citiesSubtitle: "A detailed map for each city with hundreds of documented places",
+      cityMapTitle: "{city} tourist map",
+      backToCountryMap: "Country map",
+      countryOverviewNote:
+        "This is an overview of the country's best-known landmarks. For hundreds of places in detail, open a city map below.",
+      cityNoPlaces: "We couldn't load this city's places right now. Please try again shortly.",
     },
     travelers: {
       label: "Travelers",

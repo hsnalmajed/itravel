@@ -5,7 +5,9 @@ import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
 import { fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
+import { fetchCitiesForCountry, viatorConfigured } from "@/lib/viator";
 import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
+import CityPicker from "@/components/CityPicker";
 
 export default async function CountryAttractionsPage({
   params,
@@ -26,9 +28,12 @@ export default async function CountryAttractionsPage({
   const cuisineTitles = (guide?.cuisine ?? []).map((c) => c.wikiTitle).filter((t): t is string => Boolean(t));
   const landmarkTitles = (guide?.attractions ?? []).map((a) => a.wikiTitle);
 
-  const [countrySummary, summaries] = await Promise.all([
+  const [countrySummary, summaries, cities] = await Promise.all([
     fetchWikiSummary(country.nameEn),
     fetchWikiSummaries([...landmarkTitles, ...activityTitles, ...cuisineTitles]),
+    // Empty (and instant) when no Viator key is configured — the curated
+    // guide below then stands on its own exactly as before.
+    fetchCitiesForCountry(country.code),
   ]);
 
   // Real bookable items (official tickets / guided tours) get a genuine
@@ -115,6 +120,17 @@ export default async function CountryAttractionsPage({
           <p className="text-gray-600 leading-relaxed text-sm mb-1">{countrySummary.extract}</p>
         )}
         {countrySummary?.extract && <p className="text-xs text-gray-400 mb-6">{dict.attractions.source}</p>}
+
+        {cities.length > 0 && (
+          <CityPicker locale={loc} countryCode={country.code} cities={cities} dict={dict.attractions} />
+        )}
+
+        {!viatorConfigured() && (
+          <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 p-5">
+            <h2 className="font-bold text-amber-900">{dict.attractions.viatorDisabledTitle}</h2>
+            <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.viatorDisabledBody}</p>
+          </div>
+        )}
 
         {guide ? (
           <div className={countrySummary?.extract ? "" : "mt-2"}>

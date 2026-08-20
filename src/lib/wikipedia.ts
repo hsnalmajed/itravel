@@ -149,6 +149,55 @@ export async function fetchNearbyPlaces(
   }
 }
 
+// Wikipedia's one-line "short description" for a page — "Mosque and former
+// church in Istanbul, Turkey", "Restaurant in Istanbul, Turkey". It's the
+// cheapest reliable signal for what a place actually *is*, and the API takes
+// up to 50 page ids at a time, so a 300-pin city map costs about six
+// requests rather than three hundred.
+export async function fetchDescriptions(pageIds: number[]): Promise<Map<number, string>> {
+  const result = new Map<number, string>();
+  if (pageIds.length === 0) return result;
+
+  const BATCH = 50;
+  const batches: number[][] = [];
+  for (let i = 0; i < pageIds.length; i += BATCH) batches.push(pageIds.slice(i, i + BATCH));
+
+  await Promise.all(
+    batches.map(async (batch) => {
+      const params = new URLSearchParams({
+        action: "query",
+        prop: "description",
+        pageids: batch.join("|"),
+        format: "json",
+        origin: "*",
+      });
+      try {
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`, {
+          headers: {
+            "User-Agent": "iTravel/1.0 (https://itravel.almajedhsn.workers.dev; travel metasearch site)",
+            Accept: "application/json",
+          },
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          query?: { pages?: Record<string, { pageid?: number; description?: string }> };
+        };
+        for (const page of Object.values(data.query?.pages ?? {})) {
+          if (typeof page.pageid === "number" && page.description) {
+            result.set(page.pageid, page.description);
+          }
+        }
+      } catch {
+        // A missing batch just means those pins fall back to the generic
+        // category — never a failed page.
+      }
+    })
+  );
+
+  return result;
+}
+
 export async function fetchWikiSummaries(titles: string[]): Promise<Map<string, WikiSummary | null>> {
   const entries = await Promise.all(
     titles.map(async (title) => [title, await fetchWikiSummary(title)] as const)

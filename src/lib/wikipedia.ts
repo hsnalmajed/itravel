@@ -204,3 +204,176 @@ export async function fetchWikiSummaries(titles: string[]): Promise<Map<string, 
   );
   return new Map(entries);
 }
+
+// ---------------------------------------------------------------------------
+// Arabic
+// ---------------------------------------------------------------------------
+//
+// Most of what we discover comes from English Wikipedia, because that's where
+// the geo-tagged coverage is. But a visitor reading the site in Arabic should
+// get Arabic — so for every place we look up whether an Arabic article exists
+// and, when it does, take the name and description from *that* article.
+//
+// What we never do is translate. A name we generated ourselves is a name no
+// source stands behind, and on a commercial travel site that's the kind of
+// detail a traveller acts on. A place with no Arabic article keeps its English
+// name and is marked as such in the interface, so the reader knows why.
+
+export type WikiLang = "en" | "ar";
+
+function apiBase(lang: WikiLang) {
+  return `https://${lang}.wikipedia.org/w/api.php`;
+}
+
+const WIKI_HEADERS = {
+  "User-Agent": "iTravel/1.0 (https://itravel.almajedhsn.workers.dev; travel metasearch site)",
+  Accept: "application/json",
+};
+
+/** Splits into API-sized chunks; every Wikipedia list parameter caps at 50. */
+function chunk<T>(items: T[], size = 50): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/**
+ * The Arabic article title for each English page id, where one exists.
+ *
+ * This is Wikipedia's own interlanguage link — the same "العربية" entry in an
+ * article's sidebar — so it's an editorial mapping between two articles about
+ * the same subject, not a transliteration we produced.
+ */
+export async function fetchArabicTitles(pageIds: number[]): Promise<Map<number, string>> {
+  const result = new Map<number, string>();
+  if (pageIds.length === 0) return result;
+
+  await Promise.all(
+    chunk(pageIds).map(async (batch) => {
+      const params = new URLSearchParams({
+        action: "query",
+        prop: "langlinks",
+        lllang: "ar",
+        lllimit: "500",
+        pageids: batch.join("|"),
+        format: "json",
+        origin: "*",
+      });
+      try {
+        const res = await fetch(`${apiBase("en")}?${params.toString()}`, {
+          headers: WIKI_HEADERS,
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          query?: { pages?: Record<string, { pageid?: number; langlinks?: { "*"?: string }[] }> };
+        };
+        for (const page of Object.values(data.query?.pages ?? {})) {
+          const arTitle = page.langlinks?.[0]?.["*"];
+          if (typeof page.pageid === "number" && arTitle) result.set(page.pageid, arTitle);
+        }
+      } catch {
+        // A missing batch just means those places stay English — never a
+        // failed page.
+      }
+    })
+  );
+
+  return result;
+}
+
+/**
+ * Wikipedia's one-line description for each title, on whichever language
+ * edition is asked for. Keyed by the title you passed in, so a redirect or a
+ * normalised spelling still finds its way home.
+ */
+export async function fetchDescriptionsByTitle(
+  lang: WikiLang,
+  titles: string[]
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (titles.length === 0) return result;
+
+  await Promise.all(
+    chunk(titles).map(async (batch) => {
+      const params = new URLSearchParams({
+        action: "query",
+        prop: "description",
+        titles: batch.join("|"),
+        redirects: "1",
+        format: "json",
+        origin: "*",
+      });
+      try {
+        const res = await fetch(`${apiBase(lang)}?${params.toString()}`, {
+          headers: WIKI_HEADERS,
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          query?: {
+            normalized?: { from: string; to: string }[];
+            redirects?: { from: string; to: string }[];
+            pages?: Record<string, { title?: string; description?: string }>;
+          };
+        };
+        // Wikipedia answers under the *final* title, so walk the normalise
+        // and redirect hops back to the title the caller asked about.
+        const backToAsked = new Map<string, string>();
+        for (const n of data.query?.normalized ?? []) backToAsked.set(n.to, n.from);
+        for (const r of data.query?.redirects ?? []) {
+          backToAsked.set(r.to, backToAsked.get(r.from) ?? r.from);
+        }
+        for (const page of Object.values(data.query?.pages ?? {})) {
+          if (!page.title || !page.description) continue;
+          const asked = backToAsked.get(page.title) ?? page.title;
+          result.set(asked, page.description);
+        }
+      } catch {
+        // Same as above: a missing batch costs a description, not a page.
+      }
+    })
+  );
+
+  return result;
+}
+
+/** Thumbnail URL for each page id — one batched request per 50 places. */
+export async function fetchThumbnails(pageIds: number[], size = 480): Promise<Map<number, string>> {
+  const result = new Map<number, string>();
+  if (pageIds.length === 0) return result;
+
+  await Promise.all(
+    chunk(pageIds).map(async (batch) => {
+      const params = new URLSearchParams({
+        action: "query",
+        prop: "pageimages",
+        piprop: "thumbnail",
+        pithumbsize: String(size),
+        pilimit: "50",
+        pageids: batch.join("|"),
+        format: "json",
+        origin: "*",
+      });
+      try {
+        const res = await fetch(`${apiBase("en")}?${params.toString()}`, {
+          headers: WIKI_HEADERS,
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          query?: { pages?: Record<string, { pageid?: number; thumbnail?: { source?: string } }> };
+        };
+        for (const page of Object.values(data.query?.pages ?? {})) {
+          if (typeof page.pageid === "number" && page.thumbnail?.source) {
+            result.set(page.pageid, page.thumbnail.source);
+          }
+        }
+      } catch {
+        // A place without a photo shows its name and category instead.
+      }
+    })
+  );
+
+  return result;
+}

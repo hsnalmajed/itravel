@@ -4,7 +4,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
-import { fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
+import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
@@ -31,14 +31,43 @@ export default async function CountryAttractionsPage({
   const landmarkTitles = (guide?.attractions ?? []).map((a) => a.wikiTitle);
 
   const cities = COUNTRY_CITIES[country.code] ?? [];
+  const guideTitles = [...landmarkTitles, ...activityTitles, ...cuisineTitles];
 
-  const [countrySummary, summaries, cityOverviews] = await Promise.all([
-    fetchWikiSummary(country.nameEn),
-    fetchWikiSummaries([...landmarkTitles, ...activityTitles, ...cuisineTitles]),
+  // For an Arabic reader, everything on this page that has an Arabic article
+  // should come from that article. Wikipedia's own interlanguage links tell
+  // us which English article maps to which Arabic one — we never translate a
+  // name or a description ourselves.
+  const arTitles =
+    loc === "ar"
+      ? await fetchArabicTitlesByTitle([country.nameEn, ...guideTitles])
+      : new Map<string, string>();
+
+  const countryArTitle = arTitles.get(country.nameEn);
+
+  const [countrySummary, enSummaries, arSummaries, cityOverviews] = await Promise.all([
+    countryArTitle
+      ? fetchWikiSummary(countryArTitle, "ar")
+      : fetchWikiSummary(country.nameEn),
+    fetchWikiSummaries(guideTitles),
+    fetchWikiSummaries([...arTitles.values()].filter((t) => t !== countryArTitle), "ar"),
     // A photo and a real place count for every city, so the visitor can see
     // what's behind a card before opening it.
     fetchCityOverviews(cities),
   ]);
+
+  // Arabic text where Wikipedia has an Arabic article; the English article
+  // otherwise. The photo always comes from the English article, which is the
+  // better-illustrated one and is language-neutral anyway.
+  function summaryFor(title: string) {
+    const en = enSummaries.get(title);
+    const arTitle = arTitles.get(title);
+    const ar = arTitle ? arSummaries.get(arTitle) : undefined;
+    return {
+      extract: ar?.extract || en?.extract,
+      thumbnail: en?.thumbnail || ar?.thumbnail,
+      image: en?.image || ar?.image,
+    };
+  }
 
   const cityCards: CityCard[] = cities.map((c) => {
     const overview = cityOverviews.get(c.wikiTitle);
@@ -61,7 +90,7 @@ export default async function CountryAttractionsPage({
     booking === "official" || booking === "guide" ? viatorSearchUrl(`${nameEn} ${country.nameEn}`) : undefined;
 
   const attractionItems: GuideItem[] = (guide?.attractions ?? []).map((landmark) => {
-    const summary = summaries.get(landmark.wikiTitle);
+    const summary = summaryFor(landmark.wikiTitle);
     return {
       key: landmark.wikiTitle,
       nameAr: landmark.nameAr,
@@ -74,7 +103,7 @@ export default async function CountryAttractionsPage({
   });
 
   const activityItems: GuideItem[] = (guide?.activities ?? []).map((activity, i) => {
-    const summary = activity.wikiTitle ? summaries.get(activity.wikiTitle) : undefined;
+    const summary = activity.wikiTitle ? summaryFor(activity.wikiTitle) : undefined;
     return {
       key: activity.wikiTitle || `${activity.nameEn}-${i}`,
       nameAr: activity.nameAr,
@@ -89,7 +118,7 @@ export default async function CountryAttractionsPage({
   });
 
   const cuisineItems: GuideItem[] = (guide?.cuisine ?? []).map((dish, i) => {
-    const summary = dish.wikiTitle ? summaries.get(dish.wikiTitle) : undefined;
+    const summary = dish.wikiTitle ? summaryFor(dish.wikiTitle) : undefined;
     return {
       key: dish.wikiTitle || `${dish.nameEn}-${i}`,
       nameAr: dish.nameAr,
@@ -103,7 +132,8 @@ export default async function CountryAttractionsPage({
   // TripAdvisor-style destination header: a real photo of the country's
   // best-known attraction as the hero, falling back to the general country
   // photo, and finally to a plain gradient if neither resolved.
-  const heroPhoto = countrySummary?.image || attractionItems.find((a) => a.photo)?.photo;
+  const heroLandmark = landmarkTitles.map((t) => summaryFor(t)).find((s) => s.image);
+  const heroPhoto = heroLandmark?.image || countrySummary?.image;
 
   return (
     <div>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
+import Photo from "@/components/Photo";
 
 export interface PlaceListItem {
   key: string;
@@ -137,23 +138,19 @@ export default function CityPlacesExplorer({
                 key={p.key}
                 className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                {p.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.photo}
-                    alt=""
-                    loading="lazy"
-                    className="h-40 w-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className="flex h-40 w-full items-center justify-center text-4xl"
-                    style={{ backgroundColor: `${PIN_STYLES[p.category].color}14` }}
-                    aria-hidden="true"
-                  >
-                    {PIN_STYLES[p.category].glyph}
-                  </div>
-                )}
+                <Photo
+                  src={p.photo}
+                  className="h-40 w-full object-cover"
+                  fallback={
+                    <div
+                      className="flex h-40 w-full items-center justify-center text-4xl"
+                      style={{ backgroundColor: `${PIN_STYLES[p.category].color}14` }}
+                      aria-hidden="true"
+                    >
+                      {PIN_STYLES[p.category].glyph}
+                    </div>
+                  }
+                />
 
                 <div className="flex flex-1 flex-col p-4">
                   <h3

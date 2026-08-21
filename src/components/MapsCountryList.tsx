@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import { flagEmoji } from "@/lib/countries";
 import { cityCountLabel } from "@/lib/format";
+import Photo from "@/components/Photo";
 
 export interface MapCountry {
   code: string;
@@ -70,18 +71,15 @@ export default function MapsCountryList({
               href={`/${locale}/maps/${c.code}`}
               className="group relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg"
             >
-              {c.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={c.photo}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-800 to-brand-950 text-4xl">
-                  {flagEmoji(c.code)}
-                </div>
-              )}
+              <Photo
+                src={c.photo}
+                className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-800 to-brand-950 text-4xl">
+                    {flagEmoji(c.code)}
+                  </div>
+                }
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
               <div className="absolute bottom-2.5 start-3 end-3">
                 <p className="truncate text-sm sm:text-base font-bold text-white drop-shadow-sm">

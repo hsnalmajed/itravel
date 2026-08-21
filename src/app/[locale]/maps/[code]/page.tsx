@@ -4,7 +4,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_CITIES } from "@/lib/cities";
-import { fetchWikiSummaries } from "@/lib/wikipedia";
+import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 
@@ -27,14 +27,22 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
   const cities = COUNTRY_CITIES[country.code] ?? [];
   if (cities.length === 0) notFound();
 
-  // One real photo per city, from that city's own Wikipedia article.
-  const summaries = await fetchWikiSummaries(cities.map((c) => c.wikiTitle));
+  // A real photo and a real place count per city — the same lookup the
+  // attractions guide uses, so the two sections never disagree about how much
+  // a city has.
+  const overviews = await fetchCityOverviews(cities);
 
-  const cards: CityCard[] = cities.map((c) => ({
-    slug: c.slug,
-    name: loc === "ar" ? c.nameAr : c.nameEn,
-    photo: summaries.get(c.wikiTitle)?.thumbnail,
-  }));
+  const cards: CityCard[] = cities.map((c) => {
+    const overview = overviews.get(c.wikiTitle);
+    return {
+      slug: c.slug,
+      name: loc === "ar" ? c.nameAr : c.nameEn,
+      photo: overview?.photo,
+      subtitle: overview?.count
+        ? dict.maps.pinsCount.replace("{count}", String(overview.count))
+        : undefined,
+    };
+  });
 
   const countryName = loc === "ar" ? country.nameAr : country.nameEn;
 

@@ -103,7 +103,7 @@ export default async function CountryAttractionsPage({
   // TripAdvisor-style destination header: a real photo of the country's
   // best-known attraction as the hero, falling back to the general country
   // photo, and finally to a plain gradient if neither resolved.
-  const heroPhoto = attractionItems.find((a) => a.photo)?.photo || countrySummary?.thumbnail;
+  const heroPhoto = countrySummary?.image || attractionItems.find((a) => a.photo)?.photo;
 
   return (
     <div>

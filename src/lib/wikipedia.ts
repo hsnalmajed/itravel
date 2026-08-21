@@ -10,7 +10,16 @@
 export interface WikiSummary {
   title: string;
   extract: string;
+  /**
+   * A card-sized photo (~640px wide). Wikimedia generates thumbnails on
+   * demand at whatever width the URL asks for, so we widen the 320px one the
+   * API hands back rather than falling through to `image` — an original can
+   * be a 20 MB panorama, and a grid of twelve of those is a page that takes
+   * ten seconds to paint on a phone.
+   */
   thumbnail?: string;
+  /** The full-resolution original, for a full-width hero image. */
+  image?: string;
   wikipediaUrl?: string;
   // Real coordinates for places that have them. Wikipedia already returns
   // these in the same summary payload we fetch for the photo and blurb, so
@@ -24,6 +33,16 @@ export interface WikiSummary {
 // cache is a soft best-effort speedup only — never relied on for
 // correctness. Each entry is small (a title, ~2 sentences, one image URL).
 const summaryCache = new Map<string, WikiSummary | null>();
+
+// Wikimedia thumbnail URLs carry their width in the path
+// (".../440px-Hagia_Sophia.jpg"), and the thumbnailer renders any width asked
+// for. The REST summary hands back a 320px one, which is soft on a card, so
+// we ask for 640 — sharp enough at card size, still a fraction of the
+// original's weight.
+function cardSized(url: string | undefined, width = 640): string | undefined {
+  if (!url) return undefined;
+  return url.replace(/\/(\d+)px-/, `/${width}px-`);
+}
 
 export async function fetchWikiSummary(title: string): Promise<WikiSummary | null> {
   const cached = summaryCache.get(title);
@@ -59,7 +78,8 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
     const summary: WikiSummary = {
       title: data.title || title,
       extract: data.extract || "",
-      thumbnail: data.originalimage?.source || data.thumbnail?.source,
+      thumbnail: cardSized(data.thumbnail?.source) || data.originalimage?.source,
+      image: data.originalimage?.source || cardSized(data.thumbnail?.source),
       wikipediaUrl: data.content_urls?.desktop?.page,
       lat: typeof data.coordinates?.lat === "number" ? data.coordinates.lat : undefined,
       lon: typeof data.coordinates?.lon === "number" ? data.coordinates.lon : undefined,

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Locale } from "@/lib/types";
-import { CURRENCIES, currencyFlag, findCurrency } from "@/lib/currencies";
+import { CURRENCIES, findCurrency } from "@/lib/currencies";
 import { googleRateUrl, rateBetween, type Rates } from "@/lib/rates";
 
 interface ConverterDict {
@@ -52,8 +52,12 @@ export default function CurrencyConverter({
     [rates, from, to]
   );
 
+  // Arabic gets Latin digits on purpose. Prices, bank statements and exchange
+  // boards across the Gulf are written in Latin numerals, and the amount box
+  // above is typed in them — formatting the answer in Arabic-Indic digits
+  // would make the two halves of the same calculation look unrelated.
   const nf = (value: number, decimals: number) =>
-    new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-US", {
+    new Intl.NumberFormat(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(value);
@@ -96,7 +100,7 @@ export default function CurrencyConverter({
             <select value={from} onChange={(e) => setFrom(e.target.value)} className={selectClass}>
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {currencyFlag(c)} {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
+                  {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
                 </option>
               ))}
             </select>
@@ -119,7 +123,7 @@ export default function CurrencyConverter({
             <select value={to} onChange={(e) => setTo(e.target.value)} className={selectClass}>
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {currencyFlag(c)} {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
+                  {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
                 </option>
               ))}
             </select>

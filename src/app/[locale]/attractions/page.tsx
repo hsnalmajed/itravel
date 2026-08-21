@@ -2,6 +2,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
+import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
 import AttractionsExplorer, { type FeaturedDestination } from "@/components/AttractionsExplorer";
 
@@ -41,7 +42,13 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
       const title = COUNTRY_GUIDES[code].attractions[0].wikiTitle;
       const photo =
         primarySummaries.get(title)?.thumbnail || fallbackSummaries.get(country.nameEn)?.thumbnail;
-      return { code, nameAr: country.nameAr, nameEn: country.nameEn, photo };
+      return {
+        code,
+        nameAr: country.nameAr,
+        nameEn: country.nameEn,
+        photo,
+        cityCount: COUNTRY_CITIES[code]?.length ?? 0,
+      };
     })
     .filter((c): c is FeaturedDestination => c !== null);
 

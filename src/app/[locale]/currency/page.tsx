@@ -17,11 +17,13 @@ export default async function CurrencyPage({ params }: PageProps<"/[locale]/curr
   // Shown in the reader's own calendar and language, from the feed's own
   // timestamp — not from when this page happened to render.
   const updated = rates
-    ? new Intl.DateTimeFormat(loc === "ar" ? "ar-SA" : "en-GB", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: "UTC",
-      }).format(new Date(rates.updatedAt))
+    ? new Intl.DateTimeFormat(
+        // Gregorian with Latin digits in Arabic too: "ar-SA" alone defaults to
+        // the Umm al-Qura calendar, and a Hijri date next to a flight booking
+        // and a market rate is a date nobody can cross-check at a glance.
+        loc === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
+        { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }
+      ).format(new Date(rates.updatedAt))
     : null;
 
   return (

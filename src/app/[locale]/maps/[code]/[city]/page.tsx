@@ -4,7 +4,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { findCity } from "@/lib/cities";
-import { buildLegend, pinsAroundCities } from "@/lib/mapPins";
+import { buildLegend, fetchPlacesAroundCities, placeToPin } from "@/lib/mapPins";
 import { PIN_STYLES } from "@/lib/pinStyles";
 import AttractionsMap from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
@@ -23,8 +23,10 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
   if (!cityEntry) notFound();
 
   // The city's own Wikipedia article gives us its real centre point; every
-  // pin is then a documented article within 10 km of it.
-  const pins = await pinsAroundCities([cityEntry]);
+  // pin is then a documented article within 10 km of it, named in the
+  // reader's own language wherever Wikipedia has an article in it.
+  const places = await fetchPlacesAroundCities([cityEntry], { locale: loc });
+  const pins = places.map((p) => placeToPin(p, loc));
 
   // Only show a legend entry for a kind of place this city actually has.
   const legend = buildLegend(pins, {
@@ -36,6 +38,17 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
 
   const cityName = loc === "ar" ? cityEntry.nameAr : cityEntry.nameEn;
   const pageTitle = dict.maps.cityMapTitle.replace("{city}", cityName);
+
+  const mapDict = {
+    activitiesHeading: dict.maps.legendCityActivity,
+    nearbyHeading: dict.maps.nearbyHeading,
+    foodHeading: dict.maps.foodHeading,
+    historicHeading: dict.maps.historicHeading,
+    readMore: dict.maps.readMore,
+    englishOnly: dict.maps.englishOnly,
+    viewTours: dict.maps.viewTours,
+    mapAttribution: dict.maps.mapAttribution,
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -81,20 +94,11 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
           <AttractionsMap
             locale={loc}
             countryCode={country.code}
+            citySlug={cityEntry.slug}
             pins={pins}
-            dict={{
-              attractionsHeading: dict.maps.legendAttractions,
-              activitiesHeading: dict.maps.legendActivities,
-              nearbyHeading: dict.maps.nearbyHeading,
-              foodHeading: dict.maps.foodHeading,
-              historicHeading: dict.maps.historicHeading,
-              readMore: dict.maps.readMore,
-              viewTours: dict.maps.viewTours,
-              mapAttribution: dict.maps.mapAttribution,
-            }}
+            dict={mapDict}
           />
           <MapDownloads
-            locale={loc}
             pins={pins}
             title={pageTitle}
             fileBase={`iTravel-${cityEntry.nameEn}-map`}

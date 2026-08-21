@@ -2,11 +2,11 @@ import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { findCountry } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
+import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
 import MapsCountryList, { type MapCountry } from "@/components/MapsCountryList";
 
-// Photos and coordinates are fetched live from Wikipedia, same as the rest
-// of the attractions section.
+// Photos are fetched live from Wikipedia, same as the rest of the site.
 export const dynamic = "force-dynamic";
 
 export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) {
@@ -14,9 +14,10 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  // Only countries we have a curated guide for can produce a meaningful map,
-  // since those are the ones with landmarks to place on it.
-  const codes = Object.keys(COUNTRY_GUIDES);
+  // A country belongs here only if it has cities to open — the country page
+  // is now a list of city maps, so a country with none would lead to an
+  // empty page.
+  const codes = Object.keys(COUNTRY_GUIDES).filter((c) => (COUNTRY_CITIES[c]?.length ?? 0) > 0);
   const titles = codes.map((c) => COUNTRY_GUIDES[c].attractions[0].wikiTitle);
   const summaries = await fetchWikiSummaries(titles);
 
@@ -30,7 +31,7 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
         nameAr: country.nameAr,
         nameEn: country.nameEn,
         photo: summary?.thumbnail,
-        placeCount: COUNTRY_GUIDES[code].attractions.length + COUNTRY_GUIDES[code].activities.length,
+        cityCount: COUNTRY_CITIES[code].length,
       };
     })
     .filter((c): c is MapCountry => c !== null);

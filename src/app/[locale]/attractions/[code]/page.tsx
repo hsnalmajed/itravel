@@ -5,9 +5,11 @@ import type { Locale } from "@/lib/types";
 import { findCountry, flagEmoji } from "@/lib/countries";
 import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
 import { fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
-import { fetchCitiesForCountry, viatorConfigured } from "@/lib/viator";
+import { COUNTRY_CITIES } from "@/lib/cities";
+import { fetchCityOverviews } from "@/lib/mapPins";
+import { cityCountLabel } from "@/lib/format";
 import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
-import CityPicker from "@/components/CityPicker";
+import CityGallery, { type CityCard } from "@/components/CityGallery";
 
 export default async function CountryAttractionsPage({
   params,
@@ -28,13 +30,27 @@ export default async function CountryAttractionsPage({
   const cuisineTitles = (guide?.cuisine ?? []).map((c) => c.wikiTitle).filter((t): t is string => Boolean(t));
   const landmarkTitles = (guide?.attractions ?? []).map((a) => a.wikiTitle);
 
-  const [countrySummary, summaries, cities] = await Promise.all([
+  const cities = COUNTRY_CITIES[country.code] ?? [];
+
+  const [countrySummary, summaries, cityOverviews] = await Promise.all([
     fetchWikiSummary(country.nameEn),
     fetchWikiSummaries([...landmarkTitles, ...activityTitles, ...cuisineTitles]),
-    // Empty (and instant) when no Viator key is configured — the curated
-    // guide below then stands on its own exactly as before.
-    fetchCitiesForCountry(country.code),
+    // A photo and a real place count for every city, so the visitor can see
+    // what's behind a card before opening it.
+    fetchCityOverviews(cities),
   ]);
+
+  const cityCards: CityCard[] = cities.map((c) => {
+    const overview = cityOverviews.get(c.wikiTitle);
+    return {
+      slug: c.slug,
+      name: loc === "ar" ? c.nameAr : c.nameEn,
+      photo: overview?.photo,
+      subtitle: overview?.count
+        ? dict.attractions.placesCount.replace("{count}", String(overview.count))
+        : undefined,
+    };
+  });
 
   // Real bookable items (official tickets / guided tours) get a genuine
   // outbound link to search results on an actual global tour marketplace —
@@ -121,19 +137,30 @@ export default async function CountryAttractionsPage({
         )}
         {countrySummary?.extract && <p className="text-xs text-gray-400 mb-6">{dict.attractions.source}</p>}
 
-        {cities.length > 0 && (
-          <CityPicker locale={loc} countryCode={country.code} cities={cities} dict={dict.attractions} />
-        )}
-
-        {!viatorConfigured() && (
-          <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 p-5">
-            <h2 className="font-bold text-amber-900">{dict.attractions.viatorDisabledTitle}</h2>
-            <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.viatorDisabledBody}</p>
-          </div>
+        {cityCards.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+              {dict.attractions.chooseCityTitle.replace(
+                "{country}",
+                loc === "ar" ? country.nameAr : country.nameEn
+              )}
+            </h2>
+            <p className="text-sm font-semibold text-brand-700 ms-3">
+              🏙️ {cityCountLabel(cities.length, dict.attractions)}
+            </p>
+            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.chooseCitySubtitle}</p>
+            <CityGallery cities={cityCards} hrefBase={`/${loc}/attractions/${country.code}`} />
+          </section>
         )}
 
         {guide ? (
-          <div className={countrySummary?.extract ? "" : "mt-2"}>
+          <div>
+            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+              {dict.attractions.curatedHeading}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.curatedSubtitle}</p>
             <div className="rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 flex items-center gap-2 text-brand-900 text-sm font-semibold mb-6">
               🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
             </div>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import { COUNTRIES, flagEmoji, type Continent, type Country } from "@/lib/countries";
+import { cityCountLabel } from "@/lib/format";
 
 const CONTINENT_ORDER: Continent[] = ["asia", "africa", "europe", "northAmerica", "southAmerica", "oceania"];
 
@@ -18,6 +19,8 @@ export interface FeaturedDestination {
   // broken image, the same honest-fallback pattern used everywhere else on
   // this site when a live fetch comes back empty.
   photo?: string;
+  /** How many of this country's cities have a place guide of their own. */
+  cityCount: number;
 }
 
 // Mirrors the shape of dict.attractions — only the keys this component
@@ -30,6 +33,10 @@ interface ExplorerDict {
   featuredSubtitle: string;
   moreDestinations: string;
   continents: Record<Continent, string>;
+  citiesCount: string;
+  cityOne: string;
+  cityTwo: string;
+  cityFew: string;
 }
 
 // Styled after how a real tour marketplace shows its destination picker: a
@@ -127,10 +134,15 @@ export default function AttractionsExplorer({
                       {flagEmoji(c.code)}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                  <span className="absolute bottom-2.5 start-3 end-3 truncate text-sm sm:text-base font-bold text-white drop-shadow-sm">
-                    {locale === "ar" ? c.nameAr : c.nameEn}
-                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
+                  <div className="absolute bottom-2.5 start-3 end-3">
+                    <p className="truncate text-sm sm:text-base font-bold text-white drop-shadow-sm">
+                      {locale === "ar" ? c.nameAr : c.nameEn}
+                    </p>
+                    {c.cityCount > 0 && (
+                      <p className="text-[11px] text-white/75">🏙️ {cityCountLabel(c.cityCount, dict)}</p>
+                    )}
+                  </div>
                 </Link>
               ))}
             </div>

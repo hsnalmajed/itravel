@@ -14,12 +14,12 @@ export type { PinCategory } from "@/lib/pinStyles";
 export type { MapPin } from "@/lib/mapPins";
 
 interface MapDict {
-  attractionsHeading: string;
   activitiesHeading: string;
   nearbyHeading: string;
   foodHeading: string;
   historicHeading: string;
   readMore: string;
+  englishOnly: string;
   viewTours: string;
   mapAttribution: string;
 }
@@ -76,11 +76,13 @@ function boundsOf(pins: MapPin[]): [[number, number], [number, number]] | null {
 export default function MapCanvas({
   locale,
   countryCode,
+  citySlug,
   pins,
   dict,
 }: {
   locale: Locale;
   countryCode: string;
+  citySlug?: string;
   pins: MapPin[];
   dict: MapDict;
 }) {
@@ -104,7 +106,11 @@ export default function MapCanvas({
               <div>
                 <PlacePopup pin={pin} locale={locale} dict={dict} />
                 <Link
-                  href={`/${locale}/attractions/${countryCode}`}
+                  href={
+                    citySlug
+                      ? `/${locale}/attractions/${countryCode}/${citySlug}`
+                      : `/${locale}/attractions/${countryCode}`
+                  }
                   className="mt-2 block rounded-lg bg-brand-800 px-3 py-1.5 text-center text-xs font-bold text-white no-underline"
                 >
                   {dict.viewTours}

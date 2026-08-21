@@ -4,20 +4,25 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import { flagEmoji } from "@/lib/countries";
+import { cityCountLabel } from "@/lib/format";
 
 export interface MapCountry {
   code: string;
   nameAr: string;
   nameEn: string;
   photo?: string;
-  placeCount: number;
+  /** How many of this country's cities have a map of their own. */
+  cityCount: number;
 }
 
 interface MapsDict {
   title: string;
   subtitle: string;
   searchPlaceholder: string;
-  pinsCount: string;
+  citiesCount: string;
+  cityOne: string;
+  cityTwo: string;
+  cityFew: string;
 }
 
 export default function MapsCountryList({
@@ -83,7 +88,7 @@ export default function MapsCountryList({
                   {locale === "ar" ? c.nameAr : c.nameEn}
                 </p>
                 <p className="text-[11px] text-white/75">
-                  📍 {dict.pinsCount.replace("{count}", String(c.placeCount))}
+                  🏙️ {cityCountLabel(c.cityCount, dict)}
                 </p>
               </div>
             </Link>

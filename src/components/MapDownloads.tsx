@@ -1,7 +1,6 @@
 "use client";
 
-import type { Locale } from "@/lib/types";
-import type { MapPin } from "@/components/MapCanvas";
+import type { MapPin } from "@/lib/mapPins";
 import { downloadText, safeFileName, toGPX, toKML, type ExportPlace } from "@/lib/mapExport";
 
 interface DownloadsDict {
@@ -11,18 +10,18 @@ interface DownloadsDict {
   downloadGpxHint: string;
   downloadKml: string;
   downloadKmlHint: string;
-  legendAttractions: string;
-  legendActivities: string;
+  legendHistoric: string;
+  legendFood: string;
+  legendCityActivity: string;
+  legendPlace: string;
 }
 
 export default function MapDownloads({
-  locale,
   pins,
   title,
   fileBase,
   dict,
 }: {
-  locale: Locale;
   pins: MapPin[];
   /** Shown inside the file — this is the name the maps app displays. */
   title: string;
@@ -34,14 +33,21 @@ export default function MapDownloads({
   fileBase: string;
   dict: DownloadsDict;
 }) {
-  // Export the names in the language the traveller is browsing in, so the
+  // The names were already resolved to the reader's language upstream, so the
   // pins read the same on their phone as they do here.
+  const CATEGORY_LABELS = {
+    historic: dict.legendHistoric,
+    food: dict.legendFood,
+    activity: dict.legendCityActivity,
+    place: dict.legendPlace,
+  };
+
   const places: ExportPlace[] = pins.map((p) => ({
-    name: locale === "ar" ? p.nameAr : p.nameEn,
+    name: p.name,
     lat: p.lat,
     lon: p.lon,
     description: p.extract,
-    category: p.category === "activity" ? dict.legendActivities : dict.legendAttractions,
+    category: CATEGORY_LABELS[p.category],
   }));
 
   function handleGpx() {

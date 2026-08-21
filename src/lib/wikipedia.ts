@@ -44,13 +44,19 @@ function cardSized(url: string | undefined, width = 640): string | undefined {
   return url.replace(/\/(\d+)px-/, `/${width}px-`);
 }
 
-export async function fetchWikiSummary(title: string): Promise<WikiSummary | null> {
-  const cached = summaryCache.get(title);
+export async function fetchWikiSummary(
+  title: string,
+  lang: "en" | "ar" = "en"
+): Promise<WikiSummary | null> {
+  // The cache key carries the language: the Arabic and English articles for
+  // the same subject are different text and must not share an entry.
+  const cacheKey = `${lang}:${title}`;
+  const cached = summaryCache.get(cacheKey);
   if (cached !== undefined) return cached;
 
   try {
     const res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`,
+      `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`,
       {
         headers: {
           "User-Agent": "iTravel/1.0 (https://itravel.almajedhsn.workers.dev; travel metasearch site)",
@@ -59,7 +65,7 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
       }
     );
     if (!res.ok) {
-      summaryCache.set(title, null);
+      summaryCache.set(cacheKey, null);
       return null;
     }
     const data = (await res.json()) as {
@@ -72,7 +78,7 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
       type?: string;
     };
     if (data.type === "disambiguation") {
-      summaryCache.set(title, null);
+      summaryCache.set(cacheKey, null);
       return null;
     }
     const summary: WikiSummary = {
@@ -84,10 +90,10 @@ export async function fetchWikiSummary(title: string): Promise<WikiSummary | nul
       lat: typeof data.coordinates?.lat === "number" ? data.coordinates.lat : undefined,
       lon: typeof data.coordinates?.lon === "number" ? data.coordinates.lon : undefined,
     };
-    summaryCache.set(title, summary);
+    summaryCache.set(cacheKey, summary);
     return summary;
   } catch {
-    summaryCache.set(title, null);
+    summaryCache.set(cacheKey, null);
     return null;
   }
 }
@@ -218,9 +224,12 @@ export async function fetchDescriptions(pageIds: number[]): Promise<Map<number, 
   return result;
 }
 
-export async function fetchWikiSummaries(titles: string[]): Promise<Map<string, WikiSummary | null>> {
+export async function fetchWikiSummaries(
+  titles: string[],
+  lang: "en" | "ar" = "en"
+): Promise<Map<string, WikiSummary | null>> {
   const entries = await Promise.all(
-    titles.map(async (title) => [title, await fetchWikiSummary(title)] as const)
+    titles.map(async (title) => [title, await fetchWikiSummary(title, lang)] as const)
   );
   return new Map(entries);
 }
@@ -391,6 +400,61 @@ export async function fetchThumbnails(pageIds: number[], size = 480): Promise<Ma
         }
       } catch {
         // A place without a photo shows its name and category instead.
+      }
+    })
+  );
+
+  return result;
+}
+
+/**
+ * Same interlanguage lookup as `fetchArabicTitles`, keyed by English article
+ * title instead of page id — for the places we name ourselves (countries, and
+ * the hand-curated guide entries) rather than discover by GeoSearch.
+ */
+export async function fetchArabicTitlesByTitle(titles: string[]): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (titles.length === 0) return result;
+
+  await Promise.all(
+    chunk(titles).map(async (batch) => {
+      const params = new URLSearchParams({
+        action: "query",
+        prop: "langlinks",
+        lllang: "ar",
+        lllimit: "500",
+        titles: batch.join("|"),
+        redirects: "1",
+        format: "json",
+        origin: "*",
+      });
+      try {
+        const res = await fetch(`${apiBase("en")}?${params.toString()}`, {
+          headers: WIKI_HEADERS,
+          next: { revalidate: 86400 },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          query?: {
+            normalized?: { from: string; to: string }[];
+            redirects?: { from: string; to: string }[];
+            pages?: Record<string, { title?: string; langlinks?: { "*"?: string }[] }>;
+          };
+        };
+        // Wikipedia answers under the final title after normalising and
+        // following redirects, so walk those hops back to what we asked for.
+        const backToAsked = new Map<string, string>();
+        for (const n of data.query?.normalized ?? []) backToAsked.set(n.to, n.from);
+        for (const r of data.query?.redirects ?? []) {
+          backToAsked.set(r.to, backToAsked.get(r.from) ?? r.from);
+        }
+        for (const page of Object.values(data.query?.pages ?? {})) {
+          const arTitle = page.langlinks?.[0]?.["*"];
+          if (!page.title || !arTitle) continue;
+          result.set(backToAsked.get(page.title) ?? page.title, arTitle);
+        }
+      } catch {
+        // No Arabic title just means the English one is used, and marked.
       }
     })
   );

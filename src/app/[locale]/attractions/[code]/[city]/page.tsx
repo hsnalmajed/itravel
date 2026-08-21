@@ -74,9 +74,9 @@ export default async function CityPlacesPage({
   return (
     <div>
       <div className="relative h-48 sm:h-64 overflow-hidden">
-        {citySummary?.thumbnail ? (
+        {citySummary?.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={citySummary.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img src={citySummary.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-brand-900 to-brand-950" />
         )}
@@ -145,7 +145,7 @@ export default async function CityPlacesPage({
                 englishOnly: dict.attractions.englishOnly,
                 readMoreWiki: dict.attractions.readMoreWiki,
                 loadMore: dict.attractions.loadMore,
-                searchPlaceholder: dict.attractions.citySearchPlaceholder,
+                searchPlaceholder: dict.attractions.placeSearchPlaceholder,
               }}
             />
 

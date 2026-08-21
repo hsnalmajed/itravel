@@ -11,11 +11,9 @@ export interface WikiSummary {
   title: string;
   extract: string;
   /**
-   * A card-sized photo (~640px wide). Wikimedia generates thumbnails on
-   * demand at whatever width the URL asks for, so we widen the 320px one the
-   * API hands back rather than falling through to `image` — an original can
-   * be a 20 MB panorama, and a grid of twelve of those is a page that takes
-   * ten seconds to paint on a phone.
+   * A card-sized photo, at most ~640px wide. Never the original: an original
+   * can be a 20 MB panorama, and a grid of twelve of those is a page that
+   * takes ten seconds to paint on a phone.
    */
   thumbnail?: string;
   /** The full-resolution original, for a full-width hero image. */
@@ -35,13 +33,23 @@ export interface WikiSummary {
 const summaryCache = new Map<string, WikiSummary | null>();
 
 // Wikimedia thumbnail URLs carry their width in the path
-// (".../440px-Hagia_Sophia.jpg"), and the thumbnailer renders any width asked
-// for. The REST summary hands back a 320px one, which is soft on a card, so
-// we ask for 640 — sharp enough at card size, still a fraction of the
-// original's weight.
-function cardSized(url: string | undefined, width = 640): string | undefined {
+// (".../320px-Hagia_Sophia.jpg"), and the thumbnailer will render a different
+// width if the URL asks for one. The REST summary hands back a 320px
+// thumbnail, which is soft on a card, so we ask for 640.
+//
+// The catch is that Wikimedia refuses to upscale: asking for 640px of a photo
+// whose original is 500px wide returns a 404 and the card shows a broken
+// image. So the request only goes out when the original is genuinely that
+// wide — otherwise the API's own URL is used untouched, because a slightly
+// soft photo beats a missing one.
+function cardSized(
+  url: string | undefined,
+  originalWidth: number | undefined,
+  width = 640
+): string | undefined {
   if (!url) return undefined;
-  return url.replace(/\/(\d+)px-/, `/${width}px-`);
+  if (typeof originalWidth !== "number" || originalWidth < width) return url;
+  return url.replace(/\/\d+px-/, `/${width}px-`);
 }
 
 export async function fetchWikiSummary(
@@ -72,7 +80,7 @@ export async function fetchWikiSummary(
       title?: string;
       extract?: string;
       thumbnail?: { source?: string };
-      originalimage?: { source?: string };
+      originalimage?: { source?: string; width?: number };
       content_urls?: { desktop?: { page?: string } };
       coordinates?: { lat?: number; lon?: number };
       type?: string;
@@ -84,8 +92,9 @@ export async function fetchWikiSummary(
     const summary: WikiSummary = {
       title: data.title || title,
       extract: data.extract || "",
-      thumbnail: cardSized(data.thumbnail?.source) || data.originalimage?.source,
-      image: data.originalimage?.source || cardSized(data.thumbnail?.source),
+      thumbnail:
+        cardSized(data.thumbnail?.source, data.originalimage?.width) || data.originalimage?.source,
+      image: data.originalimage?.source || data.thumbnail?.source,
       wikipediaUrl: data.content_urls?.desktop?.page,
       lat: typeof data.coordinates?.lat === "number" ? data.coordinates.lat : undefined,
       lon: typeof data.coordinates?.lon === "number" ? data.coordinates.lon : undefined,

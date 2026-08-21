@@ -11,9 +11,9 @@ export interface WikiSummary {
   title: string;
   extract: string;
   /**
-   * A card-sized photo, at most ~640px wide. Never the original: an original
-   * can be a 20 MB panorama, and a grid of twelve of those is a page that
-   * takes ten seconds to paint on a phone.
+   * A card-sized photo, at whatever width Wikipedia's API chose. Never the
+   * original: an original can be a 20 MB panorama, and a grid of twelve of
+   * those is a page that takes ten seconds to paint on a phone.
    */
   thumbnail?: string;
   /** The full-resolution original, for a full-width hero image. */
@@ -31,26 +31,6 @@ export interface WikiSummary {
 // cache is a soft best-effort speedup only — never relied on for
 // correctness. Each entry is small (a title, ~2 sentences, one image URL).
 const summaryCache = new Map<string, WikiSummary | null>();
-
-// Wikimedia thumbnail URLs carry their width in the path
-// (".../320px-Hagia_Sophia.jpg"), and the thumbnailer will render a different
-// width if the URL asks for one. The REST summary hands back a 320px
-// thumbnail, which is soft on a card, so we ask for 640.
-//
-// The catch is that Wikimedia refuses to upscale: asking for 640px of a photo
-// whose original is 500px wide returns a 404 and the card shows a broken
-// image. So the request only goes out when the original is genuinely that
-// wide — otherwise the API's own URL is used untouched, because a slightly
-// soft photo beats a missing one.
-function cardSized(
-  url: string | undefined,
-  originalWidth: number | undefined,
-  width = 640
-): string | undefined {
-  if (!url) return undefined;
-  if (typeof originalWidth !== "number" || originalWidth < width) return url;
-  return url.replace(/\/\d+px-/, `/${width}px-`);
-}
 
 export async function fetchWikiSummary(
   title: string,
@@ -92,8 +72,13 @@ export async function fetchWikiSummary(
     const summary: WikiSummary = {
       title: data.title || title,
       extract: data.extract || "",
-      thumbnail:
-        cardSized(data.thumbnail?.source, data.originalimage?.width) || data.originalimage?.source,
+      // Both URLs come from Wikipedia exactly as given. We used to widen the
+      // thumbnail URL by editing the "320px-" in its path, which looks like it
+      // should work — but Wikimedia only serves widths it has actually
+      // rendered for that file, and answers 400 for any other. That turned
+      // almost every card photo on the site into a broken image. Whatever
+      // width the API hands back is the width we use.
+      thumbnail: data.thumbnail?.source,
       image: data.originalimage?.source || data.thumbnail?.source,
       wikipediaUrl: data.content_urls?.desktop?.page,
       lat: typeof data.coordinates?.lat === "number" ? data.coordinates.lat : undefined,

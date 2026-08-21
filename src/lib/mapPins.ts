@@ -209,7 +209,22 @@ export async function fetchCityOverviews(
         return;
       }
       const places = await fetchNearbyPlaces(s.lat, s.lon, { radius, limit: perCity });
-      result.set(c.wikiTitle, { photo: s.thumbnail, count: places.length });
+
+      // Not every city's article carries a lead photo — smaller ones often
+      // don't. Rather than leave the card as a bare tile, borrow a photo from
+      // one of the city's own notable places: it's still a real, sourced
+      // picture of somewhere in that city, which is what the card is
+      // promising. Only the nearest few are checked, since they're the ones
+      // closest to the centre and most likely to be the landmark a visitor
+      // pictures when they think of the place.
+      let photo = s.thumbnail;
+      if (!photo && places.length > 0) {
+        const nearest = [...places].sort((a, b) => a.distance - b.distance).slice(0, 20);
+        const thumbs = await fetchThumbnails(nearest.map((p) => p.pageId));
+        photo = nearest.map((p) => thumbs.get(p.pageId)).find(Boolean);
+      }
+
+      result.set(c.wikiTitle, { photo, count: places.length });
     })
   );
 

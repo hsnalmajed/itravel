@@ -17,6 +17,7 @@ export default function Header({ locale }: { locale: Locale }) {
     { href: `/${locale}/maps`, label: dict.nav.maps },
     { href: `/${locale}/itinerary`, label: dict.nav.itinerary },
     { href: `/${locale}/seasons`, label: dict.nav.seasons },
+    { href: `/${locale}/visa`, label: dict.nav.visa },
     { href: `/${locale}/currency`, label: dict.nav.currency },
   ];
 

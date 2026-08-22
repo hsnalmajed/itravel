@@ -46,6 +46,20 @@ export const dictionaries = {
       viewSource: "المصدر على ويكيبيديا",
       onlySaudi: "هذه الصفحة مخصّصة لحاملي الجواز السعودي فقط. حاملو جوازات أخرى تختلف متطلباتهم تماماً.",
       seeAllRequirements: "شاهد متطلبات كل الدول",
+      applyHeading: "المتطلبات بضغطة زر",
+      applySubtitle: "اختر الدولة لتعرف طريقة التقديم على تأشيرتها",
+      applySearchPlaceholder: "ابحث عن دولة للتقديم...",
+      applyCountriesCount: "{count} دولة متاحة للتقديم",
+      applyNoResults: "لا توجد دولة بهذا الاسم ضمن الدول المتاحة للتقديم.",
+      chooseRoute: "طريقة التقديم على تأشيرة {country}",
+      applyOfficial: "التقديم من الموقع الرسمي للدولة",
+      applyDirect: "التقديم عبر دايركت",
+      officialNote:
+        "الموقع الرسمي للدولة هو الأرخص دائماً — لا تدفع فيه إلا رسوم التأشيرة نفسها. مكاتب التأشيرات تضيف رسوم خدمة مقابل تجهيز الأوراق والمواعيد.",
+      applySectionNote:
+        "هذه الدول التي نملك لها رابط تقديم موثّقاً. كل رابط رسمي هنا على نطاق حكومي تم التحقق من عمله، لأن مواقع التأشيرات المزيّفة من أكثر عمليات النصب انتشاراً في السفر.",
+      statusHeading: "هل أحتاج تأشيرة؟",
+      applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج iTravel.",
     },
     filters: {
       searchPlaceholder: "اكتب اسم دولة أو مدينة...",
@@ -464,6 +478,20 @@ export const dictionaries = {
       viewSource: "Source on Wikipedia",
       onlySaudi: "This page covers Saudi passport holders only. Other passports have entirely different requirements.",
       seeAllRequirements: "See requirements for every country",
+      applyHeading: "Apply in one tap",
+      applySubtitle: "Pick a country to see how to apply for its visa",
+      applySearchPlaceholder: "Search a country to apply for...",
+      applyCountriesCount: "{count} countries you can apply for",
+      applyNoResults: "No country by that name among the ones you can apply for here.",
+      chooseRoute: "How to apply for a {country} visa",
+      applyOfficial: "Apply on the country's official site",
+      applyDirect: "Apply through Direct",
+      officialNote:
+        "The country's own portal is always the cheapest — you pay the visa fee and nothing else. Visa agencies add a service fee for handling documents and appointments.",
+      applySectionNote:
+        "These are the countries we have a verified application link for. Every official link is on a government-controlled domain we checked resolves, because fake visa sites are among the most common travel scams there are.",
+      statusHeading: "Do I need a visa?",
+      applyExternalNote: "Applying and paying happen on the destination site directly, outside iTravel.",
     },
     filters: {
       searchPlaceholder: "Type a country or city...",

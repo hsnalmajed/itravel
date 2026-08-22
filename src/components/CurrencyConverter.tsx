@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Locale } from "@/lib/types";
 import { CURRENCIES, findCurrency } from "@/lib/currencies";
+import SearchableSelect, { type SearchableOption } from "@/components/SearchableSelect";
 import { googleRateUrl, rateBetween, type Rates } from "@/lib/rates";
 
 interface ConverterDict {
@@ -10,6 +11,8 @@ interface ConverterDict {
   from: string;
   to: string;
   swap: string;
+  searchPlaceholder: string;
+  noMatches: string;
   rateLine: string;
   inverseLine: string;
   checkOnGoogle: string;
@@ -36,8 +39,10 @@ export default function CurrencyConverter({
   dict: ConverterDict;
 }) {
   const [amount, setAmount] = useState("100");
+  // Riyal to dollar is the conversion a Saudi traveller reaches for most —
+  // it's the pair almost every other rate is quoted through.
   const [from, setFrom] = useState("SAR");
-  const [to, setTo] = useState("TRY");
+  const [to, setTo] = useState("USD");
 
   const fromCurrency = findCurrency(from);
   const toCurrency = findCurrency(to);
@@ -73,8 +78,13 @@ export default function CurrencyConverter({
     setTo(from);
   }
 
-  const selectClass =
-    "w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100";
+  // The code is searchable as well as the name, so "SAR", "ريال" and "Riyal"
+  // all find the same entry.
+  const options: SearchableOption[] = CURRENCIES.map((c) => ({
+    value: c.code,
+    label: `${c.code} — ${locale === "ar" ? c.nameAr : c.nameEn}`,
+    keywords: `${c.nameAr} ${c.nameEn}`,
+  }));
 
   return (
     <div>
@@ -94,17 +104,15 @@ export default function CurrencyConverter({
           />
         </label>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-gray-700">{dict.from}</span>
-            <select value={from} onChange={(e) => setFrom(e.target.value)} className={selectClass}>
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="relative z-10 mt-4 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+          <SearchableSelect
+            value={from}
+            options={options}
+            onChange={setFrom}
+            label={dict.from}
+            searchPlaceholder={dict.searchPlaceholder}
+            emptyText={dict.noMatches}
+          />
 
           <button
             type="button"
@@ -118,16 +126,14 @@ export default function CurrencyConverter({
             </svg>
           </button>
 
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-bold text-gray-700">{dict.to}</span>
-            <select value={to} onChange={(e) => setTo(e.target.value)} className={selectClass}>
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} — {locale === "ar" ? c.nameAr : c.nameEn}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            value={to}
+            options={options}
+            onChange={setTo}
+            label={dict.to}
+            searchPlaceholder={dict.searchPlaceholder}
+            emptyText={dict.noMatches}
+          />
         </div>
 
         <div className="mt-5 rounded-2xl bg-gradient-to-br from-brand-950 to-brand-800 p-5 text-white">

@@ -13,6 +13,7 @@ import CityGallery, { type CityCard } from "@/components/CityGallery";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
 import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
+import { directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
 
 export default async function CountryAttractionsPage({
   params,
@@ -70,6 +71,8 @@ export default async function CountryAttractionsPage({
     required: dict.visa.required,
     unknown: dict.visa.unknown,
   };
+  const visaOfficialUrl = officialVisaUrl(country.code);
+  const visaDirectUrl = directVisaUrl(country.code, loc);
   const visaHints: Record<VisaCategory, string> = {
     free: dict.visa.freeHint,
     arrival: dict.visa.arrivalHint,
@@ -190,7 +193,7 @@ export default async function CountryAttractionsPage({
         )}
         {countrySummary?.extract && <p className="text-xs text-gray-400 mb-6">{dict.attractions.source}</p>}
 
-        {visaEntry && (
+        {(visaEntry || visaOfficialUrl || visaDirectUrl) && (
           <section className="mb-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-900">
               <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
@@ -202,22 +205,59 @@ export default async function CountryAttractionsPage({
             </h2>
 
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
-              <div className="flex flex-wrap items-center gap-3">
-                <VisaBadge category={visaEntry.category} label={visaLabels[visaEntry.category]} />
-                {visaEntry.stay && (
-                  <span className="text-sm font-semibold text-gray-600">
-                    {dict.visa.allowedStay}: <span dir="ltr">{visaEntry.stay}</span>
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                {visaHints[visaEntry.category]}
-              </p>
-              {/* Verbatim from the source, so a two-route status is never
-                  reduced to the badge alone. */}
-              <p className="mt-1 text-xs text-gray-400" dir="ltr">
-                {visaEntry.status}
-              </p>
+              {visaEntry ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <VisaBadge category={visaEntry.category} label={visaLabels[visaEntry.category]} />
+                    {visaEntry.stay && (
+                      <span className="text-sm font-semibold text-gray-600">
+                        {dict.visa.allowedStay}: <span dir="ltr">{visaEntry.stay}</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                    {visaHints[visaEntry.category]}
+                  </p>
+                  {/* Verbatim from the source, so a two-route status is never
+                      reduced to the badge alone. */}
+                  <p className="mt-1 text-xs text-gray-400" dir="ltr">
+                    {visaEntry.status}
+                  </p>
+                </>
+              ) : (
+                // The status source is unreachable, but where to apply is our
+                // own verified data — so the buttons below still stand.
+                <p className="text-sm leading-relaxed text-amber-800">{dict.visa.unavailable}</p>
+              )}
+
+              {(visaOfficialUrl || visaDirectUrl) && (
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  {visaOfficialUrl && (
+                    <a
+                      href={visaOfficialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-xl bg-emerald-600 px-4 py-2.5 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                    >
+                      🏛 {dict.visa.applyOfficial} ↗
+                    </a>
+                  )}
+                  {visaDirectUrl && (
+                    <a
+                      href={visaDirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-xl bg-brand-800 px-4 py-2.5 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-900"
+                    >
+                      📄 {dict.visa.applyDirect} ↗
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {visaOfficialUrl && (
+                <p className="mt-2 text-xs leading-relaxed text-emerald-800">{dict.visa.officialNote}</p>
+              )}
 
               <Link
                 href={`/${loc}/visa`}

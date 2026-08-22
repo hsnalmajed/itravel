@@ -1,60 +1,73 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import type { Locale } from "@/lib/types";
+import type { VisaCategory } from "@/lib/visa";
 import { flagImageUrl } from "@/lib/visaProviders";
 import Photo from "@/components/Photo";
+import { VISA_ORDER, VISA_STYLES } from "@/components/VisaBadge";
 
 export interface ApplyCountry {
   code: string;
   name: string;
   photo?: string;
-  /** The country's own government portal, when we have a verified one. */
-  officialUrl?: string;
-  /** Direct's requirement page for this country, when they cover it. */
-  directUrl?: string;
+  /** Whether a visa is needed at all, so the card can say so under the name. */
+  category: VisaCategory;
+  hasOfficial: boolean;
+  hasDirect: boolean;
 }
 
 interface ApplyDict {
   searchPlaceholder: string;
-  applyOfficial: string;
-  applyDirect: string;
-  officialNote: string;
   countriesCount: string;
   noResults: string;
-  chooseRoute: string;
+  filterByType: string;
+  allStatuses: string;
+  labels: Record<VisaCategory, string>;
 }
 
 /**
- * Pick a country, then pick how to apply.
+ * Pick a destination by what it costs you to get in.
  *
- * The two routes are shown side by side rather than one being hidden behind
- * the other, because they cost very different amounts: the government portal
- * charges the visa fee and nothing else, while an agency adds a service fee
- * for handling the paperwork. A traveller who doesn't know the first option
- * exists can't choose it, so where a verified official portal exists it goes
- * first and is labelled as the official one.
+ * The status under each name is the whole point of the grid: "Georgia" tells
+ * a traveller nothing, "Georgia — no visa needed" turns browsing into
+ * deciding. And the filter above turns it around entirely — instead of
+ * checking countries one at a time to find one you can just fly to, you ask
+ * for all of them at once.
  */
 export default function VisaApplyGrid({
+  locale,
   countries,
   dict,
 }: {
-  // Names arrive already in the reader's language, so this component never
-  // needs to know which one that is.
+  locale: Locale;
   countries: ApplyCountry[];
   dict: ApplyDict;
 }) {
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState<string | null>(null);
+  const [category, setCategory] = useState<VisaCategory | "all">("all");
+
+  const counts = useMemo(() => {
+    const c = {} as Record<VisaCategory, number>;
+    for (const cat of VISA_ORDER) c[cat] = 0;
+    for (const country of countries) c[country.category]++;
+    return c;
+  }, [countries]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return countries;
-    return countries.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.name.includes(query.trim()) || c.code.toLowerCase() === q
-    );
-  }, [countries, query]);
+    return countries.filter((c) => {
+      if (category !== "all" && c.category !== category) return false;
+      if (!q) return true;
+      return c.name.toLowerCase().includes(q) || c.name.includes(query.trim()) || c.code.toLowerCase() === q;
+    });
+  }, [countries, query, category]);
 
-  const active = countries.find((c) => c.code === open);
+  const chipClass = (active: boolean) =>
+    `rounded-full px-3.5 py-2 text-xs sm:text-sm font-bold transition ${
+      active ? "bg-brand-800 text-white shadow-sm" : "bg-white text-gray-700 ring-1 ring-gray-200 hover:ring-brand-300"
+    }`;
 
   return (
     <div>
@@ -64,6 +77,23 @@ export default function VisaApplyGrid({
         placeholder={dict.searchPlaceholder}
         className="mb-3 w-full max-w-md rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100 placeholder:text-gray-400"
       />
+
+      <p className="mb-2 text-sm font-bold text-gray-700">{dict.filterByType}</p>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button type="button" onClick={() => setCategory("all")} className={chipClass(category === "all")}>
+          {dict.allStatuses}
+        </button>
+        {VISA_ORDER.filter((c) => counts[c] > 0).map((c) => (
+          <button key={c} type="button" onClick={() => setCategory(c)} className={chipClass(category === c)}>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`inline-block h-2 w-2 rounded-full ${VISA_STYLES[c].dot}`} aria-hidden="true" />
+              {dict.labels[c]}
+              <span className={category === c ? "text-white/70" : "text-gray-400"}>({counts[c]})</span>
+            </span>
+          </button>
+        ))}
+      </div>
+
       <p className="mb-4 text-xs font-semibold text-gray-500">
         {dict.countriesCount.replace("{count}", String(filtered.length))}
       </p>
@@ -73,14 +103,10 @@ export default function VisaApplyGrid({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
           {filtered.map((c) => (
-            <button
+            <Link
               key={c.code}
-              type="button"
-              onClick={() => setOpen(open === c.code ? null : c.code)}
-              aria-expanded={open === c.code}
-              className={`group overflow-hidden rounded-2xl bg-white text-start shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-lg ${
-                open === c.code ? "ring-2 ring-brand-500" : "ring-black/5"
-              }`}
+              href={`/${locale}/visa/${c.code}`}
+              className="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:ring-brand-200"
             >
               <div className="relative h-24 sm:h-28">
                 <Photo
@@ -92,52 +118,21 @@ export default function VisaApplyGrid({
                     where the eye lands when scanning a grid of destinations. */}
                 <span className="absolute -bottom-6 start-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white rtl:translate-x-1/2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={flagImageUrl(c.code)}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={flagImageUrl(c.code)} alt="" loading="lazy" className="h-full w-full object-cover" />
                 </span>
               </div>
-              <p className="px-2 pb-3 pt-8 text-center text-sm font-bold text-gray-900">{c.name}</p>
-            </button>
+
+              <div className="px-2 pb-3 pt-8 text-center">
+                <p className="truncate text-sm font-bold text-gray-900">{c.name}</p>
+                <span
+                  className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${VISA_STYLES[c.category].chip}`}
+                >
+                  <span aria-hidden="true">{VISA_STYLES[c.category].icon}</span>
+                  {dict.labels[c.category]}
+                </span>
+              </div>
+            </Link>
           ))}
-        </div>
-      )}
-
-      {active && (
-        <div className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-brand-200">
-          <p className="mb-3 font-bold text-brand-900">
-            {dict.chooseRoute.replace("{country}", active.name)}
-          </p>
-
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {active.officialUrl && (
-              <a
-                href={active.officialUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700"
-              >
-                🏛 {dict.applyOfficial} ↗
-              </a>
-            )}
-            {active.directUrl && (
-              <a
-                href={active.directUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 rounded-xl bg-brand-800 px-4 py-3 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-900"
-              >
-                📄 {dict.applyDirect} ↗
-              </a>
-            )}
-          </div>
-
-          {active.officialUrl && (
-            <p className="mt-2.5 text-xs leading-relaxed text-emerald-800">{dict.officialNote}</p>
-          )}
         </div>
       )}
     </div>

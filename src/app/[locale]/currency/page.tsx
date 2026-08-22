@@ -44,6 +44,8 @@ export default async function CurrencyPage({ params }: PageProps<"/[locale]/curr
             from: dict.currency.from,
             to: dict.currency.to,
             swap: dict.currency.swap,
+            searchPlaceholder: dict.currency.searchPlaceholder,
+            noMatches: dict.currency.noMatches,
             rateLine: dict.currency.rateLine,
             inverseLine: dict.currency.inverseLine,
             checkOnGoogle: dict.currency.checkOnGoogle,

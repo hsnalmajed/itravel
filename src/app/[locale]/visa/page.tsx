@@ -33,8 +33,9 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
         code,
         name: loc === "ar" ? country.nameAr : country.nameEn,
         photo: applyPhotos.get(code),
-        officialUrl: officialVisaUrl(code),
-        directUrl: directVisaUrl(code, loc),
+        category: data?.byCountry.get(code)?.category ?? "unknown",
+        hasOfficial: Boolean(officialVisaUrl(code)),
+        hasDirect: Boolean(directVisaUrl(code, loc)),
       };
     })
     .filter((c): c is ApplyCountry => c !== null)
@@ -112,15 +113,15 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
           </p>
 
           <VisaApplyGrid
+            locale={loc}
             countries={applyCountries}
             dict={{
               searchPlaceholder: dict.visa.applySearchPlaceholder,
-              applyOfficial: dict.visa.applyOfficial,
-              applyDirect: dict.visa.applyDirect,
-              officialNote: dict.visa.officialNote,
               countriesCount: dict.visa.applyCountriesCount,
               noResults: dict.visa.applyNoResults,
-              chooseRoute: dict.visa.chooseRoute,
+              filterByType: dict.visa.filterByType,
+              allStatuses: dict.visa.allStatuses,
+              labels,
             }}
           />
           <p className="mt-3 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>

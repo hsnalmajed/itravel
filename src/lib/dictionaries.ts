@@ -59,6 +59,18 @@ export const dictionaries = {
       applySectionNote:
         "هذه الدول التي نملك لها رابط تقديم موثّقاً. كل رابط رسمي هنا على نطاق حكومي تم التحقق من عمله، لأن مواقع التأشيرات المزيّفة من أكثر عمليات النصب انتشاراً في السفر.",
       statusHeading: "هل أحتاج تأشيرة؟",
+      filterByType: "فلترة حسب نوع التأشيرة",
+      documentsHeading: "المستندات المطلوبة",
+      documentsNote:
+        "هذه المستندات المعتادة لهذا النوع من التأشيرات، وليست قائمة السفارة الرسمية. كل سفارة تضيف أو تعدّل، وقد تطلب منك مستندات إضافية حسب حالتك — اعتمد على قائمة السفارة أو المصدر الرسمي أدناه.",
+      schengenNote:
+        "أسبانيا ضمن دول شنغن الـ29، ومتطلباتها موحّدة نظاماً مع بقية الدول: نفس صلاحية الجواز، ونفس الحد الأدنى للتأمين (30,000 يورو)، ونفس مواصفات الصورة.",
+      applyNow: "التقديم على التأشيرة",
+      applyNowSubtitle: "اختر الجهة التي تريد التقديم من خلالها",
+      backToVisa: "كل الدول",
+      openDetails: "عرض المتطلبات والتقديم",
+      noApplyRoute:
+        "لا نملك رابط تقديم موثّقاً لهذه الدولة بعد. استخدم روابط المصادر الرسمية أعلاه للوصول إلى سفارتها أو موقعها الرسمي.",
       applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج iTravel.",
     },
     filters: {
@@ -491,6 +503,18 @@ export const dictionaries = {
       applySectionNote:
         "These are the countries we have a verified application link for. Every official link is on a government-controlled domain we checked resolves, because fake visa sites are among the most common travel scams there are.",
       statusHeading: "Do I need a visa?",
+      filterByType: "Filter by visa type",
+      documentsHeading: "Documents you'll need",
+      documentsNote:
+        "These are the documents this kind of visa usually asks for — not the embassy's official list. Every consulate adds its own, changes them, and may ask you for more depending on your circumstances. The embassy's own list, or the official source below, is the one that governs.",
+      schengenNote:
+        "This is one of the 29 Schengen states, so its requirements are fixed in law and identical across all of them: the same passport validity, the same €30,000 insurance minimum, the same photo spec.",
+      applyNow: "Apply for the visa",
+      applyNowSubtitle: "Choose where you'd like to apply",
+      backToVisa: "All countries",
+      openDetails: "See requirements and apply",
+      noApplyRoute:
+        "We don't have a verified application link for this country yet. Use the official source links above to reach its embassy or official portal.",
       applyExternalNote: "Applying and paying happen on the destination site directly, outside iTravel.",
     },
     filters: {

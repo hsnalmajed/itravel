@@ -10,6 +10,9 @@ import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
 import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
+import VisaBadge from "@/components/VisaBadge";
+import VisaWarning from "@/components/VisaWarning";
+import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
 
 export default async function CountryAttractionsPage({
   params,
@@ -44,7 +47,7 @@ export default async function CountryAttractionsPage({
 
   const countryArTitle = arTitles.get(country.nameEn);
 
-  const [countrySummary, enSummaries, arSummaries, cityOverviews] = await Promise.all([
+  const [countrySummary, enSummaries, arSummaries, cityOverviews, visaData] = await Promise.all([
     countryArTitle
       ? fetchWikiSummary(countryArTitle, "ar")
       : fetchWikiSummary(country.nameEn),
@@ -53,7 +56,27 @@ export default async function CountryAttractionsPage({
     // A photo and a real place count for every city, so the visitor can see
     // what's behind a card before opening it.
     fetchCityOverviews(cities),
+    fetchVisaRequirements(),
   ]);
+
+  // Entry requirements belong here, at the top of the page where someone is
+  // deciding whether this country is even possible for them — not on a
+  // separate page they'd have to know to visit.
+  const visaEntry = visaData?.byCountry.get(country.code);
+  const visaLabels: Record<VisaCategory, string> = {
+    free: dict.visa.free,
+    arrival: dict.visa.arrival,
+    eta: dict.visa.eta,
+    required: dict.visa.required,
+    unknown: dict.visa.unknown,
+  };
+  const visaHints: Record<VisaCategory, string> = {
+    free: dict.visa.freeHint,
+    arrival: dict.visa.arrivalHint,
+    eta: dict.visa.etaHint,
+    required: dict.visa.requiredHint,
+    unknown: dict.visa.unknownHint,
+  };
 
   // Arabic text where Wikipedia has an Arabic article; the English article
   // otherwise. The photo always comes from the English article, which is the
@@ -166,6 +189,58 @@ export default async function CountryAttractionsPage({
           <p className="text-gray-600 leading-relaxed text-sm mb-1">{countrySummary.extract}</p>
         )}
         {countrySummary?.extract && <p className="text-xs text-gray-400 mb-6">{dict.attractions.source}</p>}
+
+        {visaEntry && (
+          <section className="mb-8">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-900">
+              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+              🛂{" "}
+              {dict.visa.headingForCountry.replace(
+                "{country}",
+                loc === "ar" ? country.nameAr : country.nameEn
+              )}
+            </h2>
+
+            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
+              <div className="flex flex-wrap items-center gap-3">
+                <VisaBadge category={visaEntry.category} label={visaLabels[visaEntry.category]} />
+                {visaEntry.stay && (
+                  <span className="text-sm font-semibold text-gray-600">
+                    {dict.visa.allowedStay}: <span dir="ltr">{visaEntry.stay}</span>
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                {visaHints[visaEntry.category]}
+              </p>
+              {/* Verbatim from the source, so a two-route status is never
+                  reduced to the badge alone. */}
+              <p className="mt-1 text-xs text-gray-400" dir="ltr">
+                {visaEntry.status}
+              </p>
+
+              <Link
+                href={`/${loc}/visa`}
+                className="mt-3 inline-block text-xs font-bold text-brand-700 hover:underline"
+              >
+                {dict.visa.seeAllRequirements} ←
+              </Link>
+            </div>
+
+            <div className="mt-3">
+              <VisaWarning
+                dict={{
+                  warningTitle: dict.visa.warningTitle,
+                  warningBody: dict.visa.warningBody,
+                  checkIata: dict.visa.checkIata,
+                  checkMofa: dict.visa.checkMofa,
+                  viewSource: dict.visa.viewSource,
+                }}
+                sourceUrl={VISA_SOURCE_URL}
+              />
+            </div>
+          </section>
+        )}
 
         {cityCards.length > 0 && (
           <section className="mb-10">

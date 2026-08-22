@@ -1,10 +1,13 @@
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { COUNTRIES } from "@/lib/countries";
+import { COUNTRIES, findCountry } from "@/lib/countries";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
 import VisaExplorer, { type VisaRow } from "@/components/VisaExplorer";
 import VisaWarning from "@/components/VisaWarning";
+import VisaApplyGrid, { type ApplyCountry } from "@/components/VisaApplyGrid";
+import { applicableCountryCodes, directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
+import { fetchCountryPhotos } from "@/lib/countryPhotos";
 
 // Fetched per request behind a daily cache, never frozen into the build — a
 // visa table baked into a deploy is stale the moment a rule changes.
@@ -15,7 +18,27 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  const data = await fetchVisaRequirements();
+  // The countries a traveller can actually act on, and a photo for each.
+  const applyCodes = applicableCountryCodes().filter((code) => findCountry(code));
+  const [data, applyPhotos] = await Promise.all([
+    fetchVisaRequirements(),
+    fetchCountryPhotos(applyCodes),
+  ]);
+
+  const applyCountries: ApplyCountry[] = applyCodes
+    .map((code): ApplyCountry | null => {
+      const country = findCountry(code);
+      if (!country) return null;
+      return {
+        code,
+        name: loc === "ar" ? country.nameAr : country.nameEn,
+        photo: applyPhotos.get(code),
+        officialUrl: officialVisaUrl(code),
+        directUrl: directVisaUrl(code, loc),
+      };
+    })
+    .filter((c): c is ApplyCountry => c !== null)
+    .sort((a, b) => a.name.localeCompare(b.name, loc === "ar" ? "ar" : "en"));
 
   const labels: Record<VisaCategory, string> = {
     free: dict.visa.free,
@@ -80,6 +103,30 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
             sourceUrl={data ? data.sourceUrl : VISA_SOURCE_URL}
           />
         </div>
+
+        <section className="mb-10">
+          <h2 className="text-xl font-extrabold text-brand-900">🛫 {dict.visa.applyHeading}</h2>
+          <p className="mb-1 text-sm text-gray-500">{dict.visa.applySubtitle}</p>
+          <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-xs leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+            {dict.visa.applySectionNote}
+          </p>
+
+          <VisaApplyGrid
+            countries={applyCountries}
+            dict={{
+              searchPlaceholder: dict.visa.applySearchPlaceholder,
+              applyOfficial: dict.visa.applyOfficial,
+              applyDirect: dict.visa.applyDirect,
+              officialNote: dict.visa.officialNote,
+              countriesCount: dict.visa.applyCountriesCount,
+              noResults: dict.visa.applyNoResults,
+              chooseRoute: dict.visa.chooseRoute,
+            }}
+          />
+          <p className="mt-3 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
+        </section>
+
+        <h2 className="mb-4 text-xl font-extrabold text-brand-900">❓ {dict.visa.statusHeading}</h2>
 
         {rows.length === 0 ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-sm leading-relaxed text-amber-800">

@@ -19,6 +19,18 @@ import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { findCountry } from "@/lib/countries";
 import { fetchWikiSummaries } from "@/lib/wikipedia";
 
+/**
+ * A country's own Wikipedia article usually leads with its flag, and a flag
+ * is the one image a destination card must not use: the card already shows a
+ * flag badge, and "here is Sweden" illustrated by the Swedish flag tells a
+ * traveller nothing about whether they want to go. Treating a flag as no
+ * photo at all lets the search fall through to the next candidate, or to the
+ * card's own gradient.
+ */
+function isFlagImage(url: string): boolean {
+  return /Flag[_%20]*of/i.test(url);
+}
+
 /** How many of a country's landmarks to try before falling back to the country article. */
 const LANDMARKS_TO_TRY = 3;
 
@@ -30,10 +42,15 @@ export async function fetchCountryPhotos(codes: string[]): Promise<Map<string, s
     const guide = COUNTRY_GUIDES[code];
     const landmarks = (guide?.attractions ?? []).slice(0, LANDMARKS_TO_TRY).map((a) => a.wikiTitle);
     const countryName = findCountry(code)?.nameEn;
-    return countryName ? [...landmarks, countryName] : landmarks;
+    if (!countryName) return landmarks;
+    // "Tourism in X" before plain "X": the tourism article opens on a
+    // landmark, while the country article opens on the flag we just rejected.
+    // It exists for most countries and costs nothing for the ones that
+    // already found a photo from their guide.
+    return [...landmarks, `Tourism in ${countryName}`, countryName];
   };
 
-  const maxRounds = LANDMARKS_TO_TRY + 1;
+  const maxRounds = LANDMARKS_TO_TRY + 2;
   for (let round = 0; round < maxRounds; round++) {
     const pending = codes.filter((c) => !photos.has(c));
     if (pending.length === 0) break;
@@ -47,7 +64,7 @@ export async function fetchCountryPhotos(codes: string[]): Promise<Map<string, s
     const summaries = await fetchWikiSummaries(thisRound.map((x) => x.title));
     for (const { code, title } of thisRound) {
       const photo = summaries.get(title)?.thumbnail;
-      if (photo) photos.set(code, photo);
+      if (photo && !isFlagImage(photo)) photos.set(code, photo);
     }
   }
 

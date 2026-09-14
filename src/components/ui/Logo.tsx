@@ -16,10 +16,14 @@ import Image from "next/image";
  * Reversing it by repainting the navy white would also repaint the navy
  * *inside* the pin, and the mark would stop being the mark.
  */
+// Intrinsic sizes match the files on disk. Images are served unoptimized on
+// Workers (see next.config.ts), so the browser performs every downscale
+// itself — each asset is stored at roughly 3x the largest size it is ever
+// displayed at rather than at master resolution.
 const SOURCES = {
-  lockup: { src: "/sfratna-lockup.png", width: 1531, height: 521 },
-  full: { src: "/sfratna-logo.png", width: 1543, height: 521 },
-  mark: { src: "/sfratna-mark.png", width: 480, height: 518 },
+  lockup: { src: "/sfratna-lockup.png", width: 360, height: 123 },
+  full: { src: "/sfratna-logo.png", width: 560, height: 189 },
+  mark: { src: "/sfratna-mark.png", width: 256, height: 276 },
 } as const;
 
 export default function Logo({

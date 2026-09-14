@@ -48,7 +48,7 @@ function ItineraryContent() {
   const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-4xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.itinerary.title}</h1>
       <p className="text-gray-500 mt-1.5 mb-6">{dict.itinerary.subtitle}</p>
 

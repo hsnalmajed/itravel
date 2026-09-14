@@ -1,92 +1,290 @@
 @import "tailwindcss";
 
-/* Cairo: one professional, modern typeface with full native Arabic and
-   Latin coverage, so both locales share the same typographic voice instead
-   of Arabic falling back to whatever the OS happens to ship. Self-hosted
-   via @fontsource (no external font-CDN request at runtime) — only the
-   weights actually used in the UI are imported. */
-@import "@fontsource/cairo/400.css";
-@import "@fontsource/cairo/500.css";
-@import "@fontsource/cairo/600.css";
-@import "@fontsource/cairo/700.css";
-@import "@fontsource/cairo/800.css";
+/* ─────────────────────────────────────────────────────────────────────────
+   Typography — a real pairing, not one family doing every job.
 
+   Tajawal carries the display voice: geometric, wide, confident at 800/900,
+   and it sits close to the geometry of the Sfratna wordmark. IBM Plex Sans
+   Arabic carries running text, where Tajawal gets tiring — Plex is humanist,
+   opens up at small sizes, and its Latin and Arabic were drawn together, so
+   a mixed line like "الرياض → Istanbul" doesn't visibly break.
+
+   Self-hosted through @fontsource. Only the weights and subsets in use are
+   imported: on Cloudflare Workers every byte is served from the edge, and a
+   font CDN would add a third-party request on the critical path.
+   ───────────────────────────────────────────────────────────────────────── */
+@import "@fontsource/tajawal/arabic-500.css";
+@import "@fontsource/tajawal/arabic-700.css";
+@import "@fontsource/tajawal/arabic-800.css";
+@import "@fontsource/tajawal/arabic-900.css";
+@import "@fontsource/tajawal/latin-500.css";
+@import "@fontsource/tajawal/latin-700.css";
+@import "@fontsource/tajawal/latin-800.css";
+@import "@fontsource/tajawal/latin-900.css";
+
+@import "@fontsource/ibm-plex-sans-arabic/arabic-400.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-500.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-600.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-700.css";
+@import "@fontsource/ibm-plex-sans-arabic/latin-400.css";
+@import "@fontsource/ibm-plex-sans-arabic/latin-500.css";
+@import "@fontsource/ibm-plex-sans-arabic/latin-600.css";
+@import "@fontsource/ibm-plex-sans-arabic/latin-700.css";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Sfratna — the palette is the logo.
+
+   Every value below is either one of the six brand colours exactly, or a
+   tint/shade generated from one of them. Nothing is invented: the mark's
+   navy, its two blues and its sunset orange are the whole vocabulary, so
+   the site, the app and the logo cannot drift apart.
+   ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* A cool off-white, pulled toward the navy rather than a neutral grey —
+     pure #fff beside a full-bleed photograph reads as a hole in the page. */
+  --background: #f6f8fc;
+  --foreground: #0d1b2e;
 
   /*
-   * Full tonal scales derived from the iTravel logo's two hues (blue ~208°
-   * and green ~117°), generated the same way Tailwind builds its own
-   * palettes — so we get proper light tints and dark shades instead of
-   * flat colors + opacity tricks.
+   * NAVY — the primary.
+   *
+   * navy-900 is Primary Navy #0B2D5B and navy-950 is Deep Navy #062653,
+   * exactly as specified. navy-990 goes one step deeper than the brand
+   * sheet, because a scrim over a bright photograph needs more density than
+   * Deep Navy alone can give before white text stops being legible; it is
+   * still the same hue, just darker.
    */
-  --brand-50: #f2f8fd;
-  --brand-100: #dfeefb;
-  --brand-200: #badbf7;
-  --brand-300: #7dbcf2;
-  --brand-400: #3b9aed;
-  --brand-500: #1179d4;
-  --brand-600: #0e64af;
-  --brand-700: #0d4e87;
-  --brand-800: #0c3e6a;
-  --brand-900: #0a3052;
-  --brand-950: #082035;
+  --navy-50: #eff5fc;
+  --navy-100: #dbe8f7;
+  --navy-200: #b7d1ef;
+  --navy-300: #88b1e1;
+  --navy-400: #538cd0;
+  --navy-500: #2e6cba;
+  --navy-600: #1f5599;
+  --navy-700: #17427a;
+  --navy-800: #103463;
+  --navy-900: #0b2d5b;
+  --navy-950: #062653;
+  --navy-990: #04182f;
 
   /*
-   * A refined, deeper emerald rather than the bright "grass" green this
-   * used to be — the logo's globe is photo-realistic (muted earth tones),
-   * so a saturated Kelly green never actually matched it and read as an
-   * unrelated second brand color. This scale sits closer to the logo's
-   * natural palette and pairs with the navy brand scale the way premium
-   * travel brands typically pair navy + emerald/gold, instead of navy +
-   * bright green.
+   * SUN — the accent, and the only accent.
+   *
+   * sun-400 is Sunset Orange #FFA630 exactly: every primary button, active
+   * state and section rule is this one colour. The darker steps exist so
+   * orange text on a light surface can still meet contrast — #FFA630 on
+   * white does not.
    */
-  --accent-50: #eefaf4;
-  --accent-100: #d5f2e3;
-  --accent-200: #ade4c9;
-  --accent-300: #78cea8;
-  --accent-400: #45b184;
-  --accent-500: #279367;
-  --accent-600: #1a7a54;
-  --accent-700: #146146;
-  --accent-800: #124d39;
-  --accent-900: #0f3f2f;
-  --accent-950: #08251b;
+  --sun-50: #fff8ed;
+  --sun-100: #ffeed4;
+  --sun-200: #ffd9a8;
+  --sun-300: #ffc071;
+  --sun-400: #ffa630;
+  --sun-500: #f9880b;
+  --sun-600: #dd6906;
+  --sun-700: #b74d09;
+  --sun-800: #933e0f;
+  --sun-900: #78340f;
+  --sun-950: #411903;
+
+  /*
+   * SEA — the secondary blues, used sparingly.
+   *
+   * sea-400 is Sky Blue #3BB6E4 and sea-600 is Travel Blue #1976D2. These
+   * carry gradients, links and quiet informational states; they never
+   * compete with the orange for a call to action.
+   */
+  --sea-50: #eff9fe;
+  --sea-100: #daf0fc;
+  --sea-200: #b8e4f9;
+  --sea-300: #84d2f3;
+  --sea-400: #3bb6e4;
+  --sea-500: #1f9ed2;
+  --sea-600: #1976d2;
+  --sea-700: #1a5ea8;
+  --sea-800: #1c4f8a;
+  --sea-900: #1c4372;
+  --sea-950: #132b4b;
+
+  /* MIST — neutral surfaces, tinted toward the navy so cards and dividers
+     belong to the same family as everything else. */
+  --mist-50: #f7f9fc;
+  --mist-100: #eef2f8;
+  --mist-200: #dfe6f0;
+  --mist-300: #c7d3e3;
+  --mist-400: #9aa9c0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
-  --color-brand-800: var(--brand-800);
-  --color-brand-900: var(--brand-900);
-  --color-brand-950: var(--brand-950);
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+  --color-navy-990: var(--navy-990);
 
-  --color-accent-50: var(--accent-50);
-  --color-accent-100: var(--accent-100);
-  --color-accent-200: var(--accent-200);
-  --color-accent-300: var(--accent-300);
-  --color-accent-400: var(--accent-400);
-  --color-accent-500: var(--accent-500);
-  --color-accent-600: var(--accent-600);
-  --color-accent-700: var(--accent-700);
-  --color-accent-800: var(--accent-800);
-  --color-accent-900: var(--accent-900);
-  --color-accent-950: var(--accent-950);
+  --color-sun-50: var(--sun-50);
+  --color-sun-100: var(--sun-100);
+  --color-sun-200: var(--sun-200);
+  --color-sun-300: var(--sun-300);
+  --color-sun-400: var(--sun-400);
+  --color-sun-500: var(--sun-500);
+  --color-sun-600: var(--sun-600);
+  --color-sun-700: var(--sun-700);
+  --color-sun-800: var(--sun-800);
+  --color-sun-900: var(--sun-900);
+  --color-sun-950: var(--sun-950);
+
+  --color-sea-50: var(--sea-50);
+  --color-sea-100: var(--sea-100);
+  --color-sea-200: var(--sea-200);
+  --color-sea-300: var(--sea-300);
+  --color-sea-400: var(--sea-400);
+  --color-sea-500: var(--sea-500);
+  --color-sea-600: var(--sea-600);
+  --color-sea-700: var(--sea-700);
+  --color-sea-800: var(--sea-800);
+  --color-sea-900: var(--sea-900);
+  --color-sea-950: var(--sea-950);
+
+  --color-mist-50: var(--mist-50);
+  --color-mist-100: var(--mist-100);
+  --color-mist-200: var(--mist-200);
+  --color-mist-300: var(--mist-300);
+  --color-mist-400: var(--mist-400);
+
+  /*
+   * brand-* and accent-* are kept as aliases onto the new scales.
+   *
+   * Four hundred-odd usages across thirty files already speak in these
+   * names. Re-pointing them is what carries the Sfratna identity into every
+   * page at once — including the ones restyled by hand afterwards — instead
+   * of the site spending a release half-old and half-new.
+   */
+  --color-brand-50: var(--navy-50);
+  --color-brand-100: var(--navy-100);
+  --color-brand-200: var(--navy-200);
+  --color-brand-300: var(--navy-300);
+  --color-brand-400: var(--navy-400);
+  --color-brand-500: var(--navy-500);
+  --color-brand-600: var(--navy-600);
+  --color-brand-700: var(--navy-700);
+  --color-brand-800: var(--navy-800);
+  --color-brand-900: var(--navy-900);
+  --color-brand-950: var(--navy-950);
+
+  --color-accent-50: var(--sun-50);
+  --color-accent-100: var(--sun-100);
+  --color-accent-200: var(--sun-200);
+  --color-accent-300: var(--sun-300);
+  --color-accent-400: var(--sun-400);
+  --color-accent-500: var(--sun-500);
+  --color-accent-600: var(--sun-600);
+  --color-accent-700: var(--sun-700);
+  --color-accent-800: var(--sun-800);
+  --color-accent-900: var(--sun-900);
+  --color-accent-950: var(--sun-950);
+
+  --font-display: "Tajawal", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+
+  /* Elevation tinted navy. A neutral black shadow under a card on a cool
+     off-white looks like dirt; a navy one looks like light. */
+  --shadow-card: 0 1px 2px rgb(6 38 83 / 0.05), 0 8px 24px -12px rgb(6 38 83 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(6 38 83 / 0.06), 0 20px 40px -16px rgb(6 38 83 / 0.28);
+  --shadow-sun: 0 8px 24px -10px rgb(255 166 48 / 0.6);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The scrim.
+
+   Every hero is a photograph with text on it, and the one thing that ruins
+   that is text sitting on an unpredictable part of an image. This gradient
+   is dense where the text lives and clears toward the top so the picture
+   still reads as a picture — and it is navy rather than black, so a hero
+   looks like dusk over the place rather than a grey panel laid on top.
+   ───────────────────────────────────────────────────────────────────────── */
+.scrim {
+  background: linear-gradient(
+    to top,
+    rgb(4 24 47 / 0.95) 0%,
+    rgb(4 24 47 / 0.80) 26%,
+    rgb(6 38 83 / 0.45) 58%,
+    rgb(6 38 83 / 0.20) 100%
+  );
+}
+
+.scrim-soft {
+  background: linear-gradient(
+    to top,
+    rgb(4 24 47 / 0.88) 0%,
+    rgb(6 38 83 / 0.36) 55%,
+    rgb(6 38 83 / 0.05) 100%
+  );
+}
+
+/* A hairline of sunset orange under a section heading. Small, but it is the
+   mark that repeats on every page and makes them feel like one site. */
+.rule-sun::after {
+  content: "";
+  display: block;
+  width: 2.75rem;
+  height: 3px;
+  margin-top: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sun-400), var(--sun-600));
+}
+
+.rule-sun-center::after {
+  margin-inline: auto;
+}
+
+/* The sun gradient from the logo's own disc, for the numbers that carry the
+   site's scale. */
+.text-sunlit {
+  background: linear-gradient(160deg, var(--sun-200), var(--sun-400) 55%, var(--sun-300));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Horizontal rails: one row, swipeable on a phone, no visible scrollbar. */
+.rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

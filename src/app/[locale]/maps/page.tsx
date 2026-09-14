@@ -23,9 +23,12 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
     subtitle: `🏙️ ${cityCountLabel(COUNTRY_CITIES[c.code]?.length ?? 0, dict.maps)}`,
   }));
 
+  const heroPhoto = withCityCounts.map((c) => c.photo).find(Boolean);
+
   return (
     <MapsCountryList
       locale={loc}
+      heroPhoto={heroPhoto}
       countries={withCityCounts}
       cities={cities}
       filtersDict={{
@@ -44,6 +47,8 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
         title: dict.maps.title,
         subtitle: dict.maps.subtitle,
         noResults: dict.filters.noResults,
+        statCountries: dict.home.statCountries,
+        statCities: dict.home.statCities,
       }}
     />
   );

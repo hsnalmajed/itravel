@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { findCountry, flagEmoji } from "@/lib/countries";
+import {findCountry} from "@/lib/countries";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
+import PageHero from "@/components/ui/PageHero";
 
 export const dynamic = "force-dynamic";
 
@@ -46,26 +47,30 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
 
   const countryName = loc === "ar" ? country.nameAr : country.nameEn;
 
+  // The country's hero picture comes from its first city that has one, so
+  // this page opens on somewhere inside the country rather than on a map of
+  // its borders.
+  const heroPhoto = cards.map((c) => c.photo).find(Boolean);
+
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-      <Link
-        href={`/${loc}/maps`}
-        className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md"
+    <div>
+      <PageHero
+        photo={heroPhoto}
+        size="sm"
+        eyebrow={dict.maps.title}
+        title={dict.maps.countryMapTitle.replace("{country}", countryName)}
+        subtitle={dict.maps.citiesSubtitle}
+        facts={[{ value: String(cities.length), label: cityCountLabel(cities.length, dict.maps) }]}
       >
-        <span aria-hidden="true">{loc === "ar" ? "→" : "←"}</span>
-        {dict.maps.backToMaps}
-      </Link>
+        <Link href={`/${loc}/maps`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
+          <span aria-hidden="true">{loc === "ar" ? "→" : "←"}</span>
+          {dict.maps.backToMaps}
+        </Link>
+      </PageHero>
 
-      <h1 className="mb-1 flex items-center gap-2.5 text-xl sm:text-2xl font-extrabold text-gray-900">
-        <span className="text-2xl leading-none">{flagEmoji(country.code)}</span>
-        {dict.maps.countryMapTitle.replace("{country}", countryName)}
-      </h1>
-      <p className="mb-1 text-sm font-semibold text-brand-700">
-        🏙️ {cityCountLabel(cities.length, dict.maps)}
-      </p>
-      <p className="mb-6 text-sm text-gray-500">{dict.maps.citiesSubtitle}</p>
-
-      <CityGallery cities={cards} hrefBase={`/${loc}/maps/${country.code}`} />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+        <CityGallery cities={cards} hrefBase={`/${loc}/maps/${country.code}`} />
+      </div>
     </div>
   );
 }

@@ -119,7 +119,7 @@ function DiscoverResultsContent() {
   const hasResults = mode === "multi" ? pairSuggestions.length > 0 : singleSuggestions.length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.discoverResults.title}</h1>

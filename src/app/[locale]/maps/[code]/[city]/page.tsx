@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { findCountry, flagEmoji } from "@/lib/countries";
+import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
 import { buildLegend, fetchPlacesAroundCities, placeToPin } from "@/lib/mapPins";
 import { PIN_STYLES } from "@/lib/pinStyles";
 import AttractionsMap from "@/components/AttractionsMap";
 import MapDownloads from "@/components/MapDownloads";
+import PageHero from "@/components/ui/PageHero";
 
 export const dynamic = "force-dynamic";
 
@@ -51,22 +52,19 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-      <div className="mb-5 flex flex-wrap gap-2">
-        <Link
-          href={`/${loc}/maps/${country.code}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md"
-        >
+    <div>
+      <PageHero
+        size="sm"
+        eyebrow={loc === "ar" ? country.nameAr : country.nameEn}
+        title={pageTitle}
+      >
+        <Link href={`/${loc}/maps/${country.code}`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
           <span aria-hidden="true">{loc === "ar" ? "→" : "←"}</span>
           {dict.maps.backToCountryMap}
         </Link>
-      </div>
+      </PageHero>
 
-      <h1 className="mb-1 flex items-center gap-2.5 text-xl sm:text-2xl font-extrabold text-gray-900">
-        <span className="text-2xl leading-none">{flagEmoji(country.code)}</span>
-        {pageTitle}
-      </h1>
-
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
       {pins.length === 0 ? (
         <p className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-5 text-sm text-amber-800 leading-relaxed">
           {dict.maps.cityNoPlaces}
@@ -101,14 +99,15 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
           <MapDownloads
             pins={pins}
             title={pageTitle}
-            fileBase={`iTravel-${cityEntry.nameEn}-map`}
+            fileBase={`Sfratna-${cityEntry.nameEn}-map`}
             dict={dict.maps}
           />
-          <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-gray-500">
+          <p className="mt-4 rounded-xl bg-mist-100 px-3.5 py-3 text-xs leading-relaxed text-navy-500 ring-1 ring-mist-200">
             {dict.maps.sourceNote}
           </p>
         </>
       )}
+      </div>
     </div>
   );
 }

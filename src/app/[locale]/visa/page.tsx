@@ -8,6 +8,8 @@ import VisaWarning from "@/components/VisaWarning";
 import VisaApplyGrid, { type ApplyCountry } from "@/components/VisaApplyGrid";
 import { applicableCountryCodes, directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
+import PageHero from "@/components/ui/PageHero";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 // Fetched per request behind a daily cache, never frozen into the build — a
 // visa table baked into a deploy is stale the moment a rule changes.
@@ -78,18 +80,39 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
         .filter((r): r is VisaRow => r !== null)
     : [];
 
+  // The hero picture is a country you can simply fly to. On a page about
+  // paperwork, leading with somewhere that needs none is the most useful
+  // thing the image can say.
+  const visaFreeCodes = rows.filter((r) => r.category === "free").map((r) => r.code);
+  const heroPhoto =
+    visaFreeCodes.map((c) => applyPhotos.get(c)).find(Boolean) ??
+    applyCodes.map((c) => applyPhotos.get(c)).find(Boolean);
+
+  const countBy = (cat: VisaCategory) => rows.filter((r) => r.category === cat).length;
+  // Only shown when the table actually loaded — a row of zeroes would read
+  // as "nowhere is visa-free" rather than "we could not check".
+  const heroFacts =
+    rows.length > 0
+      ? [
+          { value: String(countBy("free")), label: dict.visa.free },
+          { value: String(countBy("eta")), label: dict.visa.eta },
+          { value: String(countBy("arrival")), label: dict.visa.arrival },
+        ]
+      : undefined;
+
   return (
     <div>
-      <div className="bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 px-4 sm:px-6 py-12">
-        <div className="mx-auto max-w-6xl text-center text-white">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">🛂 {dict.visa.title}</h1>
-          <p className="mt-2 text-white/70">{dict.visa.subtitle}</p>
-        </div>
-      </div>
+      <PageHero
+        photo={heroPhoto}
+        eyebrow={dict.visa.forSaudiPassports}
+        title={dict.visa.title}
+        subtitle={dict.visa.subtitle}
+        facts={heroFacts}
+      />
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-        <p className="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-100">
-          🇸🇦 {dict.visa.onlySaudi}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+        <p className="mb-4 rounded-xl bg-navy-50 px-4 py-3 text-sm leading-relaxed text-navy-800 ring-1 ring-navy-100">
+          {dict.visa.onlySaudi}
         </p>
 
         <div className="mb-6">
@@ -105,9 +128,8 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
           />
         </div>
 
-        <section className="mb-10">
-          <h2 className="text-xl font-extrabold text-brand-900">🛫 {dict.visa.applyHeading}</h2>
-          <p className="mb-1 text-sm text-gray-500">{dict.visa.applySubtitle}</p>
+        <section className="mb-12">
+          <SectionHeading title={dict.visa.applyHeading} subtitle={dict.visa.applySubtitle} />
           <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-xs leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
             {dict.visa.applySectionNote}
           </p>
@@ -127,7 +149,7 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
           <p className="mt-3 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
         </section>
 
-        <h2 className="mb-4 text-xl font-extrabold text-brand-900">❓ {dict.visa.statusHeading}</h2>
+        <SectionHeading title={dict.visa.statusHeading} />
 
         {rows.length === 0 ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-sm leading-relaxed text-amber-800">

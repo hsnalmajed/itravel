@@ -25,9 +25,14 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
     };
   });
 
+  // A real photograph for the hero, taken from the first destination that
+  // has one — so the attractions page opens on an attraction.
+  const heroPhoto = countries.map((c) => c.photo).find(Boolean);
+
   return (
     <AttractionsExplorer
       locale={loc}
+      heroPhoto={heroPhoto}
       featured={featured}
       cities={cities}
       filtersDict={{
@@ -49,6 +54,8 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
         featuredSubtitle: dict.attractions.featuredSubtitle,
         moreDestinations: dict.attractions.moreDestinations,
         noResults: dict.filters.noResults,
+        statCountries: dict.home.statCountries,
+        statCities: dict.home.statCities,
         continents: dict.attractions.continents,
       }}
     />

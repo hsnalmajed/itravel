@@ -87,7 +87,7 @@ export function safeFileName(base: string, extension: string): string {
     .replace(/\s+/g, "-")
     .slice(0, 60)
     .replace(/^-+|-+$/g, "");
-  return `${cleaned || "itravel-map"}.${extension}`;
+  return `${cleaned || "sfratna-map"}.${extension}`;
 }
 
 export function downloadText(content: string, fileName: string, mimeType: string): void {

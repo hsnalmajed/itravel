@@ -2,13 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { findCountry, flagEmoji } from "@/lib/countries";
+import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
 import { fetchPlacesAroundCities } from "@/lib/mapPins";
 import { fetchWikiSummary } from "@/lib/wikipedia";
 import { fetchCitiesForCountry, fetchToursForCity } from "@/lib/viator";
 import CityPlacesExplorer, { type PlaceListItem } from "@/components/CityPlacesExplorer";
 import TourCard from "@/components/TourCard";
+import PageHero from "@/components/ui/PageHero";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 // Live Wikipedia lookups per request, so a newly-documented place shows up
 // without a redeploy.
@@ -73,37 +75,21 @@ export default async function CityPlacesPage({
 
   return (
     <div>
-      <div className="relative h-48 sm:h-64 overflow-hidden">
-        {citySummary?.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={citySummary.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-900 to-brand-950" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
-        <div className="relative mx-auto max-w-6xl h-full px-4 sm:px-6 flex flex-col justify-end pb-6">
-          <Link
-            href={`/${loc}/attractions/${country.code}`}
-            className="mb-3 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-white/90 transition hover:text-white"
-          >
-            {loc === "ar" ? "→" : "←"} {dict.attractions.backToCities}
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-3xl leading-none">{flagEmoji(country.code)}</span>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-sm">
-              {dict.attractions.cityPlacesTitle.replace("{city}", cityName)}
-            </h1>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        photo={citySummary?.image}
+        size="sm"
+        eyebrow={loc === "ar" ? country.nameAr : country.nameEn}
+        title={dict.attractions.cityPlacesTitle.replace("{city}", cityName)}
+      >
+        <Link href={`/${loc}/attractions/${country.code}`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
+          {loc === "ar" ? "→" : "←"} {dict.attractions.backToCities}
+        </Link>
+      </PageHero>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
         {tours.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-bold text-brand-900 mb-4 flex items-center gap-2">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              {dict.attractions.toursHeading}
-            </h2>
+            <SectionHeading title={dict.attractions.toursHeading} />
             <div className="flex flex-col gap-4">
               {tours.map((tour) => (
                 <TourCard key={tour.code} tour={tour} locale={loc} dict={dict.attractions} />

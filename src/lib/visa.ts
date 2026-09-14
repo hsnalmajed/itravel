@@ -168,7 +168,7 @@ export async function fetchVisaRequirements(): Promise<VisaData | null> {
 
     const res = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`, {
       headers: {
-        "User-Agent": "iTravel/1.0 (https://itravel.almajedhsn.workers.dev; travel metasearch site)",
+        "User-Agent": "Sfratna/1.0 (https://itravel.almajedhsn.workers.dev; travel metasearch site)",
         Accept: "application/json",
       },
       // Visa rules change on their own schedule, not ours; a day-old reading

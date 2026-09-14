@@ -3,7 +3,9 @@ import type { Locale } from "./types";
 export const dictionaries = {
   ar: {
     dir: "rtl",
-    siteName: "iTravel",
+    siteName: "Sfratna",
+    siteNameAr: "سفرتنا",
+    slogan: "لكل سفرة حكاية",
     tagline: "خطّط رحلتك بالكامل حسب ميزانيتك — طيران، فنادق، وبرنامج سياحي في مكان واحد",
     nav: {
       home: "الرئيسية",
@@ -14,9 +16,12 @@ export const dictionaries = {
       seasons: "مواسم السفر",
       visa: "متطلبات السفر",
       currency: "تحويل العملة",
+      planCta: "خطّط رحلتك",
+      menu: "القائمة",
     },
     visa: {
       title: "متطلبات السفر للسعوديين",
+      forSaudiPassports: "للجواز السعودي",
       subtitle: "هل تحتاج تأشيرة لدخول كل دولة بجواز السفر السعودي؟",
       headingForCountry: "دخول {country} بالجواز السعودي",
       free: "بدون تأشيرة",
@@ -71,7 +76,7 @@ export const dictionaries = {
       openDetails: "عرض المتطلبات والتقديم",
       noApplyRoute:
         "لا نملك رابط تقديم موثّقاً لهذه الدولة بعد. استخدم روابط المصادر الرسمية أعلاه للوصول إلى سفارتها أو موقعها الرسمي.",
-      applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج iTravel.",
+      applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج Sfratna.",
     },
     filters: {
       searchPlaceholder: "اكتب اسم دولة أو مدينة...",
@@ -118,7 +123,7 @@ export const dictionaries = {
         "تعذّر جلب أسعار الصرف الآن. لا نعرض رقماً قديماً بدلاً منها — استخدم زر قوقل أدناه للحصول على السعر الحالي.",
       pairUnavailable: "لا يتوفر سعر صرف لهذا الزوج من العملات في المصدر حالياً.",
       disclaimer:
-        "هذا سعر السوق المرجعي (mid-market). البنوك ومكاتب الصرافة تضيف هامشاً، فالمبلغ الذي تستلمه فعلياً سيكون أقل. iTravel لا يبيع عملات ولا يقدّم استشارات مالية.",
+        "هذا سعر السوق المرجعي (mid-market). البنوك ومكاتب الصرافة تضيف هامشاً، فالمبلغ الذي تستلمه فعلياً سيكون أقل. Sfratna لا يبيع عملات ولا يقدّم استشارات مالية.",
       sourceNote: "المصدر: {source}",
       popular: "الأكثر استخداماً",
       allCurrencies: "كل العملات",
@@ -204,10 +209,12 @@ export const dictionaries = {
       family: "👨‍👩‍👧 عائلي واسترخاء",
     },
     hero: {
-      badge: "تخطيط سفر ذكي بدون عمولات حجز",
+      badge: "تخطيط سفر ذكي · بدون عمولات حجز",
+      titleLine1: "قل لنا ميزانيتك،",
+      titleLine2: "ونقول لك إلى أين تسافر",
       title: "رحلتك القادمة تبدأ بميزانيتك",
       subtitle:
-        "أدخل ميزانيتك وتفضيلاتك، وسيقترح عليك iTravel أفضل خيارات الطيران والفنادق ضمن ميزانيتك، مع خطة سياحية جاهزة",
+        "نقارن الطيران والفنادق من مصادر موثوقة، ونبني لك خطة يومية كاملة — مع خرائط المعالم ومتطلبات التأشيرة وأسعار العملة في مكان واحد.",
       trust1: "بدون عمولات حجز خفية",
       trust2: "مقارنة من مصادر موثوقة",
       trust3: "خطة سياحية جاهزة لكل رحلة",
@@ -220,7 +227,7 @@ export const dictionaries = {
       chooseModeFirst: "اختر أحد الخيارين أعلاه للمتابعة",
     },
     home: {
-      stepsEyebrow: "كيف يعمل iTravel",
+      stepsEyebrow: "كيف يعمل Sfratna",
       stepsTitle: "من الميزانية إلى خطة سفر كاملة، بثلاث خطوات",
       step1Title: "حدد ميزانيتك وتفضيلاتك",
       step1Body: "أدخل ميزانيتك الإجمالية وتواريخ رحلتك — وجهة محددة تعرفها، أو اقتراح ضمن ميزانيتك إن لم تحدد بعد.",
@@ -228,8 +235,39 @@ export const dictionaries = {
       step2Body: "نقارن الطيران والفنادق عبر مصادر موثوقة محلياً وعالمياً، ونرتبها حسب ما يناسب ميزانيتك فعلياً.",
       step3Title: "احصل على خطة سياحية جاهزة",
       step3Body: "بعد اختيار رحلتك، نبني لك خطة يومية لأبرز المعالم والأنشطة والمأكولات المحلية في وجهتك.",
-      featuresEyebrow: "لماذا iTravel",
+      featuresEyebrow: "لماذا Sfratna",
       featuresTitle: "كل ما تحتاجه لتخطيط رحلة ضمن ميزانيتك",
+
+      statCountries: "دولة",
+      statCities: "مدينة",
+      statContinents: "قارات",
+
+      planEyebrow: "ابدأ من هنا",
+      planTitle: "كيف تحب أن تخطّط رحلتك؟",
+
+      featuredEyebrow: "وجهات مختارة",
+      featuredTitle: "وجهات يعشقها المسافر السعودي",
+      featuredSubtitle: "أشهر الوجهات وأقربها إلينا — اضغط أي وجهة لتفتح مدنها ومعالمها ومطاعمها وأنشطتها.",
+      featuredCta: "كل الوجهات",
+      cityCount: "{count} مدينة",
+
+      seasonEyebrow: "الموسم الآن",
+      seasonTitle: "أفضل الوجهات في {month}",
+      seasonSubtitle: "الوجهات التي يكون طقسها وموسمها في أفضل حالاته هذا الشهر تحديداً.",
+      seasonCta: "تقويم المواسم كامل",
+
+      toolsEyebrow: "أدوات المسافر",
+      toolsTitle: "كل ما تحتاجه قبل أن تحجز",
+      toolsSubtitle: "المعلومات التي تبحث عنها عادةً في خمسة مواقع مختلفة — هنا في مكان واحد.",
+      toolCta: "افتح",
+      toolAttractions: "المعالم السياحية",
+      toolAttractionsBody: "معالم ومطاعم وأنشطة كل مدينة، بالصور والوصف وبالعربي.",
+      toolMaps: "الخرائط السياحية",
+      toolMapsBody: "خريطة تفاعلية لكل مدينة بدبابيس للمعالم والمطاعم والأنشطة، وتنزّلها على جوالك.",
+      toolVisa: "متطلبات السفر",
+      toolVisaBody: "هل تحتاج تأشيرة بجوازك السعودي؟ المستندات المطلوبة ورابط التقديم لكل دولة.",
+      toolCurrency: "تحويل العملة",
+      toolCurrencyBody: "أسعار الصرف بين أي عملتين، مع رابط قوقل لآخر سعر لحظي.",
     },
     discoverForm: {
       title: "اكتشف وجهتك القادمة",
@@ -417,7 +455,7 @@ export const dictionaries = {
       tagCuisine: "طبق محلي",
       backToList: "رجوع للقائمة",
       bookNow: "احجز الآن",
-      bookingExternalNote: "الحجز والدفع يتمّان مباشرة عبر الموقع، خارج iTravel.",
+      bookingExternalNote: "الحجز والدفع يتمّان مباشرة عبر الموقع، خارج Sfratna.",
       citiesHeading: "اختر مدينة",
       citiesSubtitle: "لكل مدينة جولاتها وأنشطتها القابلة للحجز",
       citySearchPlaceholder: "ابحث عن مدينة...",
@@ -439,15 +477,19 @@ export const dictionaries = {
     },
     footer: {
       disclaimer:
-        "iTravel أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
+        "Sfratna أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
       rights: "جميع الحقوق محفوظة",
       linksHeading: "روابط سريعة",
+      exploreHeading: "اكتشف",
+      toolsHeading: "أدوات المسافر",
       partnersHeading: "نقارن أسعارك عبر",
     },
   },
   en: {
     dir: "ltr",
-    siteName: "iTravel",
+    siteName: "Sfratna",
+    siteNameAr: "سفرتنا",
+    slogan: "Every trip has a story",
     tagline: "Plan your whole trip around your budget — flights, hotels, and an itinerary in one place",
     nav: {
       home: "Home",
@@ -458,9 +500,12 @@ export const dictionaries = {
       seasons: "Travel Seasons",
       visa: "Entry Requirements",
       currency: "Currency",
+      planCta: "Plan your trip",
+      menu: "Menu",
     },
     visa: {
       title: "Entry Requirements for Saudi Passports",
+      forSaudiPassports: "Saudi passports",
       subtitle: "Do you need a visa to enter each country on a Saudi passport?",
       headingForCountry: "Entering {country} on a Saudi passport",
       free: "No visa needed",
@@ -515,7 +560,7 @@ export const dictionaries = {
       openDetails: "See requirements and apply",
       noApplyRoute:
         "We don't have a verified application link for this country yet. Use the official source links above to reach its embassy or official portal.",
-      applyExternalNote: "Applying and paying happen on the destination site directly, outside iTravel.",
+      applyExternalNote: "Applying and paying happen on the destination site directly, outside Sfratna.",
     },
     filters: {
       searchPlaceholder: "Type a country or city...",
@@ -562,7 +607,7 @@ export const dictionaries = {
         "We couldn't fetch exchange rates right now. Rather than show you a stale number, use the Google button below for the current rate.",
       pairUnavailable: "The source doesn't currently quote a rate for this pair.",
       disclaimer:
-        "This is the mid-market reference rate. Banks and exchange offices add a margin, so what you actually receive will be less. iTravel does not sell currency or give financial advice.",
+        "This is the mid-market reference rate. Banks and exchange offices add a margin, so what you actually receive will be less. Sfratna does not sell currency or give financial advice.",
       sourceNote: "Source: {source}",
       popular: "Most used",
       allCurrencies: "All currencies",
@@ -648,10 +693,12 @@ export const dictionaries = {
       family: "👨‍👩‍👧 Family & Relaxation",
     },
     hero: {
-      badge: "Smart trip planning, zero booking fees",
+      badge: "Smart trip planning · No booking fees",
+      titleLine1: "Tell us your budget,",
+      titleLine2: "we'll tell you where to go",
       title: "Your next trip starts with your budget",
       subtitle:
-        "Enter your budget and preferences, and iTravel will suggest the best flight and hotel options that fit — plus an AI-generated itinerary.",
+        "We compare flights and hotels across trusted sources and build you a full day-by-day plan — with attraction maps, visa requirements and live currency rates in one place.",
       trust1: "No hidden booking fees",
       trust2: "Compared across trusted sources",
       trust3: "A ready itinerary for every trip",
@@ -664,7 +711,7 @@ export const dictionaries = {
       chooseModeFirst: "Choose one of the options above to continue",
     },
     home: {
-      stepsEyebrow: "How iTravel works",
+      stepsEyebrow: "How Sfratna works",
       stepsTitle: "From your budget to a complete trip plan, in three steps",
       step1Title: "Set your budget and preferences",
       step1Body:
@@ -675,8 +722,39 @@ export const dictionaries = {
       step3Title: "Get a ready-made itinerary",
       step3Body:
         "Once you've picked your trip, we build a day-by-day plan for the top attractions, activities, and local food in your destination.",
-      featuresEyebrow: "Why iTravel",
+      featuresEyebrow: "Why Sfratna",
       featuresTitle: "Everything you need to plan a trip within your budget",
+
+      statCountries: "Countries",
+      statCities: "Cities",
+      statContinents: "Continents",
+
+      planEyebrow: "Start here",
+      planTitle: "How would you like to plan?",
+
+      featuredEyebrow: "Featured",
+      featuredTitle: "Where Saudi travellers actually go",
+      featuredSubtitle: "The best-loved and closest destinations — open any one for its cities, attractions, restaurants and activities.",
+      featuredCta: "All destinations",
+      cityCount: "{count} cities",
+
+      seasonEyebrow: "In season now",
+      seasonTitle: "Best places to be in {month}",
+      seasonSubtitle: "Destinations whose weather and season are at their best this particular month.",
+      seasonCta: "Full season calendar",
+
+      toolsEyebrow: "Traveller tools",
+      toolsTitle: "Everything you need before you book",
+      toolsSubtitle: "The things you normally hunt across five different sites — gathered in one.",
+      toolCta: "Open",
+      toolAttractions: "Attractions",
+      toolAttractionsBody: "Every city's sights, restaurants and activities, with photos and descriptions.",
+      toolMaps: "Tourist maps",
+      toolMapsBody: "An interactive map per city, pinned by sights, food and activities — downloadable to your phone.",
+      toolVisa: "Entry requirements",
+      toolVisaBody: "Do you need a visa on a Saudi passport? Documents required and where to apply, per country.",
+      toolCurrency: "Currency converter",
+      toolCurrencyBody: "Rates between any two currencies, with a Google link for the live figure.",
     },
     discoverForm: {
       title: "Discover your next destination",
@@ -864,7 +942,7 @@ export const dictionaries = {
       tagCuisine: "Local dish",
       backToList: "Back to list",
       bookNow: "Book now",
-      bookingExternalNote: "Booking and payment happen directly on that site, outside iTravel.",
+      bookingExternalNote: "Booking and payment happen directly on that site, outside Sfratna.",
       citiesHeading: "Choose a city",
       citiesSubtitle: "Each city has its own bookable tours and activities",
       citySearchPlaceholder: "Search for a city...",
@@ -886,9 +964,11 @@ export const dictionaries = {
     },
     footer: {
       disclaimer:
-        "iTravel is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
+        "Sfratna is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
       rights: "All rights reserved",
       linksHeading: "Quick links",
+      exploreHeading: "Explore",
+      toolsHeading: "Traveller tools",
       partnersHeading: "We compare your price across",
     },
   },

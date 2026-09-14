@@ -15,7 +15,7 @@ export async function generateMetadata(
   const { locale } = await params;
   const dict = getDictionary(locale as Locale);
   return {
-    title: `${dict.siteName} — ${dict.tagline}`,
+    title: `${dict.siteName} — ${dict.slogan}`,
     description: dict.tagline,
     icons: {
       icon: [
@@ -35,7 +35,13 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
 
   return (
     <html lang={loc} dir={dict.dir} className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-brand-50/40 text-[#111827]">
+      {/*
+        No top padding on <main>. The header is fixed and transparent at rest,
+        and every page opens on a hero that deliberately runs underneath it —
+        padding here would put a band of background above every photograph and
+        undo the whole effect. Each hero carries its own top padding instead.
+      */}
+      <body className="flex min-h-full flex-col bg-mist-50 text-navy-900">
         <Header locale={loc} />
         <main className="flex-1">{children}</main>
         <Footer locale={loc} />

@@ -106,7 +106,7 @@ function MultiCityResultsContent() {
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-5xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.multicity.resultsTitle}</h1>

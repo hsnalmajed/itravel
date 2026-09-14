@@ -9,7 +9,8 @@ import { directVisaUrl, flagImageUrl, officialVisaUrl } from "@/lib/visaProvider
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
-import Photo from "@/components/Photo";
+import PageHero from "@/components/ui/PageHero";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 export const dynamic = "force-dynamic";
 
@@ -57,33 +58,24 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
 
   return (
     <div>
-      <div className="relative h-44 overflow-hidden sm:h-56">
-        <Photo
-          src={photos.get(country.code)}
-          className="absolute inset-0 h-full w-full object-cover"
-          fallback={<div className="absolute inset-0 bg-gradient-to-br from-brand-900 to-brand-950" />}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
-        <div className="relative mx-auto flex h-full max-w-3xl flex-col justify-end px-4 pb-5 sm:px-6">
-          <Link
-            href={`/${loc}/visa`}
-            className="mb-3 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-white/90 transition hover:text-white"
-          >
+      <PageHero
+        photo={photos.get(country.code)}
+        size="sm"
+        eyebrow={dict.visa.title}
+        title={dict.visa.headingForCountry.replace("{country}", countryName)}
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href={`/${loc}/visa`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
             {loc === "ar" ? "→" : "←"} {dict.visa.backToVisa}
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={flagImageUrl(country.code)} alt="" className="h-full w-full object-cover" />
-            </span>
-            <h1 className="text-2xl font-extrabold text-white drop-shadow-sm sm:text-3xl">
-              {dict.visa.headingForCountry.replace("{country}", countryName)}
-            </h1>
-          </div>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white/70">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={flagImageUrl(country.code)} alt="" className="h-full w-full object-cover" />
+          </span>
         </div>
-      </div>
+      </PageHero>
 
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
           {entry ? (
             <>
@@ -121,7 +113,7 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
         </div>
 
         <section className="mt-8">
-          <h2 className="mb-1 text-xl font-extrabold text-brand-900">📋 {dict.visa.documentsHeading}</h2>
+          <SectionHeading title={dict.visa.documentsHeading} />
           {isSchengen(country.code) && (category === "required" || category === "eta") && (
             <p className="mb-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-100">
               🇪🇺 {dict.visa.schengenNote}
@@ -154,8 +146,7 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
         </section>
 
         <section className="mt-8">
-          <h2 className="text-xl font-extrabold text-brand-900">🛫 {dict.visa.applyNow}</h2>
-          <p className="mb-4 text-sm text-gray-500">{dict.visa.applyNowSubtitle}</p>
+          <SectionHeading title={dict.visa.applyNow} subtitle={dict.visa.applyNowSubtitle} />
 
           {officialUrl || directUrl ? (
             <>

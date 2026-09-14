@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { findCountry, flagEmoji } from "@/lib/countries";
+import {findCountry} from "@/lib/countries";
 import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
 import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import { COUNTRY_CITIES } from "@/lib/cities";
@@ -14,6 +14,8 @@ import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
 import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
 import { directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
+import PageHero from "@/components/ui/PageHero";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 export default async function CountryAttractionsPage({
   params,
@@ -109,7 +111,7 @@ export default async function CountryAttractionsPage({
 
   // Real bookable items (official tickets / guided tours) get a genuine
   // outbound link to search results on an actual global tour marketplace —
-  // the visitor books directly there, iTravel is never in that flow. Items
+  // the visitor books directly there, Sfratna is never in that flow. Items
   // that are free or arranged by phone/on arrival have nothing to "book"
   // through a third party, so they get no link.
   const bookableViator = (nameEn: string, booking: string) =>
@@ -163,46 +165,30 @@ export default async function CountryAttractionsPage({
 
   return (
     <div>
-      <div className="relative h-56 sm:h-72 overflow-hidden">
-        {heroPhoto ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={heroPhoto} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-900 to-brand-950" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
-        <div className="relative mx-auto max-w-5xl h-full px-4 sm:px-6 flex flex-col justify-end pb-6">
-          <Link
-            href={`/${loc}/attractions`}
-            className="mb-3 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition"
-          >
-            {loc === "ar" ? "→" : "←"} {dict.attractions.backToCountries}
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-4xl leading-none">{flagEmoji(country.code)}</span>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-sm">
-              {loc === "ar" ? country.nameAr : country.nameEn}
-            </h1>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        photo={heroPhoto}
+        eyebrow={dict.attractions.title}
+        title={loc === "ar" ? country.nameAr : country.nameEn}
+      >
+        <Link href={`/${loc}/attractions`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
+          {loc === "ar" ? "→" : "←"} {dict.attractions.backToCountries}
+        </Link>
+      </PageHero>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
         {countrySummary?.extract && (
-          <p className="text-gray-600 leading-relaxed text-sm mb-1">{countrySummary.extract}</p>
+          <p className="mb-1 text-sm leading-relaxed text-navy-600">{countrySummary.extract}</p>
         )}
-        {countrySummary?.extract && <p className="text-xs text-gray-400 mb-6">{dict.attractions.source}</p>}
+        {countrySummary?.extract && <p className="mb-6 text-xs text-navy-300">{dict.attractions.source}</p>}
 
         {(visaEntry || visaOfficialUrl || visaDirectUrl) && (
           <section className="mb-8">
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-900">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              🛂{" "}
-              {dict.visa.headingForCountry.replace(
+            <SectionHeading
+              title={dict.visa.headingForCountry.replace(
                 "{country}",
                 loc === "ar" ? country.nameAr : country.nameEn
               )}
-            </h2>
+            />
 
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/5">
               {visaEntry ? (

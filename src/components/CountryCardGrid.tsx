@@ -49,34 +49,46 @@ export default function CountryCardGrid({
 
         return (
           <section key={continent}>
-            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-brand-900">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              {continentLabels[continent]}
-              <span className="text-sm font-normal text-gray-400">({inContinent.length})</span>
-            </h2>
+            <h3 className="mb-3.5 flex items-center gap-2.5">
+              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-sun-300 to-sun-600" aria-hidden="true" />
+              <span className="font-display text-base font-extrabold text-navy-900">
+                {continentLabels[continent]}
+              </span>
+              <span className="text-sm font-medium text-navy-300">({inContinent.length})</span>
+            </h3>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
               {inContinent.map((c) => (
                 <Link
                   key={c.code}
                   href={`${hrefBase}/${c.code}`}
-                  className="group relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group relative isolate block aspect-[4/5] overflow-hidden rounded-2xl ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
                 >
                   <Photo
                     src={c.photo}
-                    className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]"
                     fallback={
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-800 to-brand-950 text-4xl">
+                      <div className="absolute inset-0 -z-10 flex items-center justify-center bg-gradient-to-br from-navy-700 to-navy-990 text-4xl">
                         {flagEmoji(c.code)}
                       </div>
                     }
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
-                  <div className="absolute bottom-2.5 start-3 end-3">
-                    <p className="truncate text-sm font-bold text-white drop-shadow-sm sm:text-base">
+                  <div className="scrim-soft absolute inset-0 -z-10" />
+                  {/* A sunset hairline that draws itself on hover — the same
+                      mark as the section rules, at card scale. */}
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-300 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
+                    aria-hidden="true"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <p className="truncate font-display text-sm font-extrabold text-white drop-shadow-sm sm:text-base">
                       {locale === "ar" ? c.nameAr : c.nameEn}
                     </p>
-                    {c.subtitle && <p className="text-[11px] text-white/75">{c.subtitle}</p>}
+                    {c.subtitle && (
+                      <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-sun-300">
+                        {c.subtitle}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}

@@ -13,9 +13,18 @@ import Photo from "@/components/Photo";
  * images and it goes down; when it does the hero falls back to a navy
  * gradient with the same proportions, so the page loses its picture without
  * losing its composition.
+ *
+ * `photoSrcSet` and `photoCredit` travel together and both come from
+ * sectionHero(): a hero is the page's largest paint, so it is worth handing a
+ * 4K screen the 4K rendering, and the licences these photographs carry are
+ * conditional on naming the photographer. Neither is optional in practice —
+ * they are optional in the type only because the country pages still pass a
+ * discovered Wikipedia photo, which has no credit metadata to print.
  */
 export default function PageHero({
   photo,
+  photoSrcSet,
+  photoCredit,
   eyebrow,
   title,
   subtitle,
@@ -25,6 +34,10 @@ export default function PageHero({
   align = "start",
 }: {
   photo?: string;
+  /** Larger renderings by width, for displays that can show them. */
+  photoSrcSet?: string;
+  /** Attribution, printed small in the corner and linked to the file page. */
+  photoCredit?: { text: string; href: string };
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -43,12 +56,20 @@ export default function PageHero({
     <section className={`relative isolate flex ${heights[size]} items-end overflow-hidden bg-navy-990`}>
       <Photo
         src={photo}
+        // The hero is on screen before anything else is; lazy-loading it makes
+        // the browser wait for layout before it will even ask for the file.
+        priority
+        srcSet={photoSrcSet}
+        sizes="100vw"
         className="absolute inset-0 -z-10 h-full w-full object-cover"
         fallback={
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_70%_0%,var(--navy-700),var(--navy-990))]" />
         }
       />
-      <div className="scrim absolute inset-0 -z-10" />
+      {/* The softer scrim once there is a photograph worth seeing behind the
+          type. The stronger one stays for the fallback and for the country
+          pages, where the picture is incidental and the words are the point. */}
+      <div className={`${photoSrcSet ? "scrim-soft" : "scrim"} absolute inset-0 -z-10`} />
 
       <div
         className={`mx-auto w-full max-w-6xl px-4 pb-8 pt-24 sm:px-6 sm:pb-11 ${
@@ -65,7 +86,7 @@ export default function PageHero({
         </h1>
         {subtitle && (
           <p
-            className={`mt-3 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base ${
+            className={`mt-3 max-w-2xl text-sm leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-base ${
               align === "center" ? "mx-auto" : ""
             }`}
           >
@@ -94,6 +115,19 @@ export default function PageHero({
 
         {children && <div className="mt-6">{children}</div>}
       </div>
+
+      {/* Named because the licence says so, and small because the page is not
+          about the photographer. */}
+      {photoCredit && (
+        <a
+          href={photoCredit.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-1.5 end-3 z-10 text-[0.6rem] text-white/45 transition hover:text-white/75"
+        >
+          {photoCredit.text}
+        </a>
+      )}
     </section>
   );
 }

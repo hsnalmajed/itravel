@@ -13,6 +13,7 @@ import CountryCardGrid, {
   type DestinationCountry,
 } from "@/components/CountryCardGrid";
 import PageHero from "@/components/ui/PageHero";
+import type { SectionHero } from "@/lib/heroPhotos";
 
 interface MapsDict {
   title: string;
@@ -28,14 +29,14 @@ export default function MapsCountryList({
   cities,
   filtersDict,
   dict,
-  heroPhoto,
+  hero,
 }: {
   locale: Locale;
   countries: DestinationCountry[];
   cities: CityOption[];
   filtersDict: FiltersDict;
   dict: MapsDict;
-  heroPhoto?: string;
+  hero?: SectionHero;
 }) {
   const [filters, setFilters] = useState<FilterState>({
     query: "",
@@ -51,7 +52,7 @@ export default function MapsCountryList({
   return (
     <div>
       <PageHero
-        photo={heroPhoto}
+        {...hero}
         title={dict.title}
         subtitle={dict.subtitle}
         facts={[

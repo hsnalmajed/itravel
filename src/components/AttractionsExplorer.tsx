@@ -16,6 +16,7 @@ import CountryCardGrid, {
 } from "@/components/CountryCardGrid";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
+import type { SectionHero } from "@/lib/heroPhotos";
 import { searchMatches, searchEquals } from "@/lib/search";
 
 interface ExplorerDict {
@@ -40,14 +41,14 @@ export default function AttractionsExplorer({
   cities,
   filtersDict,
   dict,
-  heroPhoto,
+  hero,
 }: {
   locale: Locale;
   featured: DestinationCountry[];
   cities: CityOption[];
   filtersDict: FiltersDict;
   dict: ExplorerDict;
-  heroPhoto?: string;
+  hero?: SectionHero;
 }) {
   const [filters, setFilters] = useState<FilterState>({
     query: "",
@@ -92,7 +93,7 @@ export default function AttractionsExplorer({
   return (
     <div>
       <PageHero
-        photo={heroPhoto}
+        {...hero}
         title={dict.title}
         subtitle={dict.subtitle}
         facts={[

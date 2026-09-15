@@ -8,8 +8,14 @@ import PageHero from "@/components/ui/PageHero";
 // so the page never serves a rate frozen at build time.
 export const dynamic = "force-dynamic";
 
-export default async function CurrencyPage({ params }: PageProps<"/[locale]/currency">) {
+export default async function CurrencyPage({ params, searchParams }: PageProps<"/[locale]/currency">) {
   const { locale } = await params;
+  // A pair can be handed in by whoever linked here — the results page sends
+  // the trip's own two currencies, so a traveller arrives on their conversion
+  // instead of on the default riyal-to-dollar one.
+  const query = await searchParams;
+  const pick = (value: string | string[] | undefined) =>
+    typeof value === "string" ? value : undefined;
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
@@ -40,6 +46,8 @@ export default async function CurrencyPage({ params }: PageProps<"/[locale]/curr
         <CurrencyConverter
           locale={loc}
           rates={rates}
+          initialFrom={pick(query.from)}
+          initialTo={pick(query.to)}
           dict={{
             amount: dict.currency.amount,
             from: dict.currency.from,

@@ -8,7 +8,9 @@ import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
-import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
+import { type GuideItem } from "@/components/CountryGuideExplorer";
+import CountryGuidePlanner from "@/components/CountryGuidePlanner";
+import PlanActions from "@/components/PlanActions";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
@@ -28,6 +30,7 @@ export default async function CountryAttractionsPage({
   if (!country) notFound();
 
   const guide = COUNTRY_GUIDES[country.code];
+  const countryName = loc === "ar" ? country.nameAr : country.nameEn;
 
   // Collect every wikiTitle this page needs (country + all three
   // categories) and resolve them together, so we make one batch of live
@@ -296,8 +299,10 @@ export default async function CountryAttractionsPage({
               🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
             </div>
 
-            <CountryGuideExplorer
+            <CountryGuidePlanner
               locale={loc}
+              countryCode={country.code}
+              countryName={countryName}
               dict={dict.attractions}
               attractions={attractionItems}
               activities={activityItems}
@@ -310,6 +315,25 @@ export default async function CountryAttractionsPage({
             <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.comingSoonBody}</p>
           </div>
         )}
+
+        {/* Carrying the whole country's places away doesn't require building
+            a plan first — plenty of travellers just want the pins. */}
+        <section className="mt-8">
+          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-brand-900">
+            <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+            {dict.picker.exportHeading.replace("{country}", countryName)}
+          </h2>
+          <p className="mb-4 ms-3 text-sm text-gray-500">{dict.picker.exportSubtitle}</p>
+          <PlanActions
+            locale={loc}
+            countryCode={country.code}
+            countryName={countryName}
+            planLines={[]}
+            showPrint={false}
+            fileBase={`sfratna-places-${country.code}`}
+            title={dict.plan.allPlacesTitle.replace("{country}", countryName)}
+          />
+        </section>
       </div>
     </div>
   );

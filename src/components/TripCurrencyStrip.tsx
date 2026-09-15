@@ -4,8 +4,30 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
-import { currencyFlag, type Currency } from "@/lib/currencies";
+import { type Currency } from "@/lib/currencies";
+import { flagImageUrl } from "@/lib/visaProviders";
 import { googleRateUrl } from "@/lib/rates";
+
+/**
+ * A flag drawn as an image, not an emoji.
+ *
+ * Windows ships no flag glyphs, so 🇸🇦 renders there as the bare letters
+ * "SA" — which is why the rest of the site already draws flags from flagcdn.
+ * Declared at module scope: a component defined inside a render is a new
+ * type on every pass and remounts on each one.
+ */
+function Flag({ currency }: { currency: Currency }) {
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element -- flag CDN, and the
+       app runs with the Next image optimizer disabled on Workers. */
+    <img
+      src={flagImageUrl(currency.country, 80)}
+      alt=""
+      loading="lazy"
+      className="inline-block h-4 w-6 shrink-0 rounded-[3px] object-cover align-[-2px] ring-1 ring-black/10"
+    />
+  );
+}
 
 /**
  * What your money is worth where you're going.
@@ -61,6 +83,7 @@ export default function TripCurrencyStrip({
   if (failed || rate == null) return null;
 
   const name = (c: Currency) => (locale === "ar" ? c.nameAr : c.nameEn);
+
   const fmt = (value: number, decimals: number) =>
     value.toLocaleString(locale === "ar" ? "ar-SA" : "en-US", {
       minimumFractionDigits: decimals,
@@ -81,14 +104,14 @@ export default function TripCurrencyStrip({
           </p>
 
           <p className="mt-2 flex flex-wrap items-baseline gap-x-2 text-lg font-extrabold text-gray-900">
-            <span aria-hidden="true">{currencyFlag(from)}</span>
+            <Flag currency={from} />
             <span>
               1 {name(from)} ={" "}
               <span className="text-brand-800">
                 {fmt(rate, to.decimals)} {name(to)}
               </span>
             </span>
-            <span aria-hidden="true">{currencyFlag(to)}</span>
+            <Flag currency={to} />
           </p>
 
           <p className="mt-1 text-sm text-gray-500">

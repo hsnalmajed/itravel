@@ -35,3 +35,28 @@ export function cityCountLabel(
   if (count >= 3 && count <= 10) return dict.cityFew.replace("{count}", String(count));
   return dict.citiesCount.replace("{count}", String(count));
 }
+
+/**
+ * The same four Arabic shapes, for any noun.
+ *
+ * `cityCountLabel` above solved this for cities before a second noun needed
+ * it. This is that logic with the noun's four strings passed in, so months —
+ * and whatever comes next — never have to repeat it. English supplies the
+ * same string for `two` and `few`, which collapses it back to the usual
+ * singular/plural pair at no cost.
+ */
+export interface CountShapes {
+  /** The "{count} x" form, used for 11 and above (and for all of English). */
+  many: string;
+  one: string;
+  two: string;
+  /** 3-10, the Arabic broken plural. */
+  few: string;
+}
+
+export function countLabel(count: number, shapes: CountShapes): string {
+  if (count === 1) return shapes.one;
+  if (count === 2) return shapes.two;
+  if (count >= 3 && count <= 10) return shapes.few.replace("{count}", String(count));
+  return shapes.many.replace("{count}", String(count));
+}

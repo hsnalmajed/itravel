@@ -2,6 +2,8 @@
 // autocomplete on both search forms. Searching by city ("الرياض") or country
 // ("السعودية") surfaces the matching airport(s) — real IATA codes, so the
 // selected value plugs straight into resolveIata() in flights.ts.
+import { searchMatches } from "@/lib/search";
+
 export interface Airport {
   iata: string;
   nameAr: string;
@@ -214,16 +216,13 @@ export function airportLabel(code: string, locale: "ar" | "en"): string {
 // Matches by IATA code, airport name, city, or country (in either language)
 // so typing a country ("السعودية") surfaces every airport within it.
 export function searchAirports(query: string, limit = 8): Airport[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return [];
   return AIRPORTS.filter(
     (a) =>
-      a.iata.toLowerCase().includes(q) ||
-      a.nameAr.includes(query.trim()) ||
-      a.nameEn.toLowerCase().includes(q) ||
-      a.cityAr.includes(query.trim()) ||
-      a.cityEn.toLowerCase().includes(q) ||
-      a.countryAr.includes(query.trim()) ||
-      a.countryEn.toLowerCase().includes(q)
+      searchMatches(
+        [a.iata, a.nameAr, a.nameEn, a.cityAr, a.cityEn, a.countryAr, a.countryEn],
+        q
+      )
   ).slice(0, limit);
 }

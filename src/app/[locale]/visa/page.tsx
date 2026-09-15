@@ -10,6 +10,7 @@ import { applicableCountryCodes, directVisaUrl, officialVisaUrl } from "@/lib/vi
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { sectionHero } from "@/lib/sectionHero";
 
 // Fetched per request behind a daily cache, never frozen into the build — a
 // visa table baked into a deploy is stale the moment a rule changes.
@@ -22,9 +23,10 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
 
   // The countries a traveller can actually act on, and a photo for each.
   const applyCodes = applicableCountryCodes().filter((code) => findCountry(code));
-  const [data, applyPhotos] = await Promise.all([
+  const [data, applyPhotos, hero] = await Promise.all([
     fetchVisaRequirements(),
     fetchCountryPhotos(applyCodes),
+    sectionHero("visa", loc),
   ]);
 
   const applyCountries: ApplyCountry[] = applyCodes
@@ -80,14 +82,6 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
         .filter((r): r is VisaRow => r !== null)
     : [];
 
-  // The hero picture is a country you can simply fly to. On a page about
-  // paperwork, leading with somewhere that needs none is the most useful
-  // thing the image can say.
-  const visaFreeCodes = rows.filter((r) => r.category === "free").map((r) => r.code);
-  const heroPhoto =
-    visaFreeCodes.map((c) => applyPhotos.get(c)).find(Boolean) ??
-    applyCodes.map((c) => applyPhotos.get(c)).find(Boolean);
-
   const countBy = (cat: VisaCategory) => rows.filter((r) => r.category === cat).length;
   // Only shown when the table actually loaded — a row of zeroes would read
   // as "nowhere is visa-free" rather than "we could not check".
@@ -103,7 +97,7 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
   return (
     <div>
       <PageHero
-        photo={heroPhoto}
+        {...hero}
         eyebrow={dict.visa.forSaudiPassports}
         title={dict.visa.title}
         subtitle={dict.visa.subtitle}

@@ -7,6 +7,7 @@ import { COUNTRY_CITIES } from "@/lib/cities";
 import { findCountry } from "@/lib/countries";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import { fetchCommonsImage } from "@/lib/commonsImage";
+import { heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import SearchModeSwitcher from "@/components/SearchModeSwitcher";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -30,17 +31,6 @@ export const dynamic = "force-dynamic";
 const FEATURED = ["TR", "GE", "MV", "MY", "JP", "ES", "AZ", "TH", "IT"];
 
 /**
- * The photograph the whole homepage rests on: Qasr Sahoud in Al-Ahsa.
- *
- * Named rather than discovered. A Saudi traveller should land on somewhere
- * they know — the site is built for them, and opening on a foreign skyline
- * says the opposite. Qasr Sahoud earns the slot on its own terms too: a mud
- * fort against a real blue sky reads instantly at hero size, and there is no
- * identifiable face in the frame.
- */
-const HERO_FILE = "Qasr_sahood.jpg";
-
-/**
  * Where the hero falls back to if Commons can't be reached — the same
  * discovered country photos the destination cards use.
  */
@@ -61,10 +51,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const month = new Date().getMonth() + 1;
   const inSeasonCodes = (countriesByMonth().get(month) ?? []).slice(0, 6);
 
+  // A different corner of the world each day — see heroPhotos.ts for the
+  // brief these are chosen against.
+  const heroPick = heroPhotoForToday();
   const photoCodes = Array.from(new Set([...HERO_CANDIDATES, ...FEATURED, ...inSeasonCodes]));
   const [photos, heroImage] = await Promise.all([
     fetchCountryPhotos(photoCodes),
-    fetchCommonsImage(HERO_FILE),
+    fetchCommonsImage(heroPick.file),
   ]);
 
   const heroPhoto = heroImage?.url ?? HERO_CANDIDATES.map((c) => photos.get(c)).find(Boolean);
@@ -109,6 +102,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <Photo
           src={heroPhoto}
           priority
+          srcSet={
+            heroImage?.url4k ? `${heroImage.url} 1920w, ${heroImage.url4k} 3840w` : undefined
+          }
+          sizes="100vw"
           className="absolute inset-0 -z-10 h-full w-full object-cover"
           fallback={
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
@@ -159,6 +156,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             className="absolute bottom-2 end-3 z-10 text-[0.6rem] text-white/45 transition hover:text-white/75"
           >
             {dict.hero.photoCredit
+              .replace("{place}", isAr ? heroPick.placeAr : heroPick.placeEn)
               .replace("{artist}", heroImage.artist ?? "Wikimedia Commons")
               .replace("{license}", heroImage.license ?? "")}
           </a>

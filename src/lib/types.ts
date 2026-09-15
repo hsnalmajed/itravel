@@ -75,6 +75,13 @@ export interface HotelOffer {
   distanceFromCenterKm: number;
   breakfastIncluded: boolean;
   roomType: RoomType;
+  /**
+   * A photo of the property, when the booking provider supplies one. Absent
+   * for demo data — the interface shows a designed tile rather than a stock
+   * picture, since a generic image beside a hotel name reads as a photo of
+   * that hotel.
+   */
+  photoUrl?: string;
 }
 
 export interface PackageCombo {

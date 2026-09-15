@@ -84,6 +84,7 @@ interface DuffelAccommodation {
   name: string;
   rating?: number;
   location?: { geographic_coordinates?: { latitude: number; longitude: number } };
+  photos?: { url?: string }[];
 }
 interface DuffelStayResult {
   id?: string;
@@ -498,6 +499,7 @@ export async function searchHotels(params: SearchParams, nights: number): Promis
           distanceFromCenterKm,
           breakfastIncluded,
           roomType,
+          photoUrl: r.accommodation?.photos?.find((ph) => ph?.url)?.url,
         } as HotelOffer;
       })
       // Unrated (stars === 0) properties are kept rather than dropped, since

@@ -12,6 +12,7 @@ import TripCurrencyStrip from "@/components/TripCurrencyStrip";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
+import { findCityByName } from "@/lib/cities";
 import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
 
 function nightsBetween(a: string, b: string) {
@@ -136,11 +137,31 @@ function ResultsContent() {
   // Bridges the destination airport to its country so we can link into the
   // "Tourist Attractions" guide. Airports in a non-UN territory (e.g. Hong
   // Kong, Taiwan) won't resolve — the explore card simply doesn't render.
-  const destinationCountry = useMemo(() => {
-    const airport = findAirport(search.destination);
-    if (!airport) return undefined;
-    return findCountryByEnglishName(airport.countryEn);
-  }, [search.destination]);
+  const destinationAirport = useMemo(() => findAirport(search.destination), [search.destination]);
+
+  const destinationCountry = useMemo(
+    () => (destinationAirport ? findCountryByEnglishName(destinationAirport.countryEn) : undefined),
+    [destinationAirport]
+  );
+
+  // The city they are actually going to, when the guide covers it. This is
+  // what the "attractions, activities & restaurants" card should open — a
+  // country page is a list of cities to choose from, and someone who has just
+  // booked Istanbul has already chosen.
+  const destinationCity = useMemo(() => {
+    if (!destinationCountry || !destinationAirport) return undefined;
+    return findCityByName(
+      destinationCountry.code,
+      destinationAirport.cityEn,
+      destinationAirport.cityAr
+    );
+  }, [destinationCountry, destinationAirport]);
+
+  const destinationCityName = destinationCity
+    ? locale === "ar"
+      ? destinationCity.nameAr
+      : destinationCity.nameEn
+    : undefined;
 
   const originCountry = useMemo(() => {
     const airport = findAirport(search.origin);
@@ -178,6 +199,46 @@ function ResultsContent() {
     });
     return p.toString();
   }, [search]);
+
+  // Where "back" goes from anywhere this page sends the traveller. It is this
+  // exact page with this exact search, so returning lands them on their own
+  // results rather than on a blank search form.
+  const backHref = `/${locale}/results?${sp.toString()}`;
+
+  const itineraryHref = useMemo(() => {
+    const p = new URLSearchParams({
+      city: search.destination,
+      country: destinationCountry?.code ?? "",
+      nights: String(nights || 3),
+      currency: search.currency,
+      origin: search.origin,
+      departDate: search.departDate,
+      returnDate: search.returnDate || "",
+      travelers: String(travelers),
+      back: backHref,
+    });
+    return `/${locale}/itinerary?${p.toString()}`;
+  }, [
+    locale,
+    search.destination,
+    search.currency,
+    search.origin,
+    search.departDate,
+    search.returnDate,
+    destinationCountry,
+    nights,
+    travelers,
+    backHref,
+  ]);
+
+  // Straight to the city they searched for when the guide has it, and to the
+  // country only when it doesn't. Either way the trip length comes along, so
+  // the day-planner further down the page is already set to their stay.
+  const exploreHref = destinationCountry
+    ? destinationCity
+      ? `/${locale}/attractions/${destinationCountry.code}/${destinationCity.slug}`
+      : `/${locale}/attractions/${destinationCountry.code}?nights=${nights || 3}#guide`
+    : undefined;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
@@ -252,30 +313,39 @@ function ResultsContent() {
               <p className="text-sm text-white/70 mt-1 max-w-xl">{dict.results.itineraryPromptBody}</p>
             </div>
             <Link
-              // The country travels with the city so the plan page can offer
-              // its map exports; the search budget deliberately does not —
-              // that money is already spent on the flight and the hotel.
-              href={`/${locale}/itinerary?city=${encodeURIComponent(search.destination)}&country=${destinationCountry?.code ?? ""}&nights=${nights || 3}&currency=${search.currency}`}
+              // Everything the plan page needs to belong to *this* trip: the
+              // city, the country (for its map exports), the dates, and the
+              // way back to these results. The search budget deliberately does
+              // not travel — that money is already spent on the flight and the
+              // hotel.
+              href={itineraryHref}
               className="shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-bold text-brand-900 shadow-sm transition hover:bg-brand-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-900"
             >
               {dict.results.viewItinerary}
             </Link>
           </div>
 
-          {destinationCountry && (
+          {destinationCountry && exploreHref && (
             <Link
-              // Straight to the guide, with the trip length already known —
-              // the section is a long way down a country page, and someone
-              // arriving from a search shouldn't have to hunt for it or
-              // re-enter how many days they booked.
-              href={`/${locale}/attractions/${destinationCountry.code}?nights=${nights || 3}#guide`}
+              href={exploreHref}
               className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5 transition hover:ring-brand-200 hover:shadow-md"
             >
               <div className="flex items-center gap-3">
                 <span className="text-3xl leading-none">{flagEmoji(destinationCountry.code)}</span>
                 <div>
-                  <p className="font-bold text-gray-900">{dict.results.exploreDestinationTitle}</p>
-                  <p className="text-sm text-gray-500 mt-1 max-w-xl">{dict.results.exploreDestinationBody}</p>
+                  {/* Named, when we know the name. "Explore your destination"
+                      is a slogan; "Attractions in Istanbul" is a promise the
+                      next page actually keeps. */}
+                  <p className="font-bold text-gray-900">
+                    {destinationCityName
+                      ? dict.results.exploreCityTitle.replace("{city}", destinationCityName)
+                      : dict.results.exploreDestinationTitle}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1 max-w-xl">
+                    {destinationCityName
+                      ? dict.results.exploreCityBody.replace("{city}", destinationCityName)
+                      : dict.results.exploreDestinationBody}
+                  </p>
                 </div>
               </div>
               <span className="shrink-0 rounded-xl border border-brand-200 px-5 py-3 text-sm font-bold text-brand-800">

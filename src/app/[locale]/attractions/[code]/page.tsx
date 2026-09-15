@@ -184,6 +184,69 @@ export default async function CountryAttractionsPage({
         )}
         {countrySummary?.extract && <p className="mb-6 text-xs text-navy-300">{dict.attractions.source}</p>}
 
+        {guide ? (
+          <div id="guide" className="scroll-mt-28">
+            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+              {dict.attractions.curatedHeading}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.curatedSubtitle}</p>
+            <div className="rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 flex items-center gap-2 text-brand-900 text-sm font-semibold mb-4">
+              🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
+            </div>
+
+            {/* Nobody finds a feature they were not told about. The basket
+                lives on cards further down a long list, so the page says up
+                front what it is for. */}
+            <div className="mb-6 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-5 text-white sm:p-6">
+              <p className="text-base font-extrabold">{dict.picker.introTitle}</p>
+              <ol className="mt-3 grid gap-2.5 text-sm text-white/80 sm:grid-cols-3">
+                {[dict.picker.step1, dict.picker.step2, dict.picker.step3].map((step, i) => (
+                  <li key={step} className="flex gap-2.5">
+                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sun-400 text-xs font-extrabold text-navy-950">
+                      {i + 1}
+                    </span>
+                    <span className="leading-snug">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <CountryGuidePlanner
+              locale={loc}
+              countryCode={country.code}
+              countryName={countryName}
+              dict={dict.attractions}
+              attractions={attractionItems}
+              activities={activityItems}
+              cuisine={cuisineItems}
+            />
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
+            <h2 className="font-bold text-amber-900">{dict.attractions.comingSoonTitle}</h2>
+            <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.comingSoonBody}</p>
+          </div>
+        )}
+
+        {/* Carrying the whole country's places away doesn't require building
+            a plan first — plenty of travellers just want the pins. */}
+        <section className="mt-10 mb-10">
+          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-brand-900">
+            <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+            {dict.picker.exportHeading.replace("{country}", countryName)}
+          </h2>
+          <p className="mb-4 ms-3 text-sm text-gray-500">{dict.picker.exportSubtitle}</p>
+          <PlanActions
+            locale={loc}
+            countryCode={country.code}
+            countryName={countryName}
+            planLines={[]}
+            showPrint={false}
+            fileBase={`sfratna-places-${country.code}`}
+            title={dict.plan.allPlacesTitle.replace("{country}", countryName)}
+          />
+        </section>
         {(visaEntry || visaOfficialUrl || visaDirectUrl) && (
           <section className="mb-8">
             <SectionHeading
@@ -288,52 +351,6 @@ export default async function CountryAttractionsPage({
           </section>
         )}
 
-        {guide ? (
-          <div>
-            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              {dict.attractions.curatedHeading}
-            </h2>
-            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.curatedSubtitle}</p>
-            <div className="rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 flex items-center gap-2 text-brand-900 text-sm font-semibold mb-6">
-              🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
-            </div>
-
-            <CountryGuidePlanner
-              locale={loc}
-              countryCode={country.code}
-              countryName={countryName}
-              dict={dict.attractions}
-              attractions={attractionItems}
-              activities={activityItems}
-              cuisine={cuisineItems}
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
-            <h2 className="font-bold text-amber-900">{dict.attractions.comingSoonTitle}</h2>
-            <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.comingSoonBody}</p>
-          </div>
-        )}
-
-        {/* Carrying the whole country's places away doesn't require building
-            a plan first — plenty of travellers just want the pins. */}
-        <section className="mt-8">
-          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-brand-900">
-            <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-            {dict.picker.exportHeading.replace("{country}", countryName)}
-          </h2>
-          <p className="mb-4 ms-3 text-sm text-gray-500">{dict.picker.exportSubtitle}</p>
-          <PlanActions
-            locale={loc}
-            countryCode={country.code}
-            countryName={countryName}
-            planLines={[]}
-            showPrint={false}
-            fileBase={`sfratna-places-${country.code}`}
-            title={dict.plan.allPlacesTitle.replace("{country}", countryName)}
-          />
-        </section>
       </div>
     </div>
   );

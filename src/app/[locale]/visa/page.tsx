@@ -23,10 +23,15 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
 
   // The countries a traveller can actually act on, and a photo for each.
   const applyCodes = applicableCountryCodes().filter((code) => findCountry(code));
-  const [data, applyPhotos, hero] = await Promise.all([
+  // The hero goes first, on its own. This page makes more outbound lookups
+  // than any other — the visa table plus a photo for every country a Saudi
+  // traveller can apply to — and a Worker is allowed only so many per render.
+  // Bundled in with the rest, the background was the request that lost, and
+  // the page came up as a navy gradient.
+  const hero = await sectionHero("visa", loc);
+  const [data, applyPhotos] = await Promise.all([
     fetchVisaRequirements(),
     fetchCountryPhotos(applyCodes),
-    sectionHero("visa", loc),
   ]);
 
   const applyCountries: ApplyCountry[] = applyCodes

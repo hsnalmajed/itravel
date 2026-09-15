@@ -32,17 +32,27 @@ export default function CurrencyConverter({
   locale,
   rates,
   dict,
+  initialFrom,
+  initialTo,
 }: {
   locale: Locale;
   /** Null when both rate feeds were unreachable. */
   rates: Rates | null;
   dict: ConverterDict;
+  /**
+   * The pair to open on. Set when the visitor arrived from somewhere that
+   * already knows which two currencies they care about — the results page
+   * sends the trip's own pair — so they land on their conversion rather than
+   * having to re-pick it.
+   */
+  initialFrom?: string;
+  initialTo?: string;
 }) {
   const [amount, setAmount] = useState("100");
   // Riyal to dollar is the conversion a Saudi traveller reaches for most —
   // it's the pair almost every other rate is quoted through.
-  const [from, setFrom] = useState("SAR");
-  const [to, setTo] = useState("USD");
+  const [from, setFrom] = useState(() => (initialFrom && findCurrency(initialFrom) ? initialFrom.toUpperCase() : "SAR"));
+  const [to, setTo] = useState(() => (initialTo && findCurrency(initialTo) ? initialTo.toUpperCase() : "USD"));
 
   const fromCurrency = findCurrency(from);
   const toCurrency = findCurrency(to);

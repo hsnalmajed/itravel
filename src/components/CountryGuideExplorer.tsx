@@ -55,13 +55,27 @@ export default function CountryGuideExplorer({
   attractions,
   activities,
   cuisine,
+  selectedKeys,
+  onToggleSelect,
+  addLabel,
+  addedLabel,
 }: {
   locale: Locale;
   dict: ExplorerDict;
   attractions: GuideItem[];
   activities: GuideItem[];
   cuisine: GuideItem[];
+  /**
+   * Which items are in the traveller's basket. Optional: the guide is still
+   * a guide on its own, and the picking controls only appear when a parent
+   * is actually collecting a selection.
+   */
+  selectedKeys?: Set<string>;
+  onToggleSelect?: (item: GuideItem, category: CategoryKey) => void;
+  addLabel?: string;
+  addedLabel?: string;
 }) {
+  const picking = Boolean(onToggleSelect && selectedKeys);
   const allCategories: { key: CategoryKey; icon: string; heading: string; tag: string; items: GuideItem[] }[] = [
     { key: "attractions", icon: "🏛️", heading: dict.attractionsHeading, tag: dict.tagAttraction, items: attractions },
     { key: "activities", icon: "🎟️", heading: dict.activitiesHeading, tag: dict.tagActivity, items: activities },
@@ -184,12 +198,19 @@ export default function CountryGuideExplorer({
           )}
           <div className="flex flex-col gap-3">
             {category.items.map((item, i) => (
+              <div key={item.key} className="relative">
               <div
-                key={item.key}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelected(item)}
+                // A control inside the card marks itself as its own target;
+                // the card then leaves that tap alone rather than also
+                // opening the detail view behind it.
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("[data-card-control]")) return;
+                  setSelected(item);
+                }}
                 onKeyDown={(e) => {
+                  if ((e.target as HTMLElement).closest("[data-card-control]")) return;
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     setSelected(item);
@@ -241,6 +262,7 @@ export default function CountryGuideExplorer({
                           href={item.bookingUrl}
                           target="_blank"
                           rel="noopener noreferrer nofollow sponsored"
+                          data-card-control
                           onClick={(e) => e.stopPropagation()}
                           className="ms-auto inline-flex items-center gap-1 text-[11px] font-bold text-white bg-gradient-to-r from-brand-700 to-brand-900 rounded-full px-2.5 py-1 transition hover:shadow-sm hover:-translate-y-0.5"
                         >
@@ -249,7 +271,30 @@ export default function CountryGuideExplorer({
                       )}
                     </div>
                   )}
+
                 </div>
+              </div>
+
+              {/* Picking sits beside the card, not inside it: the card is
+                  itself a button, and a button within a button is invalid —
+                  screen readers read the whole card's text as the control's
+                  name. As a sibling it also stays reachable by keyboard in
+                  its own right. */}
+              {picking && (
+                <button
+                  type="button"
+                  onClick={() => onToggleSelect?.(item, category.key)}
+                  aria-pressed={selectedKeys?.has(item.key) ?? false}
+                  className={`absolute top-3 end-3.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+                    selectedKeys?.has(item.key)
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
+                  }`}
+                >
+                  <span aria-hidden="true">{selectedKeys?.has(item.key) ? "✓" : "+"}</span>
+                  {selectedKeys?.has(item.key) ? addedLabel : addLabel}
+                </button>
+              )}
               </div>
             ))}
           </div>

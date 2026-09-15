@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel, formatDuration } from "@/lib/format";
 import type { FlightOffer, HotelOffer, Locale, TripType } from "@/lib/types";
+import AirlineLogo from "@/components/ui/AirlineLogo";
+import HotelThumb from "@/components/ui/HotelThumb";
 
 /**
  * One trip, priced — not a wall of near-identical packages.
@@ -24,11 +26,19 @@ import type { FlightOffer, HotelOffer, Locale, TripType } from "@/lib/types";
  * The deltas are recomputed against whatever is selected now, not against the
  * original cheapest option, so after swapping the flight the hotel list still
  * reads as "compared with what I have".
+ *
+ * Every offer is scanned rather than read: the carrier's logo, a departure
+ * and arrival time joined by a line, then two chips that answer the only
+ * questions a fare list gets asked — does it stop, and is a bag included.
+ * What a traveller compares on is never left in the same grey as everything
+ * else.
  */
 
 type Picker = "flight" | "hotel" | null;
 type FlightSort = "cheapest" | "fastest";
 type HotelSort = "cheapest" | "topRated";
+
+type Dict = ReturnType<typeof getDictionary>;
 
 function formatTime(iso: string, locale: Locale) {
   try {
@@ -39,6 +49,64 @@ function formatTime(iso: string, locale: Locale) {
   } catch {
     return iso;
   }
+}
+
+function shortDate(iso: string, locale: Locale) {
+  try {
+    // "ar-SA" would format this in the Hijri calendar — which is not the
+    // calendar the traveller picked their dates in, so 1 October would come
+    // back as 20 Rabi al-Akhir and read as a different trip entirely.
+    return new Date(iso).toLocaleDateString(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function stopsLabel(stops: number, dict: Dict): string {
+  if (stops <= 0) return dict.results.directFlight;
+  if (stops === 1) return dict.results.oneStop;
+  if (stops === 2) return dict.results.twoStops;
+  return dict.results.manyStops.replace("{count}", String(stops));
+}
+
+/** "شامل مسافرَين" — the fare already covers everyone on the search. */
+function travelersLabel(travelers: number, dict: Dict): string {
+  return countLabel(Math.max(1, travelers), {
+    one: dict.results.travelersOne,
+    two: dict.results.travelersTwo,
+    few: dict.results.travelersFew,
+    many: dict.results.travelersMany,
+  });
+}
+
+/** "٧ ليالٍ" — derived from the dates the traveller searched with. */
+function nightsLabel(nights: number, dict: Dict): string {
+  return countLabel(Math.max(1, nights), {
+    one: dict.results.nightsOne,
+    two: dict.results.nightsTwo,
+    few: dict.results.nightsFew,
+    many: dict.results.nightsMany,
+  });
+}
+
+/** A small status chip. Colour is never the only signal — each carries words. */
+function Chip({ children, tone }: { children: React.ReactNode; tone: "good" | "warn" | "info" | "mute" }) {
+  const tones = {
+    good: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    warn: "bg-amber-50 text-amber-800 ring-amber-100",
+    info: "bg-sea-50 text-sea-700 ring-sea-100",
+    mute: "bg-gray-100 text-gray-500 ring-gray-200",
+  } as const;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
 }
 
 /**
@@ -68,6 +136,99 @@ function DeltaChip({ diff, currency, sameLabel }: { diff: number; currency: stri
   );
 }
 
+/** Departure and arrival joined by a line, with the duration written on it. */
+function FlightTimeline({ flight, locale, dict }: { flight: FlightOffer; locale: Locale; dict: Dict }) {
+  return (
+    <div className="mt-1.5 max-w-[17rem]">
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm font-extrabold tabular-nums text-gray-900">
+          {formatTime(flight.departTime, locale)}
+        </span>
+        <span className="flex min-w-[54px] flex-1 items-center gap-1" aria-hidden="true">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
+          <span className="h-px flex-1 bg-gray-200" />
+          {flight.stops > 0 && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />}
+          <span className="h-px flex-1 bg-gray-200" />
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
+        </span>
+        <span className="text-sm font-extrabold tabular-nums text-gray-900">
+          {formatTime(flight.arriveTime, locale)}
+        </span>
+      </div>
+      <div className="mt-0.5 flex items-center justify-between text-[11px] font-semibold text-gray-500">
+        <span>{flight.origin}</span>
+        <span>{formatDuration(flight.durationMinutes, locale)}</span>
+        <span>{flight.destination}</span>
+      </div>
+      {flight.stops > 0 && flight.layoverCity && (
+        <p className="mt-1 text-[11px] text-gray-500">
+          {dict.results.layoverIn
+            .replace("{city}", flight.layoverCity)
+            .replace(
+              "{duration}",
+              flight.layoverDurationMinutes ? formatDuration(flight.layoverDurationMinutes, locale) : ""
+            )}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function FlightChips({ flight, dict }: { flight: FlightOffer; dict: Dict }) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      <Chip tone={flight.stops === 0 ? "good" : "warn"}>
+        <span aria-hidden="true">{flight.stops === 0 ? "➜" : "⇄"}</span>
+        {stopsLabel(flight.stops, dict)}
+      </Chip>
+      <Chip tone={flight.baggageIncluded ? "info" : "mute"}>
+        <span aria-hidden="true">🧳</span>
+        {flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+      </Chip>
+    </div>
+  );
+}
+
+function HotelChips({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      <Chip tone={hotel.breakfastIncluded ? "good" : "mute"}>
+        <span aria-hidden="true">🍳</span>
+        {hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+      </Chip>
+      <Chip tone="info">
+        <span aria-hidden="true">📍</span>
+        {dict.results.distanceFromCenter.replace("{km}", String(hotel.distanceFromCenterKm))}
+      </Chip>
+      <Chip tone="mute">
+        <span aria-hidden="true">🛏️</span>
+        {dict.roomType[hotel.roomType]}
+      </Chip>
+    </div>
+  );
+}
+
+/** Name, stars and the guest rating, shared by the trip card and the picker. */
+function HotelHeading({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
+  return (
+    <>
+      <p className="text-base font-bold leading-snug text-gray-900">{hotel.name}</p>
+      <div className="mt-0.5 flex flex-wrap items-center gap-2">
+        {hotel.stars > 0 && (
+          <span className="text-sm text-amber-500" aria-hidden="true">
+            {"★".repeat(Math.min(5, hotel.stars))}
+          </span>
+        )}
+        {hotel.rating != null && (
+          <span className="rounded-md bg-brand-900 px-1.5 py-0.5 text-[11px] font-extrabold text-white">
+            {dict.results.ratingOutOf10.replace("{rating}", String(hotel.rating))}
+          </span>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function TripBuilder({
   flights,
   hotels,
@@ -75,6 +236,9 @@ export default function TripBuilder({
   budgetTotal,
   currency,
   locale,
+  travelers,
+  departDate,
+  returnDate,
 }: {
   flights: FlightOffer[];
   hotels: HotelOffer[];
@@ -82,6 +246,10 @@ export default function TripBuilder({
   budgetTotal: number;
   currency: string;
   locale: Locale;
+  /** Everyone on the booking — the fares below already cover all of them. */
+  travelers: number;
+  departDate: string;
+  returnDate?: string;
 }) {
   const dict = getDictionary(locale);
 
@@ -101,7 +269,7 @@ export default function TripBuilder({
 
   // Stable, so the dialog can attach its key listener once on open rather
   // than re-subscribing (and re-focusing itself) on every render.
-  const closePicker = useCallback(() => setPicker(null), []);
+  const closePicker = useCallback(() => setPicker(null), [setPicker]);
 
   // Derived rather than stored, so the first render after the offers arrive
   // already shows the cheapest trip without an effect writing state.
@@ -134,6 +302,13 @@ export default function TripBuilder({
   const isCheapestTrip =
     (!flight || flight.id === cheapestFlights[0]?.id) && (!hotel || hotel.id === cheapestHotels[0]?.id);
 
+  const travelersText = travelersLabel(travelers, dict);
+  const stayDates = returnDate
+    ? dict.results.stayDates
+        .replace("{from}", shortDate(departDate, locale))
+        .replace("{to}", shortDate(returnDate, locale))
+    : "";
+
   if (!flight && !hotel) return null;
 
   return (
@@ -147,6 +322,10 @@ export default function TripBuilder({
             </p>
             <p dir="ltr" className="mt-1 text-2xl font-extrabold text-white sm:text-3xl">
               {total.toLocaleString()} {currency}
+            </p>
+            <p className="mt-0.5 text-xs text-white/60">
+              {travelersText}
+              {hotel ? ` · ${nightsLabel(hotel.nights, dict)}` : ""}
             </p>
           </div>
           <div className="text-end">
@@ -170,71 +349,91 @@ export default function TripBuilder({
 
         <div className="divide-y divide-gray-100">
           {flight && (
-            <TripRow
-              eyebrow={dict.results.flightOption}
-              title={flight.airline}
-              subtitle={`${flight.origin} → ${flight.destination}`}
-              meta={[
-                `${formatTime(flight.departTime, locale)} – ${formatTime(flight.arriveTime, locale)}`,
-                flight.stops === 0 ? dict.results.stopsNone : `${flight.stops} ${dict.results.stops}`,
-                formatDuration(flight.durationMinutes, locale),
-              ]}
-              chips={[
-                {
-                  label: `🧳 ${flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}`,
-                  good: flight.baggageIncluded,
-                },
-              ]}
-              price={`${flight.price.toLocaleString()} ${flight.currency}`}
-              changeLabel={dict.results.changeFlight}
-              changeCount={
-                otherFlights > 0
-                  ? countLabel(otherFlights, {
-                      one: dict.results.otherOptionsOne,
-                      two: dict.results.otherOptionsTwo,
-                      few: dict.results.otherOptionsFew,
-                      many: dict.results.otherOptionsMany,
-                    })
-                  : null
-              }
-              open={picker === "flight"}
-              onToggle={() => setPicker(picker === "flight" ? null : "flight")}
-            />
+            <section className="px-5 py-4 sm:px-6">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {dict.results.flightOption}
+              </p>
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <AirlineLogo code={flight.airlineCode} name={flight.airline} className="h-11 w-11" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-bold text-gray-900">{flight.airline}</p>
+                    <FlightTimeline flight={flight} locale={locale} dict={dict} />
+                    <FlightChips flight={flight} dict={dict} />
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span dir="ltr" className="text-lg font-extrabold text-gray-900">
+                    {flight.price.toLocaleString()} {flight.currency}
+                  </span>
+                  <span className="text-[11px] font-semibold text-gray-500">{travelersText}</span>
+                  <ChangeButton
+                    label={dict.results.changeFlight}
+                    open={picker === "flight"}
+                    onClick={() => setPicker(picker === "flight" ? null : "flight")}
+                    count={
+                      otherFlights > 0
+                        ? countLabel(otherFlights, {
+                            one: dict.results.otherOptionsOne,
+                            two: dict.results.otherOptionsTwo,
+                            few: dict.results.otherOptionsFew,
+                            many: dict.results.otherOptionsMany,
+                          })
+                        : null
+                    }
+                  />
+                </div>
+              </div>
+            </section>
           )}
 
           {hotel && (
-            <TripRow
-              eyebrow={dict.results.hotelOption}
-              title={hotel.name}
-              subtitle={"★".repeat(Math.max(1, hotel.stars))}
-              subtitleClass="text-amber-500"
-              meta={[
-                `${hotel.pricePerNight.toLocaleString()} ${hotel.currency} / ${dict.results.perNight}`,
-                `${hotel.nights} ${dict.results.nights}`,
-                dict.results.distanceFromCenter.replace("{km}", String(hotel.distanceFromCenterKm)),
-              ]}
-              chips={[
-                {
-                  label: `🍳 ${hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}`,
-                  good: hotel.breakfastIncluded,
-                },
-                { label: `🛏️ ${dict.roomType[hotel.roomType]}`, good: false },
-              ]}
-              price={`${hotel.totalPrice.toLocaleString()} ${hotel.currency}`}
-              changeLabel={dict.results.changeHotel}
-              changeCount={
-                otherHotels > 0
-                  ? countLabel(otherHotels, {
-                      one: dict.results.otherHotelsOne,
-                      two: dict.results.otherHotelsTwo,
-                      few: dict.results.otherHotelsFew,
-                      many: dict.results.otherHotelsMany,
-                    })
-                  : null
-              }
-              open={picker === "hotel"}
-              onToggle={() => setPicker(picker === "hotel" ? null : "hotel")}
-            />
+            <section className="px-5 py-4 sm:px-6">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {dict.results.hotelOption}
+              </p>
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <HotelThumb photoUrl={hotel.photoUrl} stars={hotel.stars} className="h-20 w-24" />
+                  <div className="min-w-0 flex-1">
+                    <HotelHeading hotel={hotel} dict={dict} />
+                    <p className="mt-1 text-sm text-gray-500">
+                      <span dir="ltr">
+                        {hotel.pricePerNight.toLocaleString()} {hotel.currency}
+                      </span>{" "}
+                      / {dict.results.perNight} · {nightsLabel(hotel.nights, dict)}
+                      {stayDates ? ` · ${stayDates}` : ""}
+                    </p>
+                    <HotelChips hotel={hotel} dict={dict} />
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span dir="ltr" className="text-lg font-extrabold text-gray-900">
+                    {hotel.totalPrice.toLocaleString()} {hotel.currency}
+                  </span>
+                  <span className="text-[11px] font-semibold text-gray-500">
+                    {dict.results.totalForStay} · {nightsLabel(hotel.nights, dict)}
+                  </span>
+                  <ChangeButton
+                    label={dict.results.changeHotel}
+                    open={picker === "hotel"}
+                    onClick={() => setPicker(picker === "hotel" ? null : "hotel")}
+                    count={
+                      otherHotels > 0
+                        ? countLabel(otherHotels, {
+                            one: dict.results.otherHotelsOne,
+                            two: dict.results.otherHotelsTwo,
+                            few: dict.results.otherHotelsFew,
+                            many: dict.results.otherHotelsMany,
+                          })
+                        : null
+                    }
+                  />
+                </div>
+              </div>
+            </section>
           )}
         </div>
 
@@ -266,24 +465,16 @@ export default function TripBuilder({
                 setFlightId(option.id);
                 setPicker(null);
               }}
-              title={option.airline}
-              lines={[
-                `${formatTime(option.departTime, locale)} – ${formatTime(option.arriveTime, locale)} · ${formatDuration(option.durationMinutes, locale)}`,
-                option.stops === 0
-                  ? dict.results.stopsNone
-                  : option.layoverCity
-                    ? dict.results.layoverIn
-                        .replace("{city}", option.layoverCity)
-                        .replace(
-                          "{duration}",
-                          option.layoverDurationMinutes
-                            ? formatDuration(option.layoverDurationMinutes, locale)
-                            : ""
-                        )
-                    : `${option.stops} ${dict.results.stops}`,
-                option.baggageIncluded ? `🧳 ${dict.results.baggageYes}` : `🧳 ${dict.results.baggageNo}`,
-              ]}
+              media={<AirlineLogo code={option.airlineCode} name={option.airline} className="h-11 w-11" />}
+              heading={<p className="text-base font-bold text-gray-900">{option.airline}</p>}
+              body={
+                <>
+                  <FlightTimeline flight={option} locale={locale} dict={dict} />
+                  <FlightChips flight={option} dict={dict} />
+                </>
+              }
               price={`${option.price.toLocaleString()} ${option.currency}`}
+              priceNote={travelersText}
               diff={option.price - flight.price}
               currency={option.currency}
               dict={dict}
@@ -314,15 +505,21 @@ export default function TripBuilder({
                 setHotelId(option.id);
                 setPicker(null);
               }}
-              title={option.name}
-              lines={[
-                `${"★".repeat(Math.max(1, option.stars))} · ${option.pricePerNight.toLocaleString()} ${option.currency} / ${dict.results.perNight}`,
-                dict.results.distanceFromCenter.replace("{km}", String(option.distanceFromCenterKm)),
-                option.breakfastIncluded
-                  ? `🍳 ${dict.results.breakfastYes}`
-                  : `🍳 ${dict.results.breakfastNo}`,
-              ]}
+              media={<HotelThumb photoUrl={option.photoUrl} stars={option.stars} className="h-20 w-24" />}
+              heading={<HotelHeading hotel={option} dict={dict} />}
+              body={
+                <>
+                  <p className="mt-1 text-sm text-gray-500">
+                    <span dir="ltr">
+                      {option.pricePerNight.toLocaleString()} {option.currency}
+                    </span>{" "}
+                    / {dict.results.perNight} · {nightsLabel(option.nights, dict)}
+                  </p>
+                  <HotelChips hotel={option} dict={dict} />
+                </>
+              }
               price={`${option.totalPrice.toLocaleString()} ${option.currency}`}
+              priceNote={`${dict.results.totalForStay} · ${nightsLabel(option.nights, dict)}`}
               diff={option.totalPrice - hotel.totalPrice}
               currency={option.currency}
               dict={dict}
@@ -334,74 +531,31 @@ export default function TripBuilder({
   );
 }
 
-/** One leg of the current trip, with the button that opens its alternatives. */
-function TripRow({
-  eyebrow,
-  title,
-  subtitle,
-  subtitleClass = "text-gray-500",
-  meta,
-  chips,
-  price,
-  changeLabel,
-  changeCount,
+function ChangeButton({
+  label,
+  count,
   open,
-  onToggle,
+  onClick,
 }: {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  subtitleClass?: string;
-  meta: string[];
-  chips: { label: string; good: boolean }[];
-  price: string;
-  changeLabel: string;
-  changeCount: string | null;
+  label: string;
+  count: string | null;
   open: boolean;
-  onToggle: () => void;
+  onClick: () => void;
 }) {
   return (
-    <div className="px-5 py-4 sm:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{eyebrow}</p>
-          <p className="mt-1 text-base font-bold text-gray-900">{title}</p>
-          <p className={`text-sm ${subtitleClass}`}>{subtitle}</p>
-          <p className="mt-1 text-sm text-gray-500">{meta.filter(Boolean).join(" · ")}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {chips.map((chip) => (
-              <span
-                key={chip.label}
-                className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  chip.good ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {chip.label}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <span dir="ltr" className="text-base font-extrabold text-gray-900">
-            {price}
-          </span>
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={open}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
-              open
-                ? "bg-brand-900 text-white"
-                : "border border-brand-200 text-brand-800 hover:bg-brand-50"
-            }`}
-          >
-            {changeLabel}
-          </button>
-          {changeCount && <span className="text-[11px] text-gray-400">{changeCount}</span>}
-        </div>
-      </div>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-expanded={open}
+        className={`rounded-xl px-3.5 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+          open ? "bg-brand-900 text-white" : "border border-brand-200 text-brand-800 hover:bg-brand-50"
+        }`}
+      >
+        {label}
+      </button>
+      {count && <span className="text-[11px] text-gray-400">{count}</span>}
+    </>
   );
 }
 
@@ -536,9 +690,11 @@ function OptionRow({
   selected,
   cheapest,
   onSelect,
-  title,
-  lines,
+  media,
+  heading,
+  body,
   price,
+  priceNote,
   diff,
   currency,
   dict,
@@ -546,12 +702,14 @@ function OptionRow({
   selected: boolean;
   cheapest: boolean;
   onSelect: () => void;
-  title: string;
-  lines: string[];
+  media: React.ReactNode;
+  heading: React.ReactNode;
+  body: React.ReactNode;
   price: string;
+  priceNote: string;
   diff: number;
   currency: string;
-  dict: ReturnType<typeof getDictionary>;
+  dict: Dict;
 }) {
   return (
     <li>
@@ -559,38 +717,42 @@ function OptionRow({
         type="button"
         onClick={onSelect}
         disabled={selected}
-        className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border p-3.5 text-start transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+        className={`flex w-full gap-3 rounded-xl border p-3.5 text-start transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
           selected
             ? "cursor-default border-brand-300 bg-brand-50/70"
             : "border-gray-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md"
         }`}
       >
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-gray-900">{title}</span>
-            {selected && (
-              <span className="rounded-full bg-brand-900 px-2 py-0.5 text-[11px] font-bold text-white">
-                {dict.results.currentChoice}
-              </span>
-            )}
-            {cheapest && !selected && (
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
-                {dict.results.cheapestOption}
-              </span>
-            )}
-          </div>
-          {lines.filter(Boolean).map((line) => (
-            <p key={line} className="mt-0.5 text-xs text-gray-500">
-              {line}
-            </p>
-          ))}
-        </div>
+        {media}
 
-        <div className="flex shrink-0 items-center gap-2.5">
-          <span dir="ltr" className="text-sm font-bold text-gray-700">
-            {price}
-          </span>
-          <DeltaChip diff={diff} currency={currency} sameLabel={dict.results.samePrice} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+            <div className="min-w-0">
+              {heading}
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {selected && (
+                  <span className="rounded-full bg-brand-900 px-2 py-0.5 text-[11px] font-bold text-white">
+                    {dict.results.currentChoice}
+                  </span>
+                )}
+                {cheapest && !selected && (
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100">
+                    {dict.results.cheapestOption}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <DeltaChip diff={diff} currency={currency} sameLabel={dict.results.samePrice} />
+              <span dir="ltr" className="text-sm font-extrabold text-gray-900">
+                {price}
+              </span>
+              <span className="text-[11px] text-gray-500">{priceNote}</span>
+            </div>
+          </div>
+
+          {body}
         </div>
       </button>
     </li>

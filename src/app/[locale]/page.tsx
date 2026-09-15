@@ -114,7 +114,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
           }
         />
-        <div className="scrim absolute inset-0 -z-10" />
+        {/* The softer of the two scrims. The stronger one was tuned against
+            dusk photographs; over a sunlit fort it buried the picture the
+            hero exists to show. The type keeps its own drop shadow, and the
+            subtitle is carried a step brighter to pay for the difference. */}
+        <div className="scrim-soft absolute inset-0 -z-10" />
 
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 sm:pb-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
@@ -127,7 +131,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <span className="text-sunlit">{dict.hero.titleLine2}</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-[0.95rem] leading-relaxed text-white/75 sm:text-lg">
+          <p className="mt-5 max-w-xl text-[0.95rem] leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-lg">
             {dict.hero.subtitle}
           </p>
 

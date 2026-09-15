@@ -19,6 +19,8 @@ export default function Photo({
   fallback,
   className,
   priority = false,
+  srcSet,
+  sizes,
 }: {
   src?: string;
   /** Shown when there's no photo, or when the photo fails to load. */
@@ -31,6 +33,9 @@ export default function Photo({
    * browser wait for layout before it will even start the request.
    */
   priority?: boolean;
+  /** Alternative renderings by width, for screens that can use a bigger one. */
+  srcSet?: string;
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -40,6 +45,8 @@ export default function Photo({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
+      srcSet={srcSet}
+      sizes={sizes}
       alt=""
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}

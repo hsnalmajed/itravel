@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { RoomType, DestinationCategory, FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
+import type { DestinationCategory, FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
 import DateInput from "@/components/DateInput";
+import HotelPreferences from "@/components/HotelPreferences";
+import {
+  occupancy,
+  resolveRoomType,
+  roomFitsParty,
+  stayTypeFromRoomType,
+  type StayType,
+} from "@/lib/stayType";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function todayPlus(days: number) {
@@ -22,7 +30,6 @@ function nightsBetween(a: string, b: string) {
 }
 
 const CATEGORY_OPTIONS: DestinationCategory[] = ["beach", "nature", "adventure", "city", "culture", "family"];
-const ROOM_TYPE_OPTIONS: RoomType[] = ["single", "twin", "double", "triple", "suite", "apartment"];
 
 export default function DiscoverForm({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
@@ -62,7 +69,11 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   });
   const [directOnly, setDirectOnly] = useState(sp.get("directOnly") === "true");
   const [minStars, setMinStars] = useState(Number(sp.get("minStars")) || 0);
-  const [roomType, setRoomType] = useState<RoomType | "">((sp.get("roomType") as RoomType) || "");
+  // Room or apartment, with the concrete room type derived from the party
+  // size at submit — same as the "I know where I'm going" form.
+  const [stayType, setStayType] = useState<StayType | "">(() =>
+    stayTypeFromRoomType(sp.get("roomType"))
+  );
   const [baggageIncluded, setBaggageIncluded] = useState(sp.get("baggageIncluded") === "true");
   const [breakfastIncluded, setBreakfastIncluded] = useState(sp.get("breakfastIncluded") === "true");
 
@@ -72,6 +83,12 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   // hotel is part of the trip.
   const showFlightFields = tripType === "both" || tripType === "flight";
   const showHotelFields = tripType === "both" || tripType === "hotel";
+
+  // A party that outgrows a room moves to an apartment on its own, derived
+  // rather than patched in an effect.
+  const guests = occupancy(travelers);
+  const effectiveStayType: StayType | "" =
+    stayType === "room" && !roomFitsParty(guests) ? "apartment" : stayType;
 
   // The budget field names what the money actually has to cover, exactly as
   // it does in the "I know where I'm going" form. Asking for a "total
@@ -89,6 +106,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
     if (!tripType) return;
     const isOneWay = tripRoute === "oneway";
     const nights = isOneWay ? Math.max(1, oneWayNights) : nightsBetween(departDate, returnDate);
+    const roomType = resolveRoomType(effectiveStayType, guests);
     const params = new URLSearchParams({
       mode: "discover",
       tripType,
@@ -284,43 +302,24 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
               <TravelersPicker locale={locale} value={travelers} onChange={setTravelers} />
             </div>
 
-            {showHotelFields && (
-              <div className="sm:col-span-2 grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>{dict.discoverForm.minStars}</label>
-                  <select
-                    className={inputClass}
-                    value={minStars}
-                    onChange={(e) => setMinStars(Number(e.target.value))}
-                  >
-                    <option value={0}>{dict.discoverForm.anyStars}</option>
-                    {[2, 3, 4, 5].map((s) => (
-                      <option key={s} value={s}>
-                        {"★".repeat(s)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>{dict.roomType.label}</label>
-                  <select
-                    className={inputClass}
-                    value={roomType}
-                    onChange={(e) => setRoomType(e.target.value as RoomType | "")}
-                  >
-                    <option value="">{dict.roomType.any}</option>
-                    {ROOM_TYPE_OPTIONS.map((rt) => (
-                      <option key={rt} value={rt}>
-                        {dict.roomType[rt]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
             <div className="sm:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm font-semibold text-gray-700 mb-2">{dict.form.additionalOptions}</p>
+              <p className="text-sm font-semibold text-gray-700 mb-3">{dict.form.additionalOptions}</p>
+
+              {/* Star rating and stay type live with the other preferences,
+                  not beside the questions the search can't run without. */}
+              {showHotelFields && (
+                <div className="mb-4 border-b border-gray-200 pb-4">
+                  <HotelPreferences
+                    locale={locale}
+                    travelers={travelers}
+                    minStars={minStars}
+                    onMinStarsChange={setMinStars}
+                    stayType={effectiveStayType}
+                    onStayTypeChange={setStayType}
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {showFlightFields && (
                   <label className={checkboxLabelClass}>

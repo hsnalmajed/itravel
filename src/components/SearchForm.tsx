@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { RoomType, FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
+import type { FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
 import DateInput from "@/components/DateInput";
+import HotelPreferences from "@/components/HotelPreferences";
+import {
+  occupancy,
+  resolveRoomType,
+  roomFitsParty,
+  stayTypeFromRoomType,
+  type StayType,
+} from "@/lib/stayType";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 
 function todayPlus(days: number) {
@@ -14,8 +22,6 @@ function todayPlus(days: number) {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
-
-const ROOM_TYPE_OPTIONS: RoomType[] = ["single", "twin", "double", "triple", "suite", "apartment"];
 
 interface LegDraft {
   destination: string;
@@ -54,7 +60,11 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   const [currency, setCurrency] = useState(sp.get("currency") || "SAR");
   const [directOnly, setDirectOnly] = useState(sp.get("directOnly") === "true");
   const [minStars, setMinStars] = useState(Number(sp.get("minStars")) || 0);
-  const [roomType, setRoomType] = useState<RoomType | "">((sp.get("roomType") as RoomType) || "");
+  // The traveller picks a room or an apartment; the concrete room type is
+  // worked out from the party size at submit. See stayType.ts.
+  const [stayType, setStayType] = useState<StayType | "">(() =>
+    stayTypeFromRoomType(sp.get("roomType"))
+  );
   const [baggageIncluded, setBaggageIncluded] = useState(sp.get("baggageIncluded") === "true");
   const [breakfastIncluded, setBreakfastIncluded] = useState(sp.get("breakfastIncluded") === "true");
   const [legs, setLegs] = useState<LegDraft[]>(() => {
@@ -83,6 +93,14 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         ? dict.form.budgetHotel
         : dict.form.budgetBoth;
 
+  // If the party grows past what a room holds after "room" was chosen, the
+  // answer changes with it rather than silently staying impossible. Derived
+  // instead of corrected in an effect, so there is never a render in which the
+  // form is showing a choice that can't be booked.
+  const guests = occupancy(travelers);
+  const effectiveStayType: StayType | "" =
+    stayType === "room" && !roomFitsParty(guests) ? "apartment" : stayType;
+
   const showTripRoute = tripType === "both" || tripType === "flight";
   const showReturnDate = tripRoute === "multicity" ? false : tripType === "hotel" || tripRoute === "roundtrip";
   const showHotelFields = tripRoute === "multicity" || tripType === "both" || tripType === "hotel";
@@ -102,6 +120,9 @@ export default function SearchForm({ locale }: { locale: Locale }) {
     e.preventDefault();
     if (!tripType) return;
     const resolvedBudget = String(Number(budget) || 6000);
+    // The hotel API and the offer data speak in room types, so the two-way
+    // choice is translated back here rather than leaking into the URL.
+    const roomType = resolveRoomType(effectiveStayType, guests);
 
     if (tripRoute === "multicity") {
       const validLegs = legs.filter((l) => l.destination.trim().length > 0);
@@ -290,44 +311,26 @@ export default function SearchForm({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            {showHotelFields && (
-              <div className="sm:col-span-2 grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>{dict.form.minStars}</label>
-                  <select
-                    className={inputClass}
-                    value={minStars}
-                    onChange={(e) => setMinStars(Number(e.target.value))}
-                  >
-                    <option value={0}>{dict.form.anyStars}</option>
-                    {[2, 3, 4, 5].map((s) => (
-                      <option key={s} value={s}>
-                        {"★".repeat(s)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>{dict.roomType.label}</label>
-                  <select
-                    className={inputClass}
-                    value={roomType}
-                    onChange={(e) => setRoomType(e.target.value as RoomType | "")}
-                  >
-                    <option value="">{dict.roomType.any}</option>
-                    {ROOM_TYPE_OPTIONS.map((rt) => (
-                      <option key={rt} value={rt}>
-                        {dict.roomType[rt]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
             {(showFlightFields || showHotelFields) && (
               <div className="sm:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-700 mb-2">{dict.form.additionalOptions}</p>
+                <p className="text-sm font-semibold text-gray-700 mb-3">{dict.form.additionalOptions}</p>
+
+                {/* Star rating and stay type are preferences, not questions
+                    the trip depends on, so they sit here with the rest of the
+                    optional detail rather than beside the dates. */}
+                {showHotelFields && (
+                  <div className="mb-4 border-b border-gray-200 pb-4">
+                    <HotelPreferences
+                      locale={locale}
+                      travelers={travelers}
+                      minStars={minStars}
+                      onMinStarsChange={setMinStars}
+                      stayType={effectiveStayType}
+                      onStayTypeChange={setStayType}
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {showFlightFields && (
                     <label className={checkboxLabelClass}>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { type Currency } from "@/lib/currencies";
@@ -57,6 +56,14 @@ export default function TripCurrencyStrip({
   const [rate, setRate] = useState<number | null>(null);
   const [source, setSource] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // The converter opens in place. Sending someone to the currency page to
+  // work out one number meant losing the results they were reading, and the
+  // back button as the only way home.
+  const [converting, setConverting] = useState(false);
+  const [amount, setAmount] = useState("");
+  // Which way round. Both directions get used — one to price a coffee, the
+  // other to check a taxi fare — so neither can be the only one offered.
+  const [reversed, setReversed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +102,13 @@ export default function TripCurrencyStrip({
   // the price of a taxi does.
   const reverse = 100 / rate;
 
+  // Which currency the typed number is in, and which it comes out in.
+  const source_ = reversed ? to : from;
+  const target = reversed ? from : to;
+  const typed = Number(amount.replace(/,/g, ""));
+  const hasAmount = amount.trim() !== "" && Number.isFinite(typed) && typed > 0;
+  const converted = hasAmount ? (reversed ? typed / rate : typed * rate) : null;
+
   return (
     <section className="mb-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
@@ -123,14 +137,16 @@ export default function TripCurrencyStrip({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={`/${locale}/currency?from=${from.code}&to=${to.code}`}
+          <button
+            type="button"
+            aria-expanded={converting}
+            onClick={() => setConverting((v) => !v)}
             className="rounded-xl border border-brand-200 px-4 py-2.5 text-sm font-bold text-brand-800 transition hover:bg-brand-50"
           >
-            {dict.results.currencyConvert}
-          </Link>
+            {converting ? dict.results.currencyConvertClose : dict.results.currencyConvert}
+          </button>
           <a
-            href={googleRateUrl(1, from.code, to.code)}
+            href={googleRateUrl(hasAmount ? typed : 1, source_.code, target.code)}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition hover:border-gray-300"
@@ -139,6 +155,52 @@ export default function TripCurrencyStrip({
           </a>
         </div>
       </div>
+
+      {converting && (
+        <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/60 p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[10rem] flex-1">
+              <label
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500"
+                htmlFor="trip-convert-amount"
+              >
+                {dict.currency.amount} · {name(source_)}
+              </label>
+              <input
+                id="trip-convert-amount"
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                autoFocus
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={dict.results.currencyAmountPlaceholder}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-bold text-gray-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setReversed((v) => !v)}
+              title={dict.currency.swap}
+              aria-label={dict.currency.swap}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-600 transition hover:border-brand-300 hover:text-brand-800"
+            >
+              ⇄
+            </button>
+
+            <div className="min-w-[10rem] flex-1">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {name(target)}
+              </p>
+              <p className="rounded-lg border border-transparent bg-white/70 px-3.5 py-2.5 text-sm font-extrabold text-brand-900">
+                {converted == null ? "—" : `${fmt(converted, target.decimals)} ${name(target)}`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="mt-3 text-xs leading-relaxed text-gray-400">
         {dict.results.currencyNote}

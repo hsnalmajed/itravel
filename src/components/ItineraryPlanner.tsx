@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { ItineraryResult, Locale } from "@/lib/types";
@@ -9,6 +10,7 @@ import { findCountry, findCountryByEnglishName } from "@/lib/countries";
 import PlanActions from "@/components/PlanActions";
 import PageHero from "@/components/ui/PageHero";
 import type { SectionHero } from "@/lib/heroPhotos";
+import { countLabel } from "@/lib/format";
 
 /**
  * The planner, lifted out of the route so the route can be a server component.
@@ -29,15 +31,38 @@ export default function ItineraryPlanner({ hero }: { hero?: SectionHero }) {
 }
 
 /**
+ * Only a relative path on this site is allowed back.
+ *
+ * `back` arrives in the query string, which anyone can write, so it is checked
+ * rather than trusted: a single leading slash and no second one, which rules
+ * out "//evil.example" and any absolute URL. A visitor should not be able to
+ * be handed a link that looks like this site and leaves it.
+ */
+function safeBackHref(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return undefined;
+  return raw;
+}
+
+/**
  * The plan, built for one named city.
  *
- * Two things this page gets asked for by name. It talks about the city, not
- * "your destination": someone arrives here from a Riyadh → Istanbul search
- * and the word on the screen should be Istanbul. And the budget starts empty
- * and is required, because it is a different number from the one they typed
- * into the search — that one bought the flight and the hotel, this one is
- * what is left for the days in between, and pre-filling it with the old
- * figure would quietly plan a trip against money already spent.
+ * Three things this page gets asked for by name.
+ *
+ * It talks about the city, not "your destination": someone arrives here from a
+ * Riyadh → Istanbul search and the word on the screen should be Istanbul.
+ *
+ * It belongs to the trip they searched. The route, the dates and the party
+ * size come along and are shown above the form, and the way back to their own
+ * results is the first thing on the page — this is a step in their trip, not a
+ * detour onto a page about cities in general. Nothing here is written anywhere
+ * shared; it is all in their own link.
+ *
+ * And the budget starts empty and is required, because it is a different
+ * number from the one they typed into the search — that one bought the flight
+ * and the hotel, this one is what is left for the days in between, and
+ * pre-filling it with the old figure would quietly plan a trip against money
+ * already spent.
  */
 function ItineraryContent({ hero }: { hero?: SectionHero }) {
   const params = useParams();
@@ -76,6 +101,33 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
       ? resolved.country.nameAr
       : resolved.country.nameEn
     : undefined;
+
+  // The trip this plan is for, printed above the form so the page reads as a
+  // step in their own booking rather than a generic tool they wandered into.
+  const backHref = safeBackHref(sp.get("back"));
+  const tripSummary = useMemo(() => {
+    const parts: string[] = [];
+    const originAirport = findAirport(sp.get("origin") || "");
+    if (originAirport) {
+      const originCity = locale === "ar" ? originAirport.cityAr : originAirport.cityEn;
+      parts.push(`${originCity} ${locale === "ar" ? "←" : "→"} ${resolved.city}`);
+    }
+    const depart = sp.get("departDate");
+    const back = sp.get("returnDate");
+    if (depart) parts.push(back ? `${depart} – ${back}` : depart);
+    const party = Number(sp.get("travelers") || 0);
+    if (party > 0) {
+      parts.push(
+        countLabel(party, {
+          one: dict.itinerary.travelersOne,
+          two: dict.itinerary.travelersTwo,
+          few: dict.itinerary.travelersFew,
+          many: dict.itinerary.travelersMany,
+        })
+      );
+    }
+    return parts.join(" · ");
+  }, [sp, locale, resolved.city, dict.itinerary]);
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -120,7 +172,32 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
       {/* Hidden when printing: the plan someone prints should start at the
           plan, not at a full-bleed photograph of Norway. */}
       <div className="print:hidden">
-        <PageHero {...hero} size="sm" title={heading} subtitle={dict.itinerary.subtitle} />
+        <PageHero {...hero} size="sm" title={heading} subtitle={dict.itinerary.subtitle}>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* The way back to their own results, first. Someone who came here
+                from a booking is mid-decision, and a plan page with no exit
+                turns a side-step into a dead end. */}
+            {backHref && (
+              <Link
+                href={backHref}
+                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20"
+              >
+                <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>
+                {dict.itinerary.backToResults}
+              </Link>
+            )}
+
+            {/* Their route, their dates, their party — so the page is visibly
+                about the trip they just searched. Set as ordinary text rather
+                than in the hero's eyebrow style, whose wide letter-spacing
+                pulls Arabic words apart at the joins. */}
+            {tripSummary && (
+              <span className="rounded-full bg-black/25 px-3.5 py-2 text-sm font-semibold text-white/85 ring-1 ring-white/15 backdrop-blur-md">
+                {tripSummary}
+              </span>
+            )}
+          </div>
+        </PageHero>
       </div>
 
       <div className="mx-auto max-w-4xl px-4 pb-10 pt-8 sm:px-6">

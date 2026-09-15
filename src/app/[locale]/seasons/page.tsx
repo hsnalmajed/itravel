@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/types";
 import { fetchDestinationList } from "@/lib/destinationList";
 import SeasonsExplorer from "@/components/SeasonsExplorer";
 import PageHero from "@/components/ui/PageHero";
+import { sectionHero } from "@/lib/sectionHero";
 import { monthName } from "@/lib/seasons";
 
 // Photos come live from Wikipedia, same as the rest of the site.
@@ -13,22 +14,17 @@ export default async function SeasonsPage({ params }: PageProps<"/[locale]/seaso
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  const { countries, cities } = await fetchDestinationList(loc);
+  const [{ countries, cities }, hero] = await Promise.all([
+    fetchDestinationList(loc),
+    sectionHero("seasons", loc),
+  ]);
 
-  // The hero picture comes from a country that is actually in season right
-  // now, so the image at the top of a calendar page is never at odds with
-  // the calendar underneath it.
   const month = new Date().getMonth() + 1;
-  const inSeasonNow = countries.filter((c) => c.months.includes(month));
-  const heroPhoto = (inSeasonNow.length > 0 ? inSeasonNow : countries)
-    .map((c) => c.photo)
-    .find(Boolean);
 
   return (
     <div>
       <PageHero
-        photo={heroPhoto}
-        size="sm"
+        {...hero}
         eyebrow={monthName(month, loc)}
         title={dict.seasons.title}
         subtitle={dict.seasons.subtitle}

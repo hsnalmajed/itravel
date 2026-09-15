@@ -108,16 +108,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       <section className="relative isolate flex min-h-[86svh] items-end overflow-hidden bg-navy-990">
         <Photo
           src={heroPhoto}
+          priority
           className="absolute inset-0 -z-10 h-full w-full object-cover"
           fallback={
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
           }
         />
         <div className="scrim absolute inset-0 -z-10" />
-        {/* Daylight sky is far brighter than the photographs this hero was
-            tuned against, so it gets its own extra wash — white display type
-            has to stay readable, not merely visible. */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-navy-990/85 via-navy-990/45 to-navy-990/55" />
 
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 sm:pb-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">

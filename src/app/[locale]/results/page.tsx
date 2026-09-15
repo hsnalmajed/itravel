@@ -264,7 +264,11 @@ function ResultsContent() {
 
           {destinationCountry && (
             <Link
-              href={`/${locale}/attractions/${destinationCountry.code}`}
+              // Straight to the guide, with the trip length already known —
+              // the section is a long way down a country page, and someone
+              // arriving from a search shouldn't have to hunt for it or
+              // re-enter how many days they booked.
+              href={`/${locale}/attractions/${destinationCountry.code}?nights=${nights || 3}#guide`}
               className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5 transition hover:ring-brand-200 hover:shadow-md"
             >
               <div className="flex items-center gap-3">

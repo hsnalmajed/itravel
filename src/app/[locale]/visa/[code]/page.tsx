@@ -30,7 +30,8 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
 
   const [data, photos] = await Promise.all([
     fetchVisaRequirements(),
-    fetchCountryPhotos([country.code]),
+    // Full resolution: this one photo is a full-width hero, not a card.
+    fetchCountryPhotos([country.code], { full: true }),
   ]);
 
   const entry = data?.byCountry.get(country.code);

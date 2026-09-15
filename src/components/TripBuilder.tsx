@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel, formatDuration } from "@/lib/format";
 import type { FlightOffer, HotelOffer, Locale, TripType } from "@/lib/types";
@@ -98,6 +98,10 @@ export default function TripBuilder({
   const [picker, setPicker] = useState<Picker>(null);
   const [flightSort, setFlightSort] = useState<FlightSort>("cheapest");
   const [hotelSort, setHotelSort] = useState<HotelSort>("cheapest");
+
+  // Stable, so the dialog can attach its key listener once on open rather
+  // than re-subscribing (and re-focusing itself) on every render.
+  const closePicker = useCallback(() => setPicker(null), []);
 
   // Derived rather than stored, so the first render after the offers arrive
   // already shows the cheapest trip without an effect writing state.
@@ -244,7 +248,7 @@ export default function TripBuilder({
         <OptionList
           title={dict.results.pickFlightTitle}
           note={dict.results.deltaNote}
-          onClose={() => setPicker(null)}
+          onClose={closePicker}
           closeLabel={dict.results.closeOptions}
           sortOptions={[
             { key: "cheapest", label: dict.results.sortCheapest },
@@ -292,7 +296,7 @@ export default function TripBuilder({
         <OptionList
           title={dict.results.pickHotelTitle}
           note={dict.results.deltaNote}
-          onClose={() => setPicker(null)}
+          onClose={closePicker}
           closeLabel={dict.results.closeOptions}
           sortOptions={[
             { key: "cheapest", label: dict.results.sortCheapest },
@@ -401,7 +405,20 @@ function TripRow({
   );
 }
 
-/** The expanded list of alternatives, with its own sort control. */
+/**
+ * The alternatives, as a dialog over the page.
+ *
+ * Swapping a flight is a comparison, and a comparison wants the screen to
+ * itself: inline, the list pushed the trip card up and the traveller lost
+ * sight of the thing they were comparing against. As an overlay the trip
+ * stays put underneath, the list gets the full height, and picking an option
+ * closes it and returns them exactly where they were.
+ *
+ * It behaves the way a dialog is expected to — Escape closes it, so does a
+ * click on the backdrop, the page behind it stops scrolling while it is open,
+ * and focus moves into it so a keyboard lands inside the list rather than
+ * somewhere back up the page.
+ */
 function OptionList({
   title,
   note,
@@ -421,39 +438,97 @@ function OptionList({
   onSort: (key: string) => void;
   children: React.ReactNode;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const headingId = useId();
+
+  // `onClose` is stable (see the useCallback in TripBuilder), so this runs
+  // once on open rather than on every render — which matters, because a
+  // re-run would yank focus back to the panel each time the sort changed.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+
+    // Stop the page behind scrolling with the dialog's own list.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    panelRef.current?.focus();
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100 sm:p-6">
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-extrabold text-gray-900">{title}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg px-2.5 py-1.5 text-xs font-bold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
-        >
-          ✕ {closeLabel}
-        </button>
-      </div>
-      <p className="text-sm text-gray-500">{note}</p>
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-6"
+      role="presentation"
+      onMouseDown={(e) => {
+        // Anywhere outside the panel — which includes the backdrop element
+        // covering the container, so comparing against currentTarget alone
+        // would never match.
+        if (!panelRef.current?.contains(e.target as Node)) onClose();
+      }}
+    >
+      <div className="absolute inset-0 bg-navy-990/70 backdrop-blur-sm" aria-hidden="true" />
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {sortOptions.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            onClick={() => onSort(opt.key)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-              sort === opt.key
-                ? "bg-brand-900 text-white"
-                : "border border-gray-200 text-gray-600 hover:border-brand-200 hover:text-brand-800"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={headingId}
+        tabIndex={-1}
+        className="relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl outline-none sm:max-h-[85vh] sm:rounded-2xl"
+      >
+        {/* Header stays put while the list scrolls under it. */}
+        <div className="shrink-0 border-b border-gray-100 px-5 pb-4 pt-5 sm:px-6">
+          {/* Grab handle — the affordance a sheet has on a phone. */}
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-200 sm:hidden" aria-hidden="true" />
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 id={headingId} className="text-lg font-extrabold text-gray-900">
+                {title}
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">{note}</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={closeLabel}
+              className="-me-1 shrink-0 rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
 
-      <ul className="mt-4 space-y-2.5">{children}</ul>
-    </section>
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            {sortOptions.map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => onSort(opt.key)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                  sort === opt.key
+                    ? "bg-brand-900 text-white"
+                    : "border border-gray-200 text-gray-600 hover:border-brand-200 hover:text-brand-800"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <ul className="min-h-0 flex-1 space-y-2.5 overflow-y-auto overscroll-contain px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+          {children}
+        </ul>
+      </div>
+    </div>
   );
 }
 

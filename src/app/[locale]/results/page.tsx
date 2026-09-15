@@ -8,6 +8,8 @@ import type { RoomType, FlightOffer, HotelOffer, Locale, SearchParams, TripType 
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import TripBuilder from "@/components/TripBuilder";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
+import TripCurrencyStrip from "@/components/TripCurrencyStrip";
+import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
 import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
@@ -140,6 +142,20 @@ function ResultsContent() {
     return findCountryByEnglishName(airport.countryEn);
   }, [search.destination]);
 
+  const originCountry = useMemo(() => {
+    const airport = findAirport(search.origin);
+    if (!airport) return undefined;
+    return findCountryByEnglishName(airport.countryEn);
+  }, [search.origin]);
+
+  // The money they leave with and the money they'll spend. Both have to
+  // resolve, and to different currencies, for the strip to have anything to
+  // say — a Riyadh-to-Dammam trip doesn't need an exchange rate.
+  const homeCurrency = currencyForCountry(originCountry?.code);
+  const tripCurrency = currencyForCountry(destinationCountry?.code);
+  const showCurrencyStrip =
+    Boolean(homeCurrency && tripCurrency) && homeCurrency!.code !== tripCurrency!.code;
+
   const editSearchParams = useMemo(() => {
     const p = new URLSearchParams({
       mode: "known",
@@ -188,6 +204,12 @@ function ResultsContent() {
           have, and finding that out after choosing a trip is too late. */}
       {destinationCountry && <EntryRequirementsPanel countryCode={destinationCountry.code} locale={locale} />}
 
+      {/* What a riyal is worth where they're going — asked on this page
+          anyway, and better answered before they price anything. */}
+      {showCurrencyStrip && homeCurrency && tripCurrency && (
+        <TripCurrencyStrip from={homeCurrency} to={tripCurrency} locale={locale} />
+      )}
+
       {isMockData && !loading && (
         <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           {dict.results.mockNotice}
@@ -230,7 +252,10 @@ function ResultsContent() {
               <p className="text-sm text-white/70 mt-1 max-w-xl">{dict.results.itineraryPromptBody}</p>
             </div>
             <Link
-              href={`/${locale}/itinerary?destination=${encodeURIComponent(search.destination)}&nights=${nights || 3}&budget=${search.budgetTotal}&currency=${search.currency}`}
+              // The country travels with the city so the plan page can offer
+              // its map exports; the search budget deliberately does not —
+              // that money is already spent on the flight and the hotel.
+              href={`/${locale}/itinerary?city=${encodeURIComponent(search.destination)}&country=${destinationCountry?.code ?? ""}&nights=${nights || 3}&currency=${search.currency}`}
               className="shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-bold text-brand-900 shadow-sm transition hover:bg-brand-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-900"
             >
               {dict.results.viewItinerary}

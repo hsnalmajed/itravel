@@ -13,6 +13,14 @@
 // width is *asked for* and whatever URL the API hands back is the one used —
 // the same lesson already recorded in wikipedia.ts.
 //
+// The one exception is Special:FilePath, which is a different thing: it is the
+// documented entry point that renders a file at whatever width you ask for,
+// rather than a guess at the path of a thumbnail that may not exist. That is
+// what the 4K variant uses, and it exists to save a request — the visa page
+// was quietly losing its background because it makes dozens of lookups of its
+// own and a Worker only gets so many per render. One call for the picture, not
+// two, is the difference between a hero and a navy gradient.
+//
 // And it does not drop the credit. These photographs are published under
 // licences that require the photographer to be named, so the author, the
 // licence and a link to the file page come back with the image and the
@@ -47,14 +55,32 @@ function stripHtml(value: string | undefined): string | undefined {
   return text || undefined;
 }
 
+/** The width the 4K candidate is rendered at. */
+const UHD_WIDTH = 3840;
+
 /**
- * Look up one Commons file.
+ * The same file rendered at an arbitrary width.
+ *
+ * Special:FilePath renders on demand, so unlike a hand-edited thumbnail path
+ * this is always a URL that resolves.
+ */
+function filePathUrl(fileName: string, width: number): string {
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(
+    fileName
+  )}?width=${width}`;
+}
+
+/**
+ * One Commons file, with a 4K variant alongside the display-size one.
  *
  * Returns null on any failure — an unreachable API, a renamed file, a
  * malformed response — so a caller can fall back to another image rather than
  * failing the page for the sake of a background.
  */
-async function fetchOne(fileName: string, width: number): Promise<CommonsImage | null> {
+export async function fetchCommonsImage(
+  fileName: string,
+  width = 1920
+): Promise<CommonsImage | null> {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
@@ -86,6 +112,8 @@ async function fetchOne(fileName: string, width: number): Promise<CommonsImage |
             thumburl?: string;
             thumbwidth?: number;
             thumbheight?: number;
+            /** The source file's own dimensions, not the thumbnail's. */
+            width?: number;
             url?: string;
             descriptionurl?: string;
             extmetadata?: Record<string, { value?: string }>;
@@ -100,10 +128,20 @@ async function fetchOne(fileName: string, width: number): Promise<CommonsImage |
     const url = info?.thumburl || info?.url;
     if (!url || !info?.descriptionurl) return null;
 
+    const displayWidth = info.thumbwidth ?? width;
+
     return {
       url,
-      width: info.thumbwidth ?? width,
+      width: displayWidth,
       height: info.thumbheight ?? 0,
+      // Offered only when the source really has 4K in it. A smaller file
+      // renders at its own size whatever width is asked for, so describing it
+      // as a 3840w candidate would be a lie the browser acts on — it would
+      // pick the blurrier of two identical images on the biggest screens.
+      url4k:
+        (info.width ?? 0) >= UHD_WIDTH && displayWidth < UHD_WIDTH
+          ? filePathUrl(fileName, UHD_WIDTH)
+          : undefined,
       artist: stripHtml(info.extmetadata?.Artist?.value),
       license: stripHtml(info.extmetadata?.LicenseShortName?.value),
       descriptionUrl: info.descriptionurl,
@@ -111,30 +149,4 @@ async function fetchOne(fileName: string, width: number): Promise<CommonsImage |
   } catch {
     return null;
   }
-}
-
-/**
- * One Commons file, with a 4K variant alongside the display-size one.
- *
- * Both widths are asked for rather than derived, for the reason above: the
- * only URL guaranteed to exist is the one Wikimedia hands back. The two
- * lookups run together and both sit behind the same daily cache, so this
- * costs one round trip, once a day.
- */
-export async function fetchCommonsImage(
-  fileName: string,
-  width = 1920
-): Promise<CommonsImage | null> {
-  const [base, large] = await Promise.all([
-    fetchOne(fileName, width),
-    fetchOne(fileName, 3840),
-  ]);
-  if (!base) return null;
-  return {
-    ...base,
-    // Only when it really is larger — a file smaller than 4K comes back at
-    // its own size, and advertising that as a 3840w candidate would make the
-    // browser pick a blurrier image on a big screen.
-    url4k: large && large.width > base.width ? large.url : undefined,
-  };
 }

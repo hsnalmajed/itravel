@@ -218,6 +218,16 @@ export const dictionaries = {
       suite: "جناح",
       apartment: "شقة كاملة",
     },
+    // What the traveller is actually asked, as opposed to what the hotel API
+    // is told. See stayType.ts.
+    stayType: {
+      label: "نوع الإقامة",
+      any: "لا يهم",
+      room: "غرفة",
+      apartment: "شقة",
+      roomFitsHint: "نختار حجم الغرفة تلقائياً حسب عدد المسافرين (الغرفة تكفي حتى {max} أشخاص).",
+      apartmentOnlyHint: "عدد المسافرين {count}، وهو أكبر من غرفة واحدة — لذلك تكون الإقامة في شقة.",
+    },
     categories: {
       label: "ما نوع الوجهة التي تفضلها؟",
       any: "بدون تفضيل",
@@ -407,6 +417,8 @@ export const dictionaries = {
       itineraryPromptBody: "نجهّز لك برنامجاً يومياً حسب مدة رحلتك واهتماماتك، جاهزاً خلال ثوانٍ.",
       exploreDestinationTitle: "المعالم السياحية والأنشطة والمطاعم",
       exploreDestinationBody: "تصفّح أبرز المعالم السياحية والأنشطة والمأكولات المحلية في وجهتك قبل السفر.",
+      exploreCityTitle: "المعالم السياحية والأنشطة والمطاعم في {city}",
+      exploreCityBody: "كل الأماكن السياحية والأنشطة والمطاعم في {city} — بالصور والوصف، حسب وجهة بحثك.",
       exploreDestinationCta: "استكشف الوجهة",
       mockNotice:
         "هذه بيانات تجريبية (Demo) لأن مفتاح Duffel غير مُفعّل بعد. أضف DUFFEL_API_KEY في ملف .env لعرض أسعار حقيقية.",
@@ -462,6 +474,8 @@ export const dictionaries = {
       ratingOutOf10: "{rating}/10",
       currencyHeading: "العملة في وجهتك",
       currencyConvert: "احسب مبلغاً آخر",
+      currencyConvertClose: "إخفاء الحاسبة",
+      currencyAmountPlaceholder: "اكتب المبلغ",
       currencyNote:
         "هذا سعر السوق المرجعي (mid-market) وليس سعر البنك أو مكتب الصرافة — يضيفون هامشاً، فاحسب تكلفتك على أساس أقل قليلاً. المصدر:",
     },
@@ -508,10 +522,15 @@ export const dictionaries = {
       cityPlaceholder: "اكتب اسم المدينة...",
       daysLabel: "عدد الأيام",
       daysCount: "{count} أيام",
-      budgetLabel: "ميزانية الأنشطة والمأكولات",
-      budgetPlaceholder: "اكتب المبلغ المخصص للأنشطة",
+      budgetLabel: "ميزانية السياحة",
+      budgetPlaceholder: "اكتب المبلغ المخصص للسياحة",
       budgetHint:
-        "هذه غير ميزانية الطيران والفنادق — اكتب ما تنوي صرفه داخل المدينة على الأنشطة والمأكولات والتنقل.",
+        "من غير الطيران والفنادق — ما تنوي صرفه داخل المدينة على الأنشطة والمأكولات والتنقل.",
+      backToResults: "العودة إلى نتائج رحلتك",
+      travelersOne: "مسافر واحد",
+      travelersTwo: "مسافران",
+      travelersFew: "{count} مسافرين",
+      travelersMany: "{count} مسافر",
       estimatedCost: "تكلفة تقديرية",
       mockNotice:
         "هذه خطة نموذجية (Demo) لأن مفتاح الذكاء الاصطناعي غير مُفعّل بعد. أضف ANTHROPIC_API_KEY في ملف .env لتوليد خطط حقيقية بالذكاء الاصطناعي.",
@@ -815,6 +834,14 @@ export const dictionaries = {
       suite: "Suite",
       apartment: "Full apartment",
     },
+    stayType: {
+      label: "Stay type",
+      any: "No preference",
+      room: "Room",
+      apartment: "Apartment",
+      roomFitsHint: "We pick the room size automatically from your party (a room sleeps up to {max}).",
+      apartmentOnlyHint: "{count} travellers is more than one room holds — so the stay will be an apartment.",
+    },
     categories: {
       label: "What kind of destination do you prefer?",
       any: "No preference",
@@ -1007,6 +1034,8 @@ export const dictionaries = {
       itineraryPromptBody: "We'll put together a daily plan based on your trip length and interests, ready in seconds.",
       exploreDestinationTitle: "Attractions, activities & restaurants",
       exploreDestinationBody: "Browse the top attractions, activities, and local cuisine at your destination before you go.",
+      exploreCityTitle: "Attractions, activities & restaurants in {city}",
+      exploreCityBody: "Every attraction, activity and restaurant in {city} — with photos and descriptions, for the destination you searched.",
       exploreDestinationCta: "Explore destination",
       mockNotice:
         "This is demo data because the Duffel API key isn't configured yet. Add DUFFEL_API_KEY in .env to show live prices.",
@@ -1062,6 +1091,8 @@ export const dictionaries = {
       ratingOutOf10: "{rating}/10",
       currencyHeading: "Money at your destination",
       currencyConvert: "Convert another amount",
+      currencyConvertClose: "Hide calculator",
+      currencyAmountPlaceholder: "Enter an amount",
       currencyNote:
         "This is the mid-market reference rate, not what a bank or exchange counter gives you — they add a margin, so budget on slightly less. Source:",
     },
@@ -1108,10 +1139,15 @@ export const dictionaries = {
       cityPlaceholder: "Type a city name…",
       daysLabel: "Number of days",
       daysCount: "{count} days",
-      budgetLabel: "Budget for activities and food",
-      budgetPlaceholder: "What you'll spend on activities",
+      budgetLabel: "Sightseeing budget",
+      budgetPlaceholder: "What you'll spend sightseeing",
       budgetHint:
-        "This is separate from your flight and hotel budget — enter what you plan to spend in the city on activities, food, and getting around.",
+        "Excluding flights and hotels — what you plan to spend in the city on activities, food, and getting around.",
+      backToResults: "Back to your results",
+      travelersOne: "1 traveller",
+      travelersTwo: "2 travellers",
+      travelersFew: "{count} travellers",
+      travelersMany: "{count} travellers",
       estimatedCost: "Estimated cost",
       mockNotice:
         "This is a sample itinerary (demo) because the AI key isn't configured yet. Add ANTHROPIC_API_KEY in .env to generate real AI itineraries.",

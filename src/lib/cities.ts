@@ -9,6 +9,8 @@
 // A wrong wikiTitle would put a city map in the wrong place, so the titles
 // here are the canonical article names rather than colloquial spellings.
 
+import { searchEquals } from "@/lib/search";
+
 export interface CityEntry {
   /** URL segment — lowercase, hyphenated, unique within its country. */
   slug: string;
@@ -242,4 +244,36 @@ export const COUNTRY_CITIES: Record<string, CityEntry[]> = {
 
 export function findCity(countryCode: string, slug: string): CityEntry | undefined {
   return (COUNTRY_CITIES[countryCode.toUpperCase()] ?? []).find((c) => c.slug === slug);
+}
+
+/**
+ * The guide entry for a city named in words rather than by slug.
+ *
+ * This is what turns a search into a place. Someone who searched for a flight
+ * picked an airport, and an airport knows its city only as a name — "Istanbul",
+ * "إسطنبول" — so linking them to that city's attractions means matching that
+ * name against this list.
+ *
+ * Both spellings are compared under the site's own folding, because the
+ * airport list and the city list were written by different hands: one says
+ * "İzmir" with a dotted capital, the other may not, and a traveller should not
+ * lose their city guide to a diacritic.
+ *
+ * Returns undefined rather than a near match. A wrong city here would show
+ * someone Ankara's restaurants for a trip to Istanbul, which is worse than
+ * falling back to the country.
+ */
+export function findCityByName(
+  countryCode: string,
+  ...names: (string | undefined | null)[]
+): CityEntry | undefined {
+  const cities = COUNTRY_CITIES[countryCode.toUpperCase()] ?? [];
+  for (const name of names) {
+    if (!name) continue;
+    const match = cities.find(
+      (c) => searchEquals(c.nameEn, name) || searchEquals(c.nameAr, name)
+    );
+    if (match) return match;
+  }
+  return undefined;
 }

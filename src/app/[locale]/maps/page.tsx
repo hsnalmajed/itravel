@@ -4,6 +4,7 @@ import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchDestinationList } from "@/lib/destinationList";
 import { cityCountLabel } from "@/lib/format";
 import MapsCountryList from "@/components/MapsCountryList";
+import { sectionHero } from "@/lib/sectionHero";
 
 // Photos are fetched live from Wikipedia, same as the rest of the site.
 export const dynamic = "force-dynamic";
@@ -16,19 +17,20 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
   // A country belongs here only if it has cities to open — the country page
   // is a list of city maps, so a country with none would lead to an empty
   // page.
-  const { countries, cities } = await fetchDestinationList(loc, { onlyWithCities: true });
+  const [{ countries, cities }, hero] = await Promise.all([
+    fetchDestinationList(loc, { onlyWithCities: true }),
+    sectionHero("maps", loc),
+  ]);
 
   const withCityCounts = countries.map((c) => ({
     ...c,
     subtitle: `🏙️ ${cityCountLabel(COUNTRY_CITIES[c.code]?.length ?? 0, dict.maps)}`,
   }));
 
-  const heroPhoto = withCityCounts.map((c) => c.photo).find(Boolean);
-
   return (
     <MapsCountryList
       locale={loc}
-      heroPhoto={heroPhoto}
+      hero={hero}
       countries={withCityCounts}
       cities={cities}
       filtersDict={{

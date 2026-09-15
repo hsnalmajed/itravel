@@ -48,11 +48,13 @@ export async function fetchCountryPlaces(code: string, locale: string): Promise<
 /**
  * The places named in a set of lines.
  *
- * Matching is deliberately conservative — the place's own name has to appear
- * in the line, under the same Arabic-tolerant folding the search boxes use —
- * because a loose match would pin someone's evening to the wrong museum.
- * Short names are skipped entirely: a three-letter place name matches half a
- * paragraph by accident.
+ * Matching is deliberately conservative — one name has to contain the other
+ * whole, under the same Arabic-tolerant folding the search boxes use —
+ * because a loose match would pin someone's evening to the wrong museum. It
+ * is checked both ways round, since a guide entry ("the Grand Bazaar") and a
+ * Wikipedia title ("Grand Bazaar, Istanbul") each routinely contain the
+ * other. Short names are skipped entirely: a three-letter place name matches
+ * half a paragraph by accident.
  */
 export function matchPlacesInLines(lines: string[], places: CountryPlace[]): CountryPlace[] {
   const haystack = lines.map((line) => normalizeSearch(line)).filter(Boolean);
@@ -62,7 +64,7 @@ export function matchPlacesInLines(lines: string[], places: CountryPlace[]): Cou
   for (const place of places) {
     const needle = normalizeSearch(place.name);
     if (needle.length < 5) continue;
-    if (haystack.some((line) => line.includes(needle))) {
+    if (haystack.some((line) => line.includes(needle) || (line.length >= 5 && needle.includes(line)))) {
       matched.set(`${place.lat},${place.lon}`, place);
     }
   }

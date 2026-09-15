@@ -73,6 +73,17 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   const showFlightFields = tripType === "both" || tripType === "flight";
   const showHotelFields = tripType === "both" || tripType === "hotel";
 
+  // The budget field names what the money actually has to cover, exactly as
+  // it does in the "I know where I'm going" form. Asking for a "total
+  // budget" when the traveller only asked for hotels invites them to include
+  // a flight we are not pricing.
+  const budgetLabel =
+    tripType === "flight"
+      ? dict.form.budgetFlight
+      : tripType === "hotel"
+        ? dict.form.budgetHotel
+        : dict.form.budgetBoth;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!tripType) return;
@@ -208,7 +219,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>{dict.discoverForm.budget}</label>
+                <label className={labelClass}>{budgetLabel}</label>
                 <input
                   type="number"
                   min={0}

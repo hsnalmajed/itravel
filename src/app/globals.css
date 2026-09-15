@@ -288,3 +288,58 @@ h1, h2, h3, .font-display {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Printing a plan.
+
+   "Save as PDF" is the browser's own print dialog rather than a JavaScript
+   PDF library: those render Arabic as disconnected letters in the wrong
+   order unless you ship a text-shaping engine with them, while the browser
+   already shapes Arabic correctly and always has. So the job here is to make
+   the printed page a document — drop the site's furniture, flatten the dark
+   panels to ink that doesn't drink a cartridge, and keep a day's card from
+   being split across two pages.
+--------------------------------------------------------------------------- */
+@media print {
+  header,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  :root {
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff !important;
+    font-size: 11pt;
+  }
+
+  /* The page's top padding exists to clear a fixed header that isn't
+     printed — but drop it to a hair rather than nothing, so the first
+     heading doesn't sit flush against the paper's cut edge. */
+  main > div,
+  body > div {
+    padding-top: 8pt !important;
+  }
+
+  /* Dark cards and coloured chips become plain ink. */
+  .print-plain,
+  .print-plain * {
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+  }
+
+  .print-block {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

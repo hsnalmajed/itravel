@@ -5,6 +5,7 @@ import type { Locale } from "@/lib/types";
 import {findCountry} from "@/lib/countries";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
+import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import { cityCountLabel } from "@/lib/format";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 import PageHero from "@/components/ui/PageHero";
@@ -31,7 +32,13 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
   // A real photo and a real place count per city — the same lookup the
   // attractions guide uses, so the two sections never disagree about how much
   // a city has.
-  const overviews = await fetchCityOverviews(cities);
+  // The city cards want thumbnails; the hero behind them wants the source
+  // image, so the two are fetched separately rather than the banner reusing a
+  // 330-pixel card photo.
+  const [overviews, heroPhotos] = await Promise.all([
+    fetchCityOverviews(cities),
+    fetchCountryPhotos([country.code], { full: true }),
+  ]);
 
   const cards: CityCard[] = cities.map((c) => {
     const overview = overviews.get(c.wikiTitle);
@@ -47,10 +54,10 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
 
   const countryName = loc === "ar" ? country.nameAr : country.nameEn;
 
-  // The country's hero picture comes from its first city that has one, so
-  // this page opens on somewhere inside the country rather than on a map of
-  // its borders.
-  const heroPhoto = cards.map((c) => c.photo).find(Boolean);
+  // The page opens on somewhere inside the country rather than on a map of
+  // its borders — the country's best-known landmark, falling back to a city
+  // card's photo if that lookup came back empty.
+  const heroPhoto = heroPhotos.get(country.code) ?? cards.map((c) => c.photo).find(Boolean);
 
   return (
     <div>

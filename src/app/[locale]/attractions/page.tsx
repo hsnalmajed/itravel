@@ -4,6 +4,7 @@ import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchDestinationList } from "@/lib/destinationList";
 import { cityCountLabel } from "@/lib/format";
 import AttractionsExplorer from "@/components/AttractionsExplorer";
+import { sectionHero } from "@/lib/sectionHero";
 
 // Live Wikipedia lookups — fetched fresh per request rather than frozen into
 // the build, so a renamed article or a newly-added country guide shows up
@@ -15,7 +16,12 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  const { countries, cities } = await fetchDestinationList(loc);
+  // The destination list and the hero are independent lookups, so they run
+  // together rather than one after the other.
+  const [{ countries, cities }, hero] = await Promise.all([
+    fetchDestinationList(loc),
+    sectionHero("attractions", loc),
+  ]);
 
   const featured = countries.map((c) => {
     const cityCount = COUNTRY_CITIES[c.code]?.length ?? 0;
@@ -25,14 +31,10 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
     };
   });
 
-  // A real photograph for the hero, taken from the first destination that
-  // has one — so the attractions page opens on an attraction.
-  const heroPhoto = countries.map((c) => c.photo).find(Boolean);
-
   return (
     <AttractionsExplorer
       locale={loc}
-      heroPhoto={heroPhoto}
+      hero={hero}
       featured={featured}
       cities={cities}
       filtersDict={{

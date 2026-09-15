@@ -121,6 +121,12 @@ function ResultsContent() {
         ? hotels.length > 0
         : flights.length > 0 && hotels.length > 0;
 
+  // Everyone the fare has to cover. Flight prices are already priced for the
+  // whole party (adults at full fare, children and infants at their usual
+  // weights), so this is only used to *say so* — a total with no headcount
+  // beside it reads as a per-person price and gets doubled in someone's head.
+  const travelers = search.adults + (search.childrenAges?.length ?? 0) + (search.infants ?? 0);
+
   const affiliateLinks = useMemo(() => buildAffiliateLinks(search), [search]);
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
   const isMockData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
@@ -208,6 +214,9 @@ function ResultsContent() {
           budgetTotal={search.budgetTotal}
           currency={search.currency}
           locale={locale}
+          travelers={travelers}
+          departDate={search.departDate}
+          returnDate={search.returnDate}
         />
       )}
 

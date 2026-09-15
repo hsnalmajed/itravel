@@ -350,6 +350,38 @@ export const dictionaries = {
       originPlaceholder: "مثال: الرياض",
       destinationPlaceholder: "مثال: إسطنبول",
     },
+    picker: {
+      add: "أضف إلى خطتي",
+      added: "مضاف",
+      itemsCount: "{count} اختيار في خطتك",
+      clear: "مسح الاختيارات",
+      daysLabel: "الأيام",
+      build: "اصنع خطتي",
+      planTitle: "خطتي في {country}",
+      planNote:
+        "وزّعنا اختياراتك على أيام رحلتك بالترتيب الذي اخترتها به، كنقطة بداية — ليست مساراً محسوباً: لا نعرف مواعيد عمل كل مكان ولا وقت التنقل بينها، فرتّب اليوم كما يناسبك.",
+      overloadNotice:
+        "أحد الأيام فيه {count} أنشطة — أكثر من {comfortable} في اليوم الواحد يعني تنقّلاً متواصلاً ووقتاً قصيراً في كل مكان. زد عدد الأيام أو احذف بعض الاختيارات.",
+      busyDay: "يوم مزدحم",
+      freeDay: "يوم مفتوح — لم تختر شيئاً له بعد.",
+      exportHeading: "خذ معالم {country} معك",
+      exportSubtitle: "نزّل كل مواقع المعالم كملف واحد واستورده في خرائطك.",
+    },
+    plan: {
+      actionsHeading: "احفظ خطتك أو خذها معك",
+      savePdf: "حفظ كـ PDF",
+      exportPlan: "أماكن الخطة على خرائطي",
+      exportAll: "كل معالم {country} على خرائطي",
+      allPlacesTitle: "معالم {country} السياحية",
+      loadingPlaces: "نجهّز مواقع المعالم...",
+      exportDone: "تم تنزيل الملف — فيه {count} موقعاً. استورده في My Maps لتظهر على خرائطك.",
+      noPlanMatches:
+        "لم نتمكن من تحديد إحداثيات دقيقة لأماكن هذه الخطة. استخدم زر «كل معالم الدولة» بدلاً منها.",
+      mapsHowTo:
+        "لا يستطيع أي موقع إضافة أماكن إلى حسابك في قوقل مباشرة. الطريقة الرسمية: نزّل الملف من هنا ثم افتح My Maps واختر «إنشاء خريطة جديدة ← استيراد» وارفع الملف — تظهر بعدها في تطبيق خرائط قوقل ضمن «خرائطك».",
+      openMyMaps: "افتح Google My Maps",
+      printedFrom: "خطة من Sfratna",
+    },
     results: {
       title: "نتائج البحث",
       subtitle: "أفضل الخيارات المطابقة لميزانيتك وتفضيلاتك",
@@ -423,6 +455,10 @@ export const dictionaries = {
       manyStops: "{count} توقفات",
       hotelNoPhoto: "لا تتوفر صورة لهذا الفندق من مزود الحجز",
       ratingOutOf10: "{rating}/10",
+      currencyHeading: "العملة في وجهتك",
+      currencyConvert: "احسب مبلغاً آخر",
+      currencyNote:
+        "هذا سعر السوق المرجعي (mid-market) وليس سعر البنك أو مكتب الصرافة — يضيفون هامشاً، فاحسب تكلفتك على أساس أقل قليلاً. المصدر:",
     },
     multicity: {
       title: "رحلة متعددة الوجهات",
@@ -461,6 +497,17 @@ export const dictionaries = {
       interestsPlaceholder: "مثال: تاريخ، طبيعة، تسوق، طعام محلي",
       day: "اليوم",
       tips: "نصائح عامة للرحلة",
+      titleForCity: "خطتك السياحية في {city}",
+      planTitleForCity: "خطة {city} اليومية",
+      cityLabel: "المدينة",
+      cityPlaceholder: "اكتب اسم المدينة...",
+      daysLabel: "عدد الأيام",
+      daysCount: "{count} أيام",
+      budgetLabel: "ميزانية الأنشطة والمأكولات",
+      budgetPlaceholder: "اكتب المبلغ المخصص للأنشطة",
+      budgetHint:
+        "هذه غير ميزانية الطيران والفنادق — اكتب ما تنوي صرفه داخل المدينة على الأنشطة والمأكولات والتنقل.",
+      estimatedCost: "تكلفة تقديرية",
       mockNotice:
         "هذه خطة نموذجية (Demo) لأن مفتاح الذكاء الاصطناعي غير مُفعّل بعد. أضف ANTHROPIC_API_KEY في ملف .env لتوليد خطط حقيقية بالذكاء الاصطناعي.",
     },
@@ -898,6 +945,38 @@ export const dictionaries = {
       originPlaceholder: "e.g. Riyadh",
       destinationPlaceholder: "e.g. Istanbul",
     },
+    picker: {
+      add: "Add to my plan",
+      added: "Added",
+      itemsCount: "{count} picks in your plan",
+      clear: "Clear picks",
+      daysLabel: "Days",
+      build: "Build my plan",
+      planTitle: "My plan in {country}",
+      planNote:
+        "We've spread your picks across your trip in the order you chose them, as a starting point — not a computed route: we don't know each place's opening hours or the travel time between them, so reorder each day to suit you.",
+      overloadNotice:
+        "One day has {count} things on it — more than {comfortable} in a day means constant travelling and little time anywhere. Add days, or drop a few picks.",
+      busyDay: "Busy day",
+      freeDay: "An open day — nothing picked for it yet.",
+      exportHeading: "Take {country} with you",
+      exportSubtitle: "Download every mapped place as one file and import it into your maps.",
+    },
+    plan: {
+      actionsHeading: "Keep this plan, or take it with you",
+      savePdf: "Save as PDF",
+      exportPlan: "Plan's places on my maps",
+      exportAll: "All of {country} on my maps",
+      allPlacesTitle: "{country} — places to visit",
+      loadingPlaces: "Gathering places…",
+      exportDone: "File downloaded — {count} places. Import it into My Maps to see them on your maps.",
+      noPlanMatches:
+        "We couldn't pin exact coordinates for this plan's places. Use the whole-country export instead.",
+      mapsHowTo:
+        "No website can add places straight into your Google account. The supported route: download the file here, open My Maps, choose Create a new map → Import, and upload it — the places then appear in the Google Maps app under Your places.",
+      openMyMaps: "Open Google My Maps",
+      printedFrom: "A plan from Sfratna",
+    },
     results: {
       title: "Search results",
       subtitle: "Best matches for your budget and preferences",
@@ -971,6 +1050,10 @@ export const dictionaries = {
       manyStops: "{count} stops",
       hotelNoPhoto: "The booking provider has no photo for this property",
       ratingOutOf10: "{rating}/10",
+      currencyHeading: "Money at your destination",
+      currencyConvert: "Convert another amount",
+      currencyNote:
+        "This is the mid-market reference rate, not what a bank or exchange counter gives you — they add a margin, so budget on slightly less. Source:",
     },
     multicity: {
       title: "Multi-city trip",
@@ -1009,6 +1092,17 @@ export const dictionaries = {
       interestsPlaceholder: "e.g. history, nature, shopping, local food",
       day: "Day",
       tips: "General trip tips",
+      titleForCity: "Your itinerary in {city}",
+      planTitleForCity: "{city} — day by day",
+      cityLabel: "City",
+      cityPlaceholder: "Type a city name…",
+      daysLabel: "Number of days",
+      daysCount: "{count} days",
+      budgetLabel: "Budget for activities and food",
+      budgetPlaceholder: "What you'll spend on activities",
+      budgetHint:
+        "This is separate from your flight and hotel budget — enter what you plan to spend in the city on activities, food, and getting around.",
+      estimatedCost: "Estimated cost",
       mockNotice:
         "This is a sample itinerary (demo) because the AI key isn't configured yet. Add ANTHROPIC_API_KEY in .env to generate real AI itineraries.",
     },

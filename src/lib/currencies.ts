@@ -97,6 +97,46 @@ export function findCurrency(code: string): Currency | undefined {
 }
 
 /**
+ * The 20 states that spend the euro.
+ *
+ * Listed explicitly because the euro breaks the one-country-one-currency
+ * assumption the table above is built on: France, Italy and Spain have no row
+ * of their own, and without this a traveller flying to Paris would be told we
+ * don't know what money they use. Non-EU users of the euro (Monaco, Kosovo,
+ * Montenegro) are included — what matters here is what you pay with.
+ */
+const EURO_COUNTRIES = new Set([
+  "AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE", "IT", "LV", "LT",
+  "LU", "MT", "NL", "PT", "SK", "SI", "ES",
+  "AD", "MC", "SM", "VA", "ME", "XK",
+]);
+
+/** A handful of countries whose currency isn't the one their code suggests. */
+const COUNTRY_CURRENCY_OVERRIDES: Record<string, string> = {
+  // Both use the US dollar as their own legal tender.
+  EC: "USD",
+  PA: "USD",
+  // Liechtenstein spends Swiss francs.
+  LI: "CHF",
+};
+
+/**
+ * What money you actually spend in a country.
+ *
+ * Returns undefined rather than guessing when we have no row for it — the
+ * interface then says nothing instead of quoting a rate for the wrong money,
+ * which is the kind of mistake someone budgets a whole trip around.
+ */
+export function currencyForCountry(countryCode: string | undefined): Currency | undefined {
+  const code = (countryCode ?? "").toUpperCase();
+  if (!code) return undefined;
+  if (EURO_COUNTRIES.has(code)) return findCurrency("EUR");
+  const override = COUNTRY_CURRENCY_OVERRIDES[code];
+  if (override) return findCurrency(override);
+  return CURRENCIES.find((c) => c.country.toUpperCase() === code);
+}
+
+/**
  * The flag emoji for a currency.
  *
  * The euro is the exception: it has no country of its own, so "EU" is mapped

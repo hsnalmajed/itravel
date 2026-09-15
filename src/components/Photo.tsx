@@ -18,11 +18,19 @@ export default function Photo({
   src,
   fallback,
   className,
+  priority = false,
 }: {
   src?: string;
   /** Shown when there's no photo, or when the photo fails to load. */
   fallback: React.ReactNode;
   className?: string;
+  /**
+   * Set on the one image that is the page's largest paint — a hero. Lazy
+   * loading is right for a grid of cards below the fold and exactly wrong
+   * for the picture already on screen when the page opens: it makes the
+   * browser wait for layout before it will even start the request.
+   */
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -33,7 +41,8 @@ export default function Photo({
     <img
       src={src}
       alt=""
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
       className={className}
       onError={() => setFailed(true)}
     />

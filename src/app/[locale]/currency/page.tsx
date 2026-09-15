@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/types";
 import { fetchRates } from "@/lib/rates";
 import CurrencyConverter from "@/components/CurrencyConverter";
 import PageHero from "@/components/ui/PageHero";
+import { sectionHero } from "@/lib/sectionHero";
 
 // Rates are fetched per request (behind an hourly cache in the fetch itself),
 // so the page never serves a rate frozen at build time.
@@ -19,7 +20,7 @@ export default async function CurrencyPage({ params, searchParams }: PageProps<"
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  const rates = await fetchRates();
+  const [rates, hero] = await Promise.all([fetchRates(), sectionHero("currency", loc)]);
 
   // Shown in the reader's own calendar and language, from the feed's own
   // timestamp — not from when this page happened to render.
@@ -36,6 +37,7 @@ export default async function CurrencyPage({ params, searchParams }: PageProps<"
   return (
     <div>
       <PageHero
+        {...hero}
         size="sm"
         align="center"
         title={dict.currency.title}

@@ -8,6 +8,7 @@ import { flagEmoji } from "@/lib/countries";
 import type { VisaCategory } from "@/lib/visa";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
 import VisaBadge, { VISA_ORDER, VISA_STYLES } from "@/components/VisaBadge";
+import { searchMatches, searchEquals } from "@/lib/search";
 
 export interface VisaRow {
   code: string;
@@ -59,11 +60,7 @@ export default function VisaExplorer({
     return rows.filter((r) => {
       if (category !== "all" && r.category !== category) return false;
       if (!q) return true;
-      return (
-        r.nameAr.includes(query.trim()) ||
-        r.nameEn.toLowerCase().includes(q) ||
-        r.code.toLowerCase() === q
-      );
+      return searchMatches([r.nameAr, r.nameEn], q) || searchEquals(r.code, q);
     });
   }, [rows, query, category]);
 

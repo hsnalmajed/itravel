@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { searchMatches } from "@/lib/search";
 
 export interface SearchableOption {
   value: string;
@@ -47,11 +48,9 @@ export default function SearchableSelect({
   const selected = options.find((o) => o.value === value);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!q) return options;
-    return options.filter((o) =>
-      `${o.value} ${o.label} ${o.hint ?? ""} ${o.keywords ?? ""}`.toLowerCase().includes(q)
-    );
+    return options.filter((o) => searchMatches([o.value, o.label, o.hint, o.keywords], q));
   }, [options, query]);
 
   // Clicking anywhere else closes the list — the behaviour every dropdown on

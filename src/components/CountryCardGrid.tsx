@@ -6,6 +6,7 @@ import type { Continent } from "@/lib/countries";
 import { flagEmoji } from "@/lib/countries";
 import Photo from "@/components/Photo";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
+import { searchMatches, searchEquals } from "@/lib/search";
 
 export interface DestinationCountry {
   code: string;
@@ -108,15 +109,13 @@ export function matchesFilters(
   if (continent !== "all" && country.continent !== continent) return false;
   if (month !== "all" && !country.months.includes(month)) return false;
 
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return true;
 
   // City names are searchable too: someone who knows they want Sharm El
   // Sheikh shouldn't have to remember it's in Egypt.
   return (
-    country.nameAr.includes(query.trim()) ||
-    country.nameEn.toLowerCase().includes(q) ||
-    country.code.toLowerCase() === q ||
-    country.cityNames.some((n) => n.toLowerCase().includes(q) || n.includes(query.trim()))
+    searchMatches([country.nameAr, country.nameEn, ...country.cityNames], q) ||
+    searchEquals(country.code, q)
   );
 }

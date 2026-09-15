@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { PIN_STYLES, type PinCategory } from "@/lib/pinStyles";
 import Photo from "@/components/Photo";
+import { searchMatches } from "@/lib/search";
 
 export interface PlaceListItem {
   key: string;
@@ -67,15 +68,10 @@ export default function CityPlacesExplorer({
   const [shown, setShown] = useState(PAGE);
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     return places
       .filter((p) => p.category === active)
-      .filter(
-        (p) =>
-          !q ||
-          p.name.toLowerCase().includes(q) ||
-          (p.description ?? "").toLowerCase().includes(q)
-      );
+      .filter((p) => searchMatches([p.name, p.description], q));
   }, [places, active, query]);
 
   function pick(tab: PinCategory) {

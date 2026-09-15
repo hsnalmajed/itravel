@@ -16,6 +16,7 @@ import CountryCardGrid, {
 } from "@/components/CountryCardGrid";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { searchMatches, searchEquals } from "@/lib/search";
 
 interface ExplorerDict {
   title: string;
@@ -75,11 +76,7 @@ export default function AttractionsExplorer({
     return restCountries.filter((c) => {
       if (filters.continent !== "all" && c.continent !== filters.continent) return false;
       if (!q) return true;
-      return (
-        c.nameAr.includes(q) ||
-        c.nameEn.toLowerCase().includes(q.toLowerCase()) ||
-        c.code.toLowerCase() === q.toLowerCase()
-      );
+      return searchMatches([c.nameAr, c.nameEn], q) || searchEquals(c.code, q);
     });
   }, [restCountries, filters]);
 

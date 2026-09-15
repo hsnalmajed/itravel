@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import type { ViatorCity } from "@/lib/viator";
+import { searchMatches } from "@/lib/search";
 
 interface PickerDict {
   citiesHeading: string;
@@ -28,9 +29,9 @@ export default function CityPicker({
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!q) return cities;
-    return cities.filter((c) => c.name.toLowerCase().includes(q));
+    return cities.filter((c) => searchMatches([c.name], q));
   }, [cities, query]);
 
   return (

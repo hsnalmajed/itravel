@@ -76,6 +76,13 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   // Trip route (round-trip/one-way/multi-city) only makes sense once a
   // flight-inclusive trip type has actually been chosen — hotel-only search
   // has no "route", and showing it against an unmade choice was confusing.
+  const budgetLabel =
+    tripType === "flight"
+      ? dict.form.budgetFlight
+      : tripType === "hotel"
+        ? dict.form.budgetHotel
+        : dict.form.budgetBoth;
+
   const showTripRoute = tripType === "both" || tripType === "flight";
   const showReturnDate = tripRoute === "multicity" ? false : tripType === "hotel" || tripRoute === "roundtrip";
   const showHotelFields = tripRoute === "multicity" || tripType === "both" || tripType === "hotel";
@@ -257,7 +264,10 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>{dict.form.budget}</label>
+                {/* The label names exactly what the number has to cover, so
+                    nobody enters a flight-only figure against a trip that
+                    also has to pay for the hotel. */}
+                <label className={labelClass}>{budgetLabel}</label>
                 <input
                   type="number"
                   min={0}

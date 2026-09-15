@@ -7,6 +7,7 @@ import type { VisaCategory } from "@/lib/visa";
 import { flagImageUrl } from "@/lib/visaProviders";
 import Photo from "@/components/Photo";
 import { VISA_ORDER, VISA_STYLES } from "@/components/VisaBadge";
+import { searchMatches, searchEquals } from "@/lib/search";
 
 export interface ApplyCountry {
   code: string;
@@ -56,11 +57,11 @@ export default function VisaApplyGrid({
   }, [countries]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     return countries.filter((c) => {
       if (category !== "all" && c.category !== category) return false;
       if (!q) return true;
-      return c.name.toLowerCase().includes(q) || c.name.includes(query.trim()) || c.code.toLowerCase() === q;
+      return searchMatches([c.name], q) || searchEquals(c.code, q);
     });
   }, [countries, query, category]);
 

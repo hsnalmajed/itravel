@@ -38,6 +38,7 @@ export default function Header({ locale }: { locale: Locale }) {
   }, []);
 
   const navLinks = [
+    { href: `/${locale}`, label: dict.nav.home },
     { href: `/${locale}/attractions`, label: dict.nav.attractions },
     { href: `/${locale}/maps`, label: dict.nav.maps },
     { href: `/${locale}/seasons`, label: dict.nav.seasons },
@@ -45,7 +46,10 @@ export default function Header({ locale }: { locale: Locale }) {
     { href: `/${locale}/currency`, label: dict.nav.currency },
   ];
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) =>
+    // The home link is the locale root, and every other path starts with it —
+    // so it only counts as active on an exact match.
+    href === `/${locale}` ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
   const solid = scrolled || menuOpen;
 
   return (
@@ -129,12 +133,6 @@ export default function Header({ locale }: { locale: Locale }) {
             onClick={() => setMenuOpen(false)}
             className="border-t border-white/10 bg-navy-990/97 px-4 pb-4 pt-2 backdrop-blur-xl lg:hidden"
           >
-            <Link
-              href={`/${locale}`}
-              className="block rounded-xl px-3 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/5"
-            >
-              {dict.nav.home}
-            </Link>
             {navLinks.map((link) => (
               <Link
                 key={link.href}

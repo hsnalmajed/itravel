@@ -4,10 +4,10 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { RoomType, FlightOffer, HotelOffer, Locale, PackageCombo, SearchParams, TripType } from "@/lib/types";
-import { buildCombos, sortCombos, type SortMode } from "@/lib/combine";
+import type { RoomType, FlightOffer, HotelOffer, Locale, SearchParams, TripType } from "@/lib/types";
 import { buildAffiliateLinks } from "@/lib/affiliateLinks";
-import PackageCard from "@/components/PackageCard";
+import TripBuilder from "@/components/TripBuilder";
+import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
 import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
@@ -57,7 +57,6 @@ function ResultsContent() {
   const [hotels, setHotels] = useState<HotelOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("recommended");
 
   useEffect(() => {
     if (!search.destination || !search.departDate) return;
@@ -112,11 +111,15 @@ function ResultsContent() {
       .finally(() => setLoading(false));
   }, [search]);
 
-  const combos: PackageCombo[] = useMemo(
-    () => buildCombos(search.tripType, flights, hotels, search.budgetTotal),
-    [search, flights, hotels]
-  );
-  const sortedCombos = useMemo(() => sortCombos(combos, sortMode), [combos, sortMode]);
+  // Whether there is anything to build a trip out of at all. A flight-only
+  // search needs flights; a hotel-only search needs hotels; "both" needs one
+  // of each, since half a package has no price we could honestly show.
+  const hasResults =
+    search.tripType === "flight"
+      ? flights.length > 0
+      : search.tripType === "hotel"
+        ? hotels.length > 0
+        : flights.length > 0 && hotels.length > 0;
 
   const affiliateLinks = useMemo(() => buildAffiliateLinks(search), [search]);
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
@@ -154,15 +157,6 @@ function ResultsContent() {
     return p.toString();
   }, [search]);
 
-  const sortOptions: { mode: SortMode; label: string }[] = [
-    { mode: "recommended", label: dict.results.sortRecommended },
-    { mode: "cheapest", label: dict.results.sortCheapest },
-    ...(search.tripType !== "hotel" ? [{ mode: "fastest" as SortMode, label: dict.results.sortFastest }] : []),
-    ...(search.tripType !== "flight"
-      ? [{ mode: "topRatedHotels" as SortMode, label: dict.results.sortTopRatedHotels }]
-      : []),
-  ];
-
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
@@ -183,19 +177,18 @@ function ResultsContent() {
         </Link>
       </div>
 
+      {/* Whether they can actually enter the country comes before what it
+          costs — a fare is no use to someone who needs a visa they don't
+          have, and finding that out after choosing a trip is too late. */}
+      {destinationCountry && <EntryRequirementsPanel countryCode={destinationCountry.code} locale={locale} />}
+
       {isMockData && !loading && (
         <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           {dict.results.mockNotice}
         </div>
       )}
 
-      {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-48 rounded-2xl bg-white ring-1 ring-black/5 animate-pulse" />
-          ))}
-        </div>
-      )}
+      {loading && <div className="h-72 animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />}
 
       {!loading && error && (
         <p className="text-red-600 py-4 text-center text-sm">
@@ -203,36 +196,19 @@ function ResultsContent() {
         </p>
       )}
 
-      {!loading && !error && combos.length === 0 && (
+      {!loading && !error && !hasResults && (
         <p className="text-gray-500 py-10 text-center">{dict.results.noResults}</p>
       )}
 
-      {!loading && !error && combos.length > 0 && sortOptions.length > 1 && (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-gray-500 me-1">{dict.results.sortBy}:</span>
-          {sortOptions.map((opt) => (
-            <button
-              key={opt.mode}
-              type="button"
-              onClick={() => setSortMode(opt.mode)}
-              className={`rounded-full px-4 py-1.75 text-sm font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
-                sortMode === opt.mode
-                  ? "bg-gradient-to-br from-brand-700 to-brand-900 text-white border-brand-800 shadow-md shadow-brand-900/20"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-brand-200 hover:text-brand-800"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {!loading && combos.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {sortedCombos.map((combo, i) => (
-            <PackageCard key={i} combo={combo} locale={locale} />
-          ))}
-        </div>
+      {!loading && !error && hasResults && (
+        <TripBuilder
+          flights={flights}
+          hotels={hotels}
+          tripType={search.tripType}
+          budgetTotal={search.budgetTotal}
+          currency={search.currency}
+          locale={locale}
+        />
       )}
 
       {!loading && (

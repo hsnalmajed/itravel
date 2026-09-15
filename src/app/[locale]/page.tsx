@@ -6,6 +6,7 @@ import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { findCountry } from "@/lib/countries";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
+import { fetchCommonsImage } from "@/lib/commonsImage";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import SearchModeSwitcher from "@/components/SearchModeSwitcher";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -28,7 +29,21 @@ export const dynamic = "force-dynamic";
  */
 const FEATURED = ["TR", "GE", "MV", "MY", "JP", "ES", "AZ", "TH", "IT"];
 
-/** Candidates for the one photograph the whole homepage rests on. */
+/**
+ * The photograph the whole homepage rests on: Qasr Sahoud in Al-Ahsa.
+ *
+ * Named rather than discovered. A Saudi traveller should land on somewhere
+ * they know — the site is built for them, and opening on a foreign skyline
+ * says the opposite. Qasr Sahoud earns the slot on its own terms too: a mud
+ * fort against a real blue sky reads instantly at hero size, and there is no
+ * identifiable face in the frame.
+ */
+const HERO_FILE = "Qasr_sahood.jpg";
+
+/**
+ * Where the hero falls back to if Commons can't be reached — the same
+ * discovered country photos the destination cards use.
+ */
 const HERO_CANDIDATES = ["TR", "MV", "GE", "IT", "JP"];
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
@@ -47,9 +62,12 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const inSeasonCodes = (countriesByMonth().get(month) ?? []).slice(0, 6);
 
   const photoCodes = Array.from(new Set([...HERO_CANDIDATES, ...FEATURED, ...inSeasonCodes]));
-  const photos = await fetchCountryPhotos(photoCodes);
+  const [photos, heroImage] = await Promise.all([
+    fetchCountryPhotos(photoCodes),
+    fetchCommonsImage(HERO_FILE),
+  ]);
 
-  const heroPhoto = HERO_CANDIDATES.map((c) => photos.get(c)).find(Boolean);
+  const heroPhoto = heroImage?.url ?? HERO_CANDIDATES.map((c) => photos.get(c)).find(Boolean);
   const nameOf = (code: string) => {
     const c = findCountry(code);
     return c ? (isAr ? c.nameAr : c.nameEn) : code;
@@ -96,6 +114,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           }
         />
         <div className="scrim absolute inset-0 -z-10" />
+        {/* Daylight sky is far brighter than the photographs this hero was
+            tuned against, so it gets its own extra wash — white display type
+            has to stay readable, not merely visible. */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-navy-990/85 via-navy-990/45 to-navy-990/55" />
 
         <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 sm:pb-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
@@ -125,6 +147,21 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             ))}
           </div>
         </div>
+
+        {/* These photographs are licensed on the condition that the
+            photographer is named. */}
+        {heroImage && (
+          <a
+            href={heroImage.descriptionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-2 end-3 z-10 text-[0.6rem] text-white/45 transition hover:text-white/75"
+          >
+            {dict.hero.photoCredit
+              .replace("{artist}", heroImage.artist ?? "Wikimedia Commons")
+              .replace("{license}", heroImage.license ?? "")}
+          </a>
+        )}
       </section>
 
       {/* ── The planner ─────────────────────────────────────────────────

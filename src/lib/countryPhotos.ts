@@ -34,7 +34,16 @@ function isFlagImage(url: string): boolean {
 /** How many of a country's landmarks to try before falling back to the country article. */
 const LANDMARKS_TO_TRY = 3;
 
-export async function fetchCountryPhotos(codes: string[]): Promise<Map<string, string>> {
+/**
+ * @param full Return the source image instead of Wikipedia's card thumbnail.
+ *   The thumbnail is about 330 pixels wide — right for a tile in a grid, and
+ *   visibly soft the moment the same URL is stretched across a full-width
+ *   hero, which is exactly what the country pages were doing with it.
+ */
+export async function fetchCountryPhotos(
+  codes: string[],
+  { full = false }: { full?: boolean } = {}
+): Promise<Map<string, string>> {
   const photos = new Map<string, string>();
   if (codes.length === 0) return photos;
 
@@ -63,7 +72,10 @@ export async function fetchCountryPhotos(codes: string[]): Promise<Map<string, s
 
     const summaries = await fetchWikiSummaries(thisRound.map((x) => x.title));
     for (const { code, title } of thisRound) {
-      const photo = summaries.get(title)?.thumbnail;
+      const summary = summaries.get(title);
+      // Falls back to the thumbnail when an article has no original image, so
+      // asking for full resolution never costs a page its picture entirely.
+      const photo = full ? summary?.image ?? summary?.thumbnail : summary?.thumbnail;
       if (photo && !isFlagImage(photo)) photos.set(code, photo);
     }
   }

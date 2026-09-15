@@ -230,7 +230,7 @@ export const dictionaries = {
     },
     hero: {
       badge: "تخطيط سفر ذكي · بدون عمولات حجز",
-      photoCredit: "قصر صاهود، الأحساء · تصوير {artist} — ويكيميديا كومنز {license}",
+      photoCredit: "{place} · تصوير {artist} — ويكيميديا كومنز {license}",
       titleLine1: "قل لنا ميزانيتك،",
       titleLine2: "ونقول لك إلى أين تسافر",
       title: "رحلتك القادمة تبدأ بميزانيتك",
@@ -827,7 +827,7 @@ export const dictionaries = {
     },
     hero: {
       badge: "Smart trip planning · No booking fees",
-      photoCredit: "Qasr Sahoud, Al-Ahsa · photo by {artist} — Wikimedia Commons {license}",
+      photoCredit: "{place} · photo by {artist} — Wikimedia Commons {license}",
       titleLine1: "Tell us your budget,",
       titleLine2: "we'll tell you where to go",
       title: "Your next trip starts with your budget",

@@ -24,6 +24,12 @@ export interface CommonsImage {
   url: string;
   width: number;
   height: number;
+  /**
+   * The same photograph at 4K, for the screens that can show it. Offered
+   * through srcset rather than as the default: a phone should not download a
+   * four-megabyte panorama to display it 400 pixels wide.
+   */
+  url4k?: string;
   /** The photographer, as Commons records them. */
   artist?: string;
   /** e.g. "CC BY-SA 4.0". */
@@ -48,10 +54,7 @@ function stripHtml(value: string | undefined): string | undefined {
  * malformed response — so a caller can fall back to another image rather than
  * failing the page for the sake of a background.
  */
-export async function fetchCommonsImage(
-  fileName: string,
-  width = 1920
-): Promise<CommonsImage | null> {
+async function fetchOne(fileName: string, width: number): Promise<CommonsImage | null> {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
@@ -108,4 +111,30 @@ export async function fetchCommonsImage(
   } catch {
     return null;
   }
+}
+
+/**
+ * One Commons file, with a 4K variant alongside the display-size one.
+ *
+ * Both widths are asked for rather than derived, for the reason above: the
+ * only URL guaranteed to exist is the one Wikimedia hands back. The two
+ * lookups run together and both sit behind the same daily cache, so this
+ * costs one round trip, once a day.
+ */
+export async function fetchCommonsImage(
+  fileName: string,
+  width = 1920
+): Promise<CommonsImage | null> {
+  const [base, large] = await Promise.all([
+    fetchOne(fileName, width),
+    fetchOne(fileName, 3840),
+  ]);
+  if (!base) return null;
+  return {
+    ...base,
+    // Only when it really is larger — a file smaller than 4K comes back at
+    // its own size, and advertising that as a 3840w candidate would make the
+    // browser pick a blurrier image on a big screen.
+    url4k: large && large.width > base.width ? large.url : undefined,
+  };
 }

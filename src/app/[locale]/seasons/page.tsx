@@ -62,6 +62,27 @@ export default async function SeasonsPage({ params }: PageProps<"/[locale]/seaso
             seasonAutumn: dict.seasons.seasonAutumn,
             sourceNote: dict.seasons.sourceNote,
             noResults: dict.filters.noResults,
+
+            modeQuestion: dict.seasons.modeQuestion,
+            byMonth: dict.seasons.byMonth,
+            byMonthHint: dict.seasons.byMonthHint,
+            byCountry: dict.seasons.byCountry,
+            byCountryHint: dict.seasons.byCountryHint,
+            pickCountry: dict.seasons.pickCountry,
+            pickCountryPlaceholder: dict.seasons.pickCountryPlaceholder,
+            countrySearchPlaceholder: dict.seasons.countrySearchPlaceholder,
+            countryNoMatches: dict.seasons.countryNoMatches,
+            noCountryChosen: dict.seasons.noCountryChosen,
+            yearFor: dict.seasons.yearFor,
+            inSeason: dict.seasons.inSeason,
+            outOfSeason: dict.seasons.outOfSeason,
+            inSeasonCount: dict.seasons.inSeasonCount,
+            inSeasonOne: dict.seasons.inSeasonOne,
+            inSeasonTwo: dict.seasons.inSeasonTwo,
+            inSeasonFew: dict.seasons.inSeasonFew,
+            noMonthsForCountry: dict.seasons.noMonthsForCountry,
+            changeMode: dict.seasons.changeMode,
+            viewCountry: dict.seasons.viewCountry,
           }}
         />
       </div>

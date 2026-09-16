@@ -6,6 +6,7 @@ import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
 import { fetchPlacesAroundCities } from "@/lib/mapPins";
 import { fetchCityHighlights } from "@/lib/guideHighlights";
+import { placeCountLabel } from "@/lib/format";
 import { BOOKING_SHORT_LABELS } from "@/lib/countryGuides";
 import { fetchWikiSummary } from "@/lib/wikipedia";
 import { fetchCitiesForCountry, fetchToursForCity } from "@/lib/viator";
@@ -69,10 +70,10 @@ export default async function CityPlacesPage({
   ]);
 
   // Keyed by English article title, which is the one name both sides share.
-  const highlightByTitle = new Map(highlights.map((h) => [h.wikiTitle, h]));
+  const highlightByTitle = new Map(highlights.map((h) => [h.landmark.wikiTitle, h]));
   const bookingLabelFor = (enTitle: string) => {
     const hit = highlightByTitle.get(enTitle);
-    return hit ? BOOKING_SHORT_LABELS[hit.booking][loc] : undefined;
+    return hit ? BOOKING_SHORT_LABELS[hit.landmark.booking][loc] : undefined;
   };
 
   // Viator names its destinations in English, same as our `nameEn`, so an
@@ -103,6 +104,28 @@ export default async function CityPlacesPage({
       bookingLabel: bookingLabelFor(p.enTitle),
     };
   });
+
+  // A curated landmark that geosearch missed still belongs on its city's
+  // page — Diriyah is fifteen kilometres out of Riyadh and every traveller
+  // calls it Riyadh's. Added from its own article rather than dropped.
+  const covered = new Set(places.map((p) => p.enTitle));
+  for (const h of highlights) {
+    if (covered.has(h.landmark.wikiTitle)) continue;
+    items.push({
+      key: `guide-${h.landmark.wikiTitle}`,
+      name: loc === "ar" ? h.landmark.nameAr : h.landmark.nameEn,
+      description: h.extract,
+      photo: h.photo,
+      category: "historic",
+      wikiUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(
+        h.landmark.wikiTitle.replace(/ /g, "_")
+      )}`,
+      // The names here are our own, written in both languages, so nothing is
+      // being shown in a language the reader didn't ask for.
+      englishOnly: false,
+      bookingLabel: BOOKING_SHORT_LABELS[h.landmark.booking][loc],
+    });
+  }
 
   // The curated landmarks first, in each category. They are the ones somebody
   // checked by hand, and they are what a visitor came to this city for — they
@@ -163,7 +186,7 @@ export default async function CityPlacesPage({
           <>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-gray-500">
-                📍 {dict.attractions.placesCount.replace("{count}", String(items.length))}
+                📍 {placeCountLabel(items.length, dict.attractions)}
               </p>
               <Link
                 href={`/${loc}/maps/${country.code}/${cityEntry.slug}`}

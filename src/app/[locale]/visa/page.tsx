@@ -95,11 +95,7 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
       />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
-        <p className="mb-4 rounded-xl bg-navy-50 px-4 py-3 text-sm leading-relaxed text-navy-800 ring-1 ring-navy-100">
-          {dict.visa.onlySaudi}
-        </p>
-
-        <div className="mb-6">
+        <div className="mb-8">
           <VisaWarning
             dict={{
               warningTitle: dict.visa.warningTitle,
@@ -108,6 +104,7 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
               checkMofa: dict.visa.checkMofa,
               viewSource: dict.visa.viewSource,
             }}
+            scope={dict.visa.onlySaudi}
             sourceUrl={data ? data.sourceUrl : VISA_SOURCE_URL}
           />
         </div>

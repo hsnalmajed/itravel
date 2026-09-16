@@ -242,25 +242,76 @@ function ResultsContent() {
   }, [locale, destinationCountry, destinationCity, nights, backHref]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{dict.results.title}</h1>
-          <p className="text-gray-500 mt-1.5">
-            {search.origin && `${search.origin} → `}
-            {search.destination} · {search.departDate}
-            {search.returnDate ? ` – ${search.returnDate}` : ""} · {dict.results.subtitle}
-          </p>
-        </div>
-        <Link
-          href={`/${locale}?${editSearchParams}`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
-        >
-          <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>
-          {dict.results.backToSearch}
-        </Link>
-      </div>
+    <div className="bg-mist-50">
+      {/* ── The trip band ───────────────────────────────────────────────
+          Every other page on the site opens with a navy header; this one —
+          the page a traveller spends the most time on and reaches through
+          the most effort — opened with black text on white, which made the
+          most important screen in the funnel look like the only unfinished
+          one. It gets the same band, built from the search itself.
 
+          No photograph. This is a client component with no server fetch, and
+          a hero here would mean either a slow one or a wrong one; the navy
+          gradient carries the brand on its own, and the route deserves to be
+          read rather than looked through. */}
+      <section className="relative isolate overflow-hidden bg-gradient-to-b from-navy-900 to-navy-990 pb-9 pt-24 sm:pt-28">
+        <div
+          className="absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_85%_0%,rgb(255_166_48/0.14),transparent_70%)]"
+          aria-hidden="true"
+        />
+        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-5 px-4 sm:px-6">
+          <div className="min-w-0">
+            <p className="eyebrow eyebrow-light mb-2.5">{dict.results.subtitle}</p>
+
+            {/* The route as a route. Two airport codes with a rule and a
+                plane between them say "this is your trip" faster than the
+                same two codes in a sentence — and it is the one piece of
+                the page the traveller scans to check they searched right. */}
+            <h1 className="flex flex-wrap items-center gap-x-3.5 gap-y-1 font-display text-h1 font-extrabold text-white">
+              {search.origin && (
+                <>
+                  <span>{search.origin}</span>
+                  <span
+                    className="inline-flex items-center gap-1.5 text-sun-400"
+                    aria-hidden="true"
+                  >
+                    <span className="h-px w-6 bg-sun-400/50 sm:w-9" />
+                    <span className="text-h3">✈</span>
+                    <span className="h-px w-6 bg-sun-400/50 sm:w-9" />
+                  </span>
+                </>
+              )}
+              <span>{destinationCityName ?? search.destination}</span>
+            </h1>
+
+            <p className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-semibold text-white/70">
+              <span>{search.departDate}</span>
+              {search.returnDate && (
+                <>
+                  <span className="text-white/30" aria-hidden="true">
+                    ·
+                  </span>
+                  <span>{search.returnDate}</span>
+                </>
+              )}
+              <span className="text-white/30" aria-hidden="true">
+                ·
+              </span>
+              <span>{dict.results.title}</span>
+            </p>
+          </div>
+
+          <Link
+            href={`/${locale}?${editSearchParams}`}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400"
+          >
+            <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>
+            {dict.results.backToSearch}
+          </Link>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6">
       {/* Whether they can actually enter the country comes before what it
           costs — a fare is no use to someone who needs a visa they don't
           have, and finding that out after choosing a trip is too late. */}
@@ -357,6 +408,7 @@ function ResultsContent() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }

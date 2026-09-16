@@ -43,12 +43,27 @@ const TAB_ORDER: PinCategory[] = ["historic", "activity", "food", "place"];
 export default function CityPlacesExplorer({
   places,
   dict,
+  selectedKeys,
+  onToggleSelect,
+  addLabel,
+  addedLabel,
 }: {
   // Names and descriptions arrive already resolved to the reader's language,
   // so this component never needs to know which language that is.
   places: PlaceListItem[];
   dict: ExplorerDict;
+  /**
+   * The traveller's picks. Optional, because this list is a perfectly good
+   * list on its own — the add buttons only appear once a parent is actually
+   * collecting a selection, which keeps 280 cards free of a control nobody
+   * asked for.
+   */
+  selectedKeys?: Set<string>;
+  onToggleSelect?: (place: PlaceListItem) => void;
+  addLabel?: string;
+  addedLabel?: string;
 }) {
+  const picking = Boolean(onToggleSelect && selectedKeys);
   const labels: Record<PinCategory, string> = {
     historic: dict.attractionsHeading,
     activity: dict.activitiesHeading,
@@ -179,6 +194,25 @@ export default function CityPlacesExplorer({
                   >
                     {dict.readMoreWiki}
                   </a>
+
+                  {/* Pushed to the bottom edge so the button lines up across a
+                      row of cards whose descriptions are all different
+                      lengths — a ragged row of controls reads as broken. */}
+                  {picking && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleSelect?.(p)}
+                      aria-pressed={selectedKeys?.has(p.key) ?? false}
+                      className={`mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+                        selectedKeys?.has(p.key)
+                          ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                          : "border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
+                      }`}
+                    >
+                      <span aria-hidden="true">{selectedKeys?.has(p.key) ? "✓" : "+"}</span>
+                      {selectedKeys?.has(p.key) ? addedLabel : addLabel}
+                    </button>
+                  )}
                 </div>
               </article>
             ))}

@@ -381,6 +381,20 @@ export const dictionaries = {
       step3: "احفظ الخطة PDF أو نزّل مواقعها لخرائط قوقل.",
       exportHeading: "خذ معالم {country} معك",
       exportSubtitle: "نزّل كل مواقع المعالم كملف واحد واستورده في خرائطك.",
+
+      // The same idea on a city's page of places, where the wording the
+      // traveller asked for is "اهتماماتي" rather than "خطتي".
+      cityStartTitle: "اصنع خطتك باختيار اهتماماتك",
+      cityStartBody:
+        "اضغط هنا، ثم اختر ما يهمك من الأماكن والأنشطة والمطاعم أدناه، ونوزّعها على أيام إقامتك.",
+      cityPickingBody:
+        "اختر ما يهمك من القوائم أدناه — سيظهر عددها في الأسفل، ومنه تصنع الخطة.",
+      cityStart: "ابدأ الاختيار",
+      cityStop: "إلغاء",
+      addInterest: "أضف إلى اهتمامي",
+      addedInterest: "ضمن اهتماماتي",
+      cityBuild: "اصنع الخطة",
+      cityPlanTitle: "خطتك في {city}",
     },
     plan: {
       actionsHeading: "احفظ خطتك أو خذها معك",
@@ -998,6 +1012,18 @@ export const dictionaries = {
       step3: "Save the plan as a PDF, or download its places for Google Maps.",
       exportHeading: "Take {country} with you",
       exportSubtitle: "Download every mapped place as one file and import it into your maps.",
+
+      cityStartTitle: "Build your plan by picking what interests you",
+      cityStartBody:
+        "Tap here, then pick the places, activities and restaurants that interest you below — we'll spread them across the days you're staying.",
+      cityPickingBody:
+        "Pick what interests you from the lists below — your count appears at the bottom, and that's where you build the plan.",
+      cityStart: "Start picking",
+      cityStop: "Cancel",
+      addInterest: "Add to my interests",
+      addedInterest: "In my interests",
+      cityBuild: "Build the plan",
+      cityPlanTitle: "Your plan in {city}",
     },
     plan: {
       actionsHeading: "Keep this plan, or take it with you",

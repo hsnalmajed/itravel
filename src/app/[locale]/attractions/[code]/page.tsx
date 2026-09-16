@@ -3,14 +3,11 @@ import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import {findCountry} from "@/lib/countries";
-import { COUNTRY_GUIDES, viatorSearchUrl } from "@/lib/countryGuides";
+import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
 import { cityCountLabel } from "@/lib/format";
-import { type GuideItem } from "@/components/CountryGuideExplorer";
-import CountryGuidePlanner from "@/components/CountryGuidePlanner";
-import PlanActions from "@/components/PlanActions";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
@@ -30,7 +27,6 @@ export default async function CountryAttractionsPage({
   if (!country) notFound();
 
   const guide = COUNTRY_GUIDES[country.code];
-  const countryName = loc === "ar" ? country.nameAr : country.nameEn;
 
   // Collect every wikiTitle this page needs (country + all three
   // categories) and resolve them together, so we make one batch of live
@@ -112,54 +108,6 @@ export default async function CountryAttractionsPage({
     };
   });
 
-  // Real bookable items (official tickets / guided tours) get a genuine
-  // outbound link to search results on an actual global tour marketplace —
-  // the visitor books directly there, Sfratna is never in that flow. Items
-  // that are free or arranged by phone/on arrival have nothing to "book"
-  // through a third party, so they get no link.
-  const bookableViator = (nameEn: string, booking: string) =>
-    booking === "official" || booking === "guide" ? viatorSearchUrl(`${nameEn} ${country.nameEn}`) : undefined;
-
-  const attractionItems: GuideItem[] = (guide?.attractions ?? []).map((landmark) => {
-    const summary = summaryFor(landmark.wikiTitle);
-    return {
-      key: landmark.wikiTitle,
-      nameAr: landmark.nameAr,
-      nameEn: landmark.nameEn,
-      photo: summary?.thumbnail,
-      extract: summary?.extract,
-      booking: landmark.booking,
-      bookingUrl: bookableViator(landmark.nameEn, landmark.booking),
-    };
-  });
-
-  const activityItems: GuideItem[] = (guide?.activities ?? []).map((activity, i) => {
-    const summary = activity.wikiTitle ? summaryFor(activity.wikiTitle) : undefined;
-    return {
-      key: activity.wikiTitle || `${activity.nameEn}-${i}`,
-      nameAr: activity.nameAr,
-      nameEn: activity.nameEn,
-      emoji: activity.emoji,
-      photo: summary?.thumbnail,
-      extract: summary?.extract,
-      booking: activity.booking,
-      costTier: activity.costTier,
-      bookingUrl: bookableViator(activity.nameEn, activity.booking),
-    };
-  });
-
-  const cuisineItems: GuideItem[] = (guide?.cuisine ?? []).map((dish, i) => {
-    const summary = dish.wikiTitle ? summaryFor(dish.wikiTitle) : undefined;
-    return {
-      key: dish.wikiTitle || `${dish.nameEn}-${i}`,
-      nameAr: dish.nameAr,
-      nameEn: dish.nameEn,
-      emoji: dish.emoji,
-      photo: summary?.thumbnail,
-      extract: summary?.extract,
-    };
-  });
-
   // TripAdvisor-style destination header: a real photo of the country's
   // best-known attraction as the hero, falling back to the general country
   // photo, and finally to a plain gradient if neither resolved.
@@ -184,69 +132,32 @@ export default async function CountryAttractionsPage({
         )}
         {countrySummary?.extract && <p className="mb-6 text-xs text-navy-300">{dict.attractions.source}</p>}
 
-        {guide ? (
-          <div id="guide" className="scroll-mt-28">
-            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              {dict.attractions.curatedHeading}
-            </h2>
-            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.curatedSubtitle}</p>
-            <div className="rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 flex items-center gap-2 text-brand-900 text-sm font-semibold mb-4">
-              🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
-            </div>
-
-            {/* Nobody finds a feature they were not told about. The basket
-                lives on cards further down a long list, so the page says up
-                front what it is for. */}
-            <div className="mb-6 rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-5 text-white sm:p-6">
-              <p className="text-base font-extrabold">{dict.picker.introTitle}</p>
-              <ol className="mt-3 grid gap-2.5 text-sm text-white/80 sm:grid-cols-3">
-                {[dict.picker.step1, dict.picker.step2, dict.picker.step3].map((step, i) => (
-                  <li key={step} className="flex gap-2.5">
-                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sun-400 text-xs font-extrabold text-navy-950">
-                      {i + 1}
-                    </span>
-                    <span className="leading-snug">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            <CountryGuidePlanner
-              locale={loc}
-              countryCode={country.code}
-              countryName={countryName}
-              dict={dict.attractions}
-              attractions={attractionItems}
-              activities={activityItems}
-              cuisine={cuisineItems}
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
-            <h2 className="font-bold text-amber-900">{dict.attractions.comingSoonTitle}</h2>
-            <p className="mt-1.5 text-sm text-amber-800 leading-relaxed">{dict.attractions.comingSoonBody}</p>
+        {guide && (
+          <div className="mb-6 rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 flex items-center gap-2 text-brand-900 text-sm font-semibold">
+            🗓️ {dict.attractions.bestMonths}: {loc === "ar" ? guide.bestMonthsAr : guide.bestMonthsEn}
           </div>
         )}
 
-        {/* Carrying the whole country's places away doesn't require building
-            a plan first — plenty of travellers just want the pins. */}
-        <section className="mt-10 mb-10">
-          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-brand-900">
-            <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-            {dict.picker.exportHeading.replace("{country}", countryName)}
-          </h2>
-          <p className="mb-4 ms-3 text-sm text-gray-500">{dict.picker.exportSubtitle}</p>
-          <PlanActions
-            locale={loc}
-            countryCode={country.code}
-            countryName={countryName}
-            planLines={[]}
-            showPrint={false}
-            fileBase={`sfratna-places-${country.code}`}
-            title={dict.plan.allPlacesTitle.replace("{country}", countryName)}
-          />
-        </section>
+        {/* The one thing this page is for. A country has no attractions of its
+            own — its cities do — so choosing one is the whole job, and it
+            comes before anything else on the page. */}
+        {cityCards.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+              {dict.attractions.chooseCityTitle.replace(
+                "{country}",
+                loc === "ar" ? country.nameAr : country.nameEn
+              )}
+            </h2>
+            <p className="text-sm font-semibold text-brand-700 ms-3">
+              🏙️ {cityCountLabel(cities.length, dict.attractions)}
+            </p>
+            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.chooseCitySubtitle}</p>
+            <CityGallery cities={cityCards} hrefBase={`/${loc}/attractions/${country.code}`} />
+          </section>
+        )}
+
         {(visaEntry || visaOfficialUrl || visaDirectUrl) && (
           <section className="mb-8">
             <SectionHeading
@@ -331,23 +242,6 @@ export default async function CountryAttractionsPage({
                 sourceUrl={VISA_SOURCE_URL}
               />
             </div>
-          </section>
-        )}
-
-        {cityCards.length > 0 && (
-          <section className="mb-10">
-            <h2 className="text-lg font-bold text-brand-900 mb-1 flex items-center gap-2">
-              <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-              {dict.attractions.chooseCityTitle.replace(
-                "{country}",
-                loc === "ar" ? country.nameAr : country.nameEn
-              )}
-            </h2>
-            <p className="text-sm font-semibold text-brand-700 ms-3">
-              🏙️ {cityCountLabel(cities.length, dict.attractions)}
-            </p>
-            <p className="text-sm text-gray-500 mb-4 ms-3">{dict.attractions.chooseCitySubtitle}</p>
-            <CityGallery cities={cityCards} hrefBase={`/${loc}/attractions/${country.code}`} />
           </section>
         )}
 

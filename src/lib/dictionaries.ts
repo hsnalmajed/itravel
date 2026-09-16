@@ -276,6 +276,13 @@ export const dictionaries = {
 
       planEyebrow: "ابدأ من هنا",
       planTitle: "كيف تحب أن تخطّط رحلتك؟",
+      heroPlanCta: "خطّط رحلتك",
+
+      // The four tabs the homepage collapses its sections into.
+      tabFeatured: "وجهات مميزة",
+      tabSeason: "الأنسب هذا الشهر",
+      tabTools: "قبل أن تحجز",
+      tabHow: "كيف يعمل الموقع",
 
       featuredEyebrow: "وجهات مختارة",
       featuredTitle: "وجهات يعشقها المسافر السعودي",
@@ -914,6 +921,12 @@ export const dictionaries = {
 
       planEyebrow: "Start here",
       planTitle: "How would you like to plan?",
+      heroPlanCta: "Plan your trip",
+
+      tabFeatured: "Featured",
+      tabSeason: "Best this month",
+      tabTools: "Before you book",
+      tabHow: "How it works",
 
       featuredEyebrow: "Featured",
       featuredTitle: "Where Saudi travellers actually go",

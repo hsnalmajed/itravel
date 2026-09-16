@@ -6,7 +6,6 @@ import type { Locale } from "@/lib/types";
 import type { Continent } from "@/lib/countries";
 import type { VisaCategory } from "@/lib/visa";
 import { flagImageUrl } from "@/lib/visaProviders";
-import Photo from "@/components/Photo";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
 import { VISA_ORDER, VISA_STYLES } from "@/components/VisaBadge";
 import { searchMatches, searchEquals } from "@/lib/search";
@@ -20,7 +19,6 @@ export interface VisaCountry {
   /** The source's own wording, shown as-is. */
   status: string;
   stay: string;
-  photo?: string;
   /** There is somewhere to actually start an application. */
   canApply: boolean;
 }
@@ -59,6 +57,14 @@ interface DirectoryDict {
  * Where an application can actually be started, the card says so. That was the
  * only thing the old top section knew that the bottom one didn't, and it is
  * now a line on the card instead of a section of its own.
+ *
+ * The cards carry flags rather than photographs, for two reasons. A grid where
+ * a quarter of the cards have a picture and the rest don't looks broken, and
+ * the page could only ever afford photographs for a quarter: fetching one per
+ * country meant a hundred and ninety-three lookups competing with the one
+ * request this page cannot do without — the visa table itself, which was
+ * losing that race and leaving the page saying it could not check. On a page
+ * about who may enter where, the flag is the right picture anyway.
  */
 export default function VisaDirectory({
   locale,
@@ -182,30 +188,18 @@ export default function VisaDirectory({
                         href={`/${locale}/visa/${c.code}`}
                         className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:ring-brand-200"
                       >
-                        <div className="relative h-24 sm:h-28">
-                          <Photo
-                            src={c.photo}
-                            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                            // Photographs exist for the countries whose guides
-                            // we fetch; the rest get their own flag, large and
-                            // on the brand gradient, so a card without a photo
-                            // still reads as designed rather than unfinished.
-                            fallback={
-                              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-700 to-brand-950">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={flagImageUrl(c.code, 160)}
-                                  alt=""
-                                  loading="lazy"
-                                  className="h-10 w-15 rounded-[3px] object-cover opacity-30 blur-[1px]"
-                                />
-                              </div>
-                            }
-                          />
-                          {/* The flag on the seam between photo and label —
-                              where the eye lands when scanning a grid. */}
-                          <span className="absolute -bottom-6 start-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white rtl:translate-x-1/2">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {/* The status colour as a band across the top, so a
+                            grid of a hundred and ninety-three is readable at a
+                            glance before a single word is read. */}
+                        <div
+                          className={`relative flex h-20 items-center justify-center ${
+                            VISA_STYLES[c.category].chip
+                          }`}
+                        >
+                          <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white">
+                            {/* eslint-disable-next-line @next/next/no-img-element -- flag
+                                CDN, and the app runs with the Next image optimizer
+                                disabled on Workers. */}
                             <img
                               src={flagImageUrl(c.code)}
                               alt=""
@@ -215,7 +209,7 @@ export default function VisaDirectory({
                           </span>
                         </div>
 
-                        <div className="flex flex-1 flex-col px-2 pb-3 pt-8 text-center">
+                        <div className="flex flex-1 flex-col px-2 pb-3 pt-3 text-center">
                           <p className="truncate text-sm font-bold text-gray-900">{name}</p>
 
                           <span

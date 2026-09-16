@@ -5,7 +5,6 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { RoomType, FlightOffer, HotelOffer, Locale, SearchParams, TripType } from "@/lib/types";
-import { buildAffiliateLinks } from "@/lib/affiliateLinks";
 import TripBuilder from "@/components/TripBuilder";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
@@ -130,7 +129,6 @@ function ResultsContent() {
   // beside it reads as a per-person price and gets doubled in someone's head.
   const travelers = search.adults + (search.childrenAges?.length ?? 0) + (search.infants ?? 0);
 
-  const affiliateLinks = useMemo(() => buildAffiliateLinks(search), [search]);
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
   const isMockData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
 
@@ -232,13 +230,16 @@ function ResultsContent() {
   ]);
 
   // Straight to the city they searched for when the guide has it, and to the
-  // country only when it doesn't. Either way the trip length comes along, so
-  // the day-planner further down the page is already set to their stay.
-  const exploreHref = destinationCountry
-    ? destinationCity
-      ? `/${locale}/attractions/${destinationCountry.code}/${destinationCity.slug}`
-      : `/${locale}/attractions/${destinationCountry.code}?nights=${nights || 3}#guide`
-    : undefined;
+  // country only when it doesn't. The trip length comes along so the day
+  // planner there is already set to their stay, and so does the way back —
+  // that page is part of their search, not somewhere else they got sent.
+  const exploreHref = useMemo(() => {
+    if (!destinationCountry) return undefined;
+    const p = new URLSearchParams({ nights: String(nights || 3), back: backHref });
+    return destinationCity
+      ? `/${locale}/attractions/${destinationCountry.code}/${destinationCity.slug}?${p}`
+      : `/${locale}/attractions/${destinationCountry.code}?${p}#guide`;
+  }, [locale, destinationCountry, destinationCity, nights, backHref]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6 sm:pt-32">
@@ -356,22 +357,6 @@ function ResultsContent() {
         </div>
       )}
 
-      <div className="mt-10 rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-black/5">
-        <p className="text-sm font-bold text-gray-700 mb-3">🔗 {dict.results.compareOn}</p>
-        <div className="flex flex-wrap gap-2">
-          {affiliateLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer nofollow sponsored"
-              className="rounded-full border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
-            >
-              {link.name}
-            </a>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

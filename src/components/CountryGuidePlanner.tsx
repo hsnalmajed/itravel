@@ -73,7 +73,19 @@ export default function CountryGuidePlanner({
 
   useEffect(() => {
     if (builds === 0) return;
-    planRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = planRef.current;
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // See CityPlacesPlanner: smooth scrolling is skipped under "reduce
+    // motion" and suspended in a hidden tab, so land there anyway.
+    const settle = setTimeout(() => {
+      if (Math.abs(el.getBoundingClientRect().top) > 120) {
+        el.scrollIntoView({ block: "start" });
+      }
+    }, 700);
+    return () => clearTimeout(settle);
   }, [builds]);
 
   const selectedKeys = useMemo(() => new Set(picked.map((p) => p.key)), [picked]);

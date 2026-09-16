@@ -66,7 +66,23 @@ export default function CityPlacesPlanner({
 
   useEffect(() => {
     if (builds === 0) return;
-    planRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el = planRef.current;
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Smooth scrolling is not always available — a browser honouring
+    // "reduce motion" skips it, and Chrome suspends the animation outright in
+    // a tab that isn't visible. Either way the traveller would press the
+    // button and stay exactly where they were, which is the bug this whole
+    // effect exists to fix. So: check where we actually ended up, and if the
+    // animation never happened, jump.
+    const settle = setTimeout(() => {
+      if (Math.abs(el.getBoundingClientRect().top) > 120) {
+        el.scrollIntoView({ block: "start" });
+      }
+    }, 700);
+    return () => clearTimeout(settle);
   }, [builds]);
 
   // Their own stay when they came from a search; a sane default when they

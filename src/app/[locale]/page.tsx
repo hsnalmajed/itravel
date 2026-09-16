@@ -122,17 +122,17 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <div className="scrim-soft absolute inset-0 -z-10" />
 
         <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 sm:pb-28">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-2xs font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
 
-          <h1 className="max-w-3xl font-display text-[2rem] font-black leading-[1.12] text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)] sm:text-[3.4rem]">
+          <h1 className="max-w-3xl font-display text-hero font-black text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)]">
             {dict.hero.titleLine1}
             <br />
             <span className="text-sunlit">{dict.hero.titleLine2}</span>
           </h1>
 
-          <p className="mt-4 max-w-xl text-[0.92rem] leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-base">
+          <p className="mt-4 max-w-xl text-lead text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)]">
             {dict.hero.subtitle}
           </p>
 
@@ -165,7 +165,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             href={heroImage.descriptionUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute bottom-2 end-3 z-10 text-[0.6rem] text-white/45 transition hover:text-white/75"
+            className="absolute bottom-2 end-3 z-10 text-2xs text-white/45 transition hover:text-white/75"
           >
             {dict.hero.photoCredit
               .replace("{place}", isAr ? heroPick.placeAr : heroPick.placeEn)
@@ -209,18 +209,28 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           one who has seen nothing yet. The hero's button jumps straight here,
           so it is never more than a tap away. */}
       <section id="plan" className="scroll-mt-20 bg-mist-50">
-        <div className="mx-auto max-w-4xl px-4 pb-12 pt-14 sm:px-6 sm:pb-14 sm:pt-16">
+        <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 sm:pt-12">
           <div className="mb-6 text-center">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-sun-700">
-              {dict.home.planEyebrow}
-            </p>
-            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-2xl font-extrabold text-navy-900 sm:text-3xl">
+            <p className="eyebrow">{dict.home.planEyebrow}</p>
+            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-h2 font-extrabold text-navy-900">
               {dict.home.planTitle}
             </h2>
           </div>
-          <Suspense fallback={null}>
-            <SearchModeSwitcher locale={loc} />
-          </Suspense>
+
+          {/* On a card, not on the background.
+
+              This is the one thing on the page a visitor is meant to *do*,
+              and it was the only major block with no surface under it: two
+              grey buttons and a form, adrift on the same pale wash as the
+              margins. A white plate with real elevation says "this is the
+              instrument" before a word of it is read — and it is the same
+              plate the search results, the trip builder and the planner all
+              sit on, so the promise made here is kept on the next page. */}
+          <div className="card p-5 sm:p-7">
+            <Suspense fallback={null}>
+              <SearchModeSwitcher locale={loc} />
+            </Suspense>
+          </div>
         </div>
       </section>
     </div>

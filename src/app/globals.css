@@ -300,6 +300,26 @@ h1, h2, h3, .font-display {
    panels to ink that doesn't drink a cartridge, and keep a day's card from
    being split across two pages.
 --------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   Arabic does not take letter-spacing.
+
+   The eyebrows and small labels all over this site are set in the Latin
+   editorial idiom: uppercase, widely tracked. Uppercase is a no-op in Arabic,
+   but the tracking is not — Arabic letters join, and pushing them apart snaps
+   every ligature in the word. "خطّط رحلتك" set with 0.2em of tracking reads to
+   a native speaker roughly the way "p l a n n i n g" reads in English: not
+   elegant, just broken.
+
+   So the whole family of tracking utilities is neutralised when the page is
+   in Arabic, in one place, rather than every component having to remember.
+--------------------------------------------------------------------------- */
+html[lang="ar"] .tracking-wide,
+html[lang="ar"] .tracking-wider,
+html[lang="ar"] .tracking-widest,
+html[lang="ar"] [class*="tracking-["] {
+  letter-spacing: normal;
+}
+
 @media print {
   /* The site's own header and footer go; the document's letterhead stays. */
   body > header,

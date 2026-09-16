@@ -7,7 +7,8 @@ import { findCity } from "@/lib/cities";
 import { fetchPlacesAroundCities } from "@/lib/mapPins";
 import { fetchWikiSummary } from "@/lib/wikipedia";
 import { fetchCitiesForCountry, fetchToursForCity } from "@/lib/viator";
-import CityPlacesExplorer, { type PlaceListItem } from "@/components/CityPlacesExplorer";
+import { type PlaceListItem } from "@/components/CityPlacesExplorer";
+import CityPlacesPlanner from "@/components/CityPlacesPlanner";
 import TourCard from "@/components/TourCard";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -22,12 +23,31 @@ export const dynamic = "force-dynamic";
 // worth my afternoon" — a photo, a name, and what Wikipedia says it is, in
 // the reader's own language, split into the three sections the site has
 // always used.
+/**
+ * Only a relative path on this site is allowed back.
+ *
+ * `back` arrives in the query string, which anyone can write, so it is checked
+ * rather than trusted: one leading slash and no second one rules out
+ * "//evil.example" and every absolute URL.
+ */
+function safeBackHref(raw: string | string[] | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return undefined;
+  return raw;
+}
+
 export default async function CityPlacesPage({
   params,
+  searchParams,
 }: PageProps<"/[locale]/attractions/[code]/[city]">) {
   const { locale, code, city } = await params;
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
+
+  // Someone who arrived from their own search is mid-decision, and this page
+  // is about their destination — so the way back to their results comes with
+  // them, and nothing about the page itself changes for anyone else.
+  const backToResults = safeBackHref((await searchParams).back);
 
   const country = findCountry(code);
   if (!country) notFound();
@@ -81,9 +101,25 @@ export default async function CityPlacesPage({
         eyebrow={loc === "ar" ? country.nameAr : country.nameEn}
         title={dict.attractions.cityPlacesTitle.replace("{city}", cityName)}
       >
-        <Link href={`/${loc}/attractions/${country.code}`} className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20">
-          {loc === "ar" ? "→" : "←"} {dict.attractions.backToCities}
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Their own results first, when that is where they came from. */}
+          {backToResults && (
+            <Link
+              href={backToResults}
+              className="inline-flex w-fit items-center gap-1.5 rounded-full bg-sun-400 px-3.5 py-2 text-sm font-bold text-navy-950 shadow-sm transition hover:bg-sun-300"
+            >
+              <span aria-hidden="true">{loc === "ar" ? "→" : "←"}</span>
+              {dict.itinerary.backToResults}
+            </Link>
+          )}
+          <Link
+            href={`/${loc}/attractions/${country.code}`}
+            className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/90 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20"
+          >
+            <span aria-hidden="true">{loc === "ar" ? "→" : "←"}</span>
+            {dict.attractions.backToCities}
+          </Link>
+        </div>
       </PageHero>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
@@ -119,8 +155,12 @@ export default async function CityPlacesPage({
               </Link>
             </div>
 
-            <CityPlacesExplorer
+            <CityPlacesPlanner
+              locale={loc}
               places={items}
+              cityName={cityName}
+              countryCode={country.code}
+              countryName={loc === "ar" ? country.nameAr : country.nameEn}
               dict={{
                 attractionsHeading: dict.attractions.attractionsHeading,
                 activitiesHeading: dict.attractions.activitiesHeading,

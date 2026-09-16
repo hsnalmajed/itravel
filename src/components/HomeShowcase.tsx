@@ -59,6 +59,13 @@ type TabKey = "featured" | "season" | "tools" | "how";
  * The panel is deliberately a constant height across tabs. A tab strip that
  * makes the page jump as you move between tabs feels broken, and the jump is
  * worse than the empty row it avoids.
+ *
+ * It is navy, not white. A white card under a sunset photograph reads as a
+ * different website pasted over the first one — the palette here is navy and
+ * sunset orange, and the panel is the biggest surface on the page, so it is
+ * the last thing that should be neutral. Dark, it continues the photograph
+ * instead of interrupting it, and the destination photos inside it sit on the
+ * dark ground they were shot against.
  */
 export default function HomeShowcase({
   locale,
@@ -99,17 +106,17 @@ export default function HomeShowcase({
   };
 
   const tabClass = (on: boolean) =>
-    `shrink-0 rounded-full px-4 py-2.5 text-sm font-bold transition duration-200 ${
+    `shrink-0 rounded-full px-4 py-2.5 text-sm font-bold transition duration-200 sm:px-5 sm:text-[0.95rem] ${
       on
-        ? "bg-navy-900 text-white shadow-[var(--shadow-card)]"
-        : "text-navy-600 hover:bg-white hover:text-navy-900"
+        ? "bg-sun-400 text-navy-950 shadow-lg shadow-sun-900/25"
+        : "text-white/60 hover:bg-white/10 hover:text-white"
     }`;
 
   const card = (d: ShowcaseDestination) => (
     <Link
       key={d.code}
       href={`/${locale}/attractions/${d.code}`}
-      className="group relative isolate block aspect-[4/5] overflow-hidden rounded-2xl ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
+      className="group relative isolate block aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:ring-sun-400/50"
     >
       <Photo
         src={d.photo}
@@ -135,10 +142,10 @@ export default function HomeShowcase({
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="overflow-hidden rounded-[1.75rem] bg-white shadow-[var(--shadow-card)] ring-1 ring-navy-950/5">
+    <div className="mx-auto max-w-7xl px-3 sm:px-6">
+      <div className="overflow-hidden rounded-[2rem] bg-gradient-to-b from-navy-900 to-navy-990 shadow-[0_30px_80px_-20px_rgba(4,24,47,0.6)] ring-1 ring-white/10">
         {/* ── The strip ─────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-mist-200 bg-mist-50 px-3 py-3 sm:px-4">
+        <div className="rail flex items-center gap-2 overflow-x-auto border-b border-white/10 bg-white/[0.04] px-3 py-3 sm:px-5">
           {tabs
             .filter((t) => !t.hidden)
             .map((t) => (
@@ -155,13 +162,13 @@ export default function HomeShowcase({
         </div>
 
         {/* ── The panel ─────────────────────────────────────────────── */}
-        <div className="p-4 sm:p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="max-w-2xl text-sm leading-relaxed text-navy-600">{blurb[active]}</p>
+        <div className="p-4 sm:p-7">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-2xl text-sm leading-relaxed text-white/65">{blurb[active]}</p>
             {link[active] && (
               <Link
                 href={link[active]!.href}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-800"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 transition hover:bg-white/20"
               >
                 {link[active]!.label}
                 <span aria-hidden="true">{arrow}</span>
@@ -192,20 +199,20 @@ export default function HomeShowcase({
                   <Link
                     key={t.href}
                     href={t.href}
-                    className="group relative flex flex-col overflow-hidden rounded-2xl bg-mist-50 p-5 ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[var(--shadow-lift)]"
+                    className="group relative flex flex-col overflow-hidden rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.12] hover:ring-sun-400/40"
                   >
                     <span
-                      className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-400 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
+                      className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-300 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
                       aria-hidden="true"
                     />
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sun-50 text-xl ring-1 ring-sun-200">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sun-400/15 text-xl ring-1 ring-sun-400/30">
                       {t.icon}
                     </span>
-                    <h3 className="mt-3.5 font-display text-base font-extrabold text-navy-900">
+                    <h3 className="mt-3.5 font-display text-base font-extrabold text-white">
                       {t.title}
                     </h3>
-                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-navy-600">{t.body}</p>
-                    <span className="mt-auto inline-flex items-center gap-1 pt-3.5 text-sm font-bold text-sun-700">
+                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{t.body}</p>
+                    <span className="mt-auto inline-flex items-center gap-1 pt-3.5 text-sm font-bold text-sun-300">
                       {dict.toolCta}
                       <span
                         className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
@@ -224,15 +231,15 @@ export default function HomeShowcase({
                 {steps.map((s) => (
                   <li
                     key={s.n}
-                    className="relative rounded-2xl bg-mist-50 p-5 ring-1 ring-navy-950/5"
+                    className="relative rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10"
                   >
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-navy-900 font-display text-base font-black text-sun-400">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sun-400 font-display text-base font-black text-navy-950">
                       {s.n}
                     </span>
-                    <h3 className="mt-3.5 font-display text-base font-extrabold text-navy-900">
+                    <h3 className="mt-3.5 font-display text-base font-extrabold text-white">
                       {s.title}
                     </h3>
-                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-navy-600">{s.body}</p>
+                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{s.body}</p>
                   </li>
                 ))}
               </ol>

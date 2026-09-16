@@ -60,3 +60,22 @@ export function countLabel(count: number, shapes: CountShapes): string {
   if (count >= 3 && count <= 10) return shapes.few.replace("{count}", String(count));
   return shapes.many.replace("{count}", String(count));
 }
+
+/**
+ * "6 أماكن" / "6 places".
+ *
+ * The city cards were reading "6 مكان", which is the singular — correct
+ * English grammar applied to Arabic, and wrong in the same way "6 place"
+ * would be. Four shapes, like every other counted noun on the site.
+ */
+export function placeCountLabel(
+  count: number,
+  dict: { placesCount: string; placeOne: string; placeTwo: string; placeFew: string }
+): string {
+  return countLabel(count, {
+    many: dict.placesCount,
+    one: dict.placeOne,
+    two: dict.placeTwo,
+    few: dict.placeFew,
+  });
+}

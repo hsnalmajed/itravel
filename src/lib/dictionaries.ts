@@ -592,7 +592,12 @@ export const dictionaries = {
       comingSoonBody:
         "لم نضِف بعد دليلاً مفصلاً لمعالم وأنشطة ومطاعم هذه الدولة. نعرض هنا نبذة ودولة عامة من ويكيبيديا في الوقت الحالي، وسنضيف التفاصيل الكاملة تباعاً.",
       source: "المصدر: ويكيبيديا العربية حيثما توفّرت مقالة عربية، وإلا ويكيبيديا الإنجليزية. لا نترجم الأسماء أو الأوصاف بأنفسنا.",
+      // Four shapes, because Arabic counts nouns in four — "6 مكان" is as
+      // wrong to a native reader as "6 place" is in English.
       placesCount: "{count} مكان",
+      placeOne: "مكان واحد",
+      placeTwo: "مكانان",
+      placeFew: "{count} أماكن",
       backToCategories: "رجوع",
       restaurantsNotice:
         "لا نعرض أسماء مطاعم بعينها لأننا لا نملك مصدراً حياً يؤكد أنها ما زالت تعمل أو مناسبة — بدلاً من ذلك نعرض أشهر الأطباق والتجارب الغذائية في الوجهة.",
@@ -1223,6 +1228,9 @@ export const dictionaries = {
         "We haven't added a detailed attractions/activities/restaurants guide for this country yet. Showing a general country overview from Wikipedia for now — full details are on the way.",
       source: "Source: Wikipedia — each name and description comes from that place's own article.",
       placesCount: "{count} places",
+      placeOne: "1 place",
+      placeTwo: "2 places",
+      placeFew: "{count} places",
       backToCategories: "Back",
       restaurantsNotice:
         "We don't list specific restaurant names since we have no live source to confirm they're still open or a good fit — instead, here are the destination's best-known dishes and food experiences.",

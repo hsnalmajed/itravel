@@ -33,7 +33,19 @@ import { fetchWikiSummaries } from "@/lib/wikipedia";
  */
 const MAX_KM = 60;
 
-export type GuideHighlight = LandmarkEntry;
+export interface GuideHighlight {
+  landmark: LandmarkEntry;
+  /**
+   * The landmark's own article, so a page can build a card for it.
+   *
+   * Needed because geosearch does not always return a landmark that is
+   * plainly in the city: Diriyah is fifteen kilometres from the middle of
+   * Riyadh, outside the radius the city list is built with, and a "merge into
+   * the city" that quietly dropped Diriyah from Riyadh would not be a merge.
+   */
+  extract?: string;
+  photo?: string;
+}
 
 /** Great-circle distance in kilometres. */
 function distanceKm(aLat: number, aLon: number, bLat: number, bLon: number): number {
@@ -84,9 +96,11 @@ export async function fetchCityHighlights(
 
   if (cityPoints.length === 0) return [];
 
-  return landmarks.filter((landmark) => {
+  const mine: GuideHighlight[] = [];
+
+  for (const landmark of landmarks) {
     const s = summaries.get(landmark.wikiTitle);
-    if (typeof s?.lat !== "number" || typeof s?.lon !== "number") return false;
+    if (typeof s?.lat !== "number" || typeof s?.lon !== "number") continue;
 
     let nearest = cityPoints[0];
     let best = distanceKm(s.lat, s.lon, nearest.lat, nearest.lon);
@@ -97,6 +111,11 @@ export async function fetchCityHighlights(
         nearest = point;
       }
     }
-    return nearest.slug === city.slug && best <= MAX_KM;
-  });
+
+    if (nearest.slug === city.slug && best <= MAX_KM) {
+      mine.push({ landmark, extract: s.extract, photo: s.thumbnail });
+    }
+  }
+
+  return mine;
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { RoomType, DestinationCategory, DestinationPairSuggestion, DestinationSuggestion, Locale, TripType } from "@/lib/types";
 import DestinationCard from "@/components/DestinationCard";
+import PricesUnavailable from "@/components/PricesUnavailable";
 import DestinationPairCard from "@/components/DestinationPairCard";
 import { parseChildrenAges } from "@/lib/searchParamsUtil";
 
@@ -110,11 +111,16 @@ function DiscoverResultsContent() {
     preferenceCategory,
   ]);
 
-  const isMockData = useMemo(() => {
+  // Generated prices never reach a visitor — see the note in results/page.tsx.
+  // Suggestions are *made of* prices here, so when they are generated there is
+  // nothing honest left to show and the whole list is replaced.
+  const isGeneratedData = useMemo(() => {
     if (mode === "multi")
       return pairSuggestions.some((p) => p.legs.some((l) => l.flight?.isMock || l.hotel?.isMock));
     return singleSuggestions.some((s) => s.flight?.isMock || s.hotel?.isMock);
   }, [mode, singleSuggestions, pairSuggestions]);
+  const showGenerated = process.env.NODE_ENV === "development";
+  const pricesUnavailable = isGeneratedData && !showGenerated;
 
   const hasResults = mode === "multi" ? pairSuggestions.length > 0 : singleSuggestions.length > 0;
 
@@ -136,13 +142,22 @@ function DiscoverResultsContent() {
         </Link>
       </div>
 
-      {isMockData && !loading && (
-        <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          {dict.results.mockNotice}
+      {showGenerated && isGeneratedData && !loading && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Generated data (no provider key configured). Hidden in production.
         </div>
       )}
 
-      {mode === "multi" && !loading && hasResults && (
+      {!loading && !error && pricesUnavailable && (
+        <PricesUnavailable
+          locale={locale}
+          dict={dict}
+          exploreHref={`/${locale}/attractions`}
+          planHref={`/${locale}/itinerary`}
+        />
+      )}
+
+      {mode === "multi" && !loading && !pricesUnavailable && hasResults && (
         <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           {dict.discoverResults.multiNotice}
         </div>
@@ -162,11 +177,11 @@ function DiscoverResultsContent() {
         </p>
       )}
 
-      {!loading && !error && !hasResults && (
+      {!loading && !error && !pricesUnavailable && !hasResults && (
         <p className="text-gray-500 py-10 text-center">{dict.discoverResults.noResults}</p>
       )}
 
-      {!loading && mode === "single" && singleSuggestions.length > 0 && (
+      {!loading && !pricesUnavailable && mode === "single" && singleSuggestions.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {singleSuggestions.map((s) => (
             <DestinationCard
@@ -182,12 +197,14 @@ function DiscoverResultsContent() {
               directOnly={directOnly}
               minStars={Number(minStars)}
               roomType={roomType}
+              baggageIncluded={baggageIncluded}
+              breakfastIncluded={breakfastIncluded}
             />
           ))}
         </div>
       )}
 
-      {!loading && mode === "multi" && pairSuggestions.length > 0 && (
+      {!loading && !pricesUnavailable && mode === "multi" && pairSuggestions.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {pairSuggestions.map((p, i) => (
             <DestinationPairCard key={i} pair={p} locale={locale} />

@@ -384,11 +384,12 @@ export const dictionaries = {
 
       // The same idea on a city's page of places, where the wording the
       // traveller asked for is "اهتماماتي" rather than "خطتي".
-      cityStartTitle: "اصنع خطتك باختيار اهتماماتك",
+      cityStartTitle: "إنشاء خطة سياحية من اختياري",
       cityStartBody:
-        "اضغط هنا، ثم اختر ما يهمك من الأماكن والأنشطة والمطاعم أدناه، ونوزّعها على أيام إقامتك.",
+        "اضغط هنا، ثم اختر ما يعجبك من الأماكن والأنشطة والمطاعم أدناه، ونوزّعها على أيام رحلتك.",
       cityPickingBody:
-        "اختر ما يهمك من القوائم أدناه — سيظهر عددها في الأسفل، ومنه تصنع الخطة.",
+        "حدّد أيام رحلتك، واختر الأماكن التي تعجبك من القائمة أدناه عن طريق «أضف إلى اهتمامي» — ونعمل لك الخطة.",
+      cityDaysLabel: "أيام رحلتك",
       cityStart: "ابدأ الاختيار",
       cityStop: "إلغاء",
       addInterest: "أضف إلى اهتمامي",
@@ -1013,11 +1014,12 @@ export const dictionaries = {
       exportHeading: "Take {country} with you",
       exportSubtitle: "Download every mapped place as one file and import it into your maps.",
 
-      cityStartTitle: "Build your plan by picking what interests you",
+      cityStartTitle: "Build an itinerary from my picks",
       cityStartBody:
-        "Tap here, then pick the places, activities and restaurants that interest you below — we'll spread them across the days you're staying.",
+        "Tap here, then pick the places, activities and restaurants you like below — we'll spread them across the days of your trip.",
       cityPickingBody:
-        "Pick what interests you from the lists below — your count appears at the bottom, and that's where you build the plan.",
+        "Set the length of your trip, then pick the places you like from the list below with \"Add to my interests\" — and we'll build the plan.",
+      cityDaysLabel: "Days of your trip",
       cityStart: "Start picking",
       cityStop: "Cancel",
       addInterest: "Add to my interests",

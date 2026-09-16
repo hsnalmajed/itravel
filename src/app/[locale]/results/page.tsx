@@ -8,6 +8,7 @@ import type { RoomType, FlightOffer, HotelOffer, Locale, SearchParams, TripType 
 import TripBuilder from "@/components/TripBuilder";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
+import PricesUnavailable from "@/components/PricesUnavailable";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
@@ -96,6 +97,10 @@ function ResultsContent() {
         departDate: search.departDate,
         returnDate: search.returnDate || search.departDate,
         adults: String(search.adults),
+        // The hotel search needs the whole party, not just the adults —
+        // otherwise a family of four gets offered a double bed.
+        childrenAges: serializeChildrenAges(search.childrenAges || []),
+        infants: String(search.infants || 0),
         currency: search.currency,
         minStars: String(search.minHotelStars),
         breakfastIncluded: String(Boolean(search.breakfastIncluded)),
@@ -130,7 +135,23 @@ function ResultsContent() {
   const travelers = search.adults + (search.childrenAges?.length ?? 0) + (search.infants ?? 0);
 
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
-  const isMockData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
+
+  /**
+   * Whether these numbers came from a real provider.
+   *
+   * When they did not, the page does not show them. A metasearch site whose
+   * whole promise is "we compare real prices" cannot put an invented fare in
+   * front of a visitor with a small amber caption underneath — someone will
+   * budget a holiday around it. So in production, generated data means the
+   * prices section is replaced by an honest "not yet" with somewhere useful
+   * to go instead.
+   *
+   * In development the generated data still renders, because otherwise the
+   * whole results surface would be untestable without live API keys.
+   */
+  const isGeneratedData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
+  const showGenerated = process.env.NODE_ENV === "development";
+  const pricesUnavailable = isGeneratedData && !showGenerated;
 
   // Bridges the destination airport to its country so we can link into the
   // "Tourist Attractions" guide. Airports in a non-UN territory (e.g. Hong
@@ -323,9 +344,10 @@ function ResultsContent() {
         <TripCurrencyStrip from={homeCurrency} to={tripCurrency} locale={locale} />
       )}
 
-      {isMockData && !loading && (
-        <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          {dict.results.mockNotice}
+      {showGenerated && isGeneratedData && !loading && (
+        // Development only — this branch is compiled out of production.
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Generated data (no provider key configured). Hidden in production.
         </div>
       )}
 
@@ -337,11 +359,20 @@ function ResultsContent() {
         </p>
       )}
 
-      {!loading && !error && !hasResults && (
+      {!loading && !error && pricesUnavailable && (
+        <PricesUnavailable
+          locale={locale}
+          dict={dict}
+          exploreHref={exploreHref ?? `/${locale}/attractions`}
+          planHref={itineraryHref}
+        />
+      )}
+
+      {!loading && !error && !pricesUnavailable && !hasResults && (
         <p className="text-gray-500 py-10 text-center">{dict.results.noResults}</p>
       )}
 
-      {!loading && !error && hasResults && (
+      {!loading && !error && !pricesUnavailable && hasResults && (
         <TripBuilder
           flights={flights}
           hotels={hotels}
@@ -352,6 +383,8 @@ function ResultsContent() {
           travelers={travelers}
           departDate={search.departDate}
           returnDate={search.returnDate}
+          search={search}
+          destinationName={destinationCityName ?? search.destination}
         />
       )}
 

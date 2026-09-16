@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
@@ -10,7 +9,7 @@ import { fetchCommonsImage } from "@/lib/commonsImage";
 import { heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import SearchModeSwitcher from "@/components/SearchModeSwitcher";
-import SectionHeading from "@/components/ui/SectionHeading";
+import HomeShowcase from "@/components/HomeShowcase";
 import Photo from "@/components/Photo";
 
 export const dynamic = "force-dynamic";
@@ -92,13 +91,22 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     { href: `/${loc}/currency`, icon: "💱", title: dict.home.toolCurrency, body: dict.home.toolCurrencyBody },
   ];
 
+
+  const steps = [
+    { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
+    { n: "2", title: dict.home.step2Title, body: dict.home.step2Body },
+    { n: "3", title: dict.home.step3Title, body: dict.home.step3Body },
+  ];
+
   return (
     <div className="bg-mist-50">
       {/* ── Hero ─────────────────────────────────────────────────────────
-          One photograph, edge to edge, with the header sitting on top of
-          it. Everything the old hero tried to do with gradients and a
-          wireframe globe, a real picture of somewhere does better. */}
-      <section className="relative isolate flex min-h-[86svh] items-end overflow-hidden bg-navy-990">
+          Shorter than it was. A full-screen photograph is a fine opening for
+          a magazine and a poor one for a tool: it spent the whole first
+          screen saying nothing a visitor could act on, and the page behind it
+          was already too long. It keeps the picture, the promise and the
+          numbers, and hands over at about two thirds of the fold. */}
+      <section className="relative isolate flex min-h-[62svh] items-end overflow-hidden bg-navy-990 sm:min-h-[66svh]">
         <Photo
           src={heroPhoto}
           priority
@@ -111,38 +119,42 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
           }
         />
-        {/* The softer of the two scrims. The stronger one was tuned against
-            dusk photographs; over a sunlit fort it buried the picture the
-            hero exists to show. The type keeps its own drop shadow, and the
-            subtitle is carried a step brighter to pay for the difference. */}
         <div className="scrim-soft absolute inset-0 -z-10" />
 
-        <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-32 sm:px-6 sm:pb-24">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
 
-          <h1 className="max-w-3xl font-display text-[2.1rem] font-black leading-[1.12] text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)] sm:text-6xl">
+          <h1 className="max-w-3xl font-display text-[2rem] font-black leading-[1.12] text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)] sm:text-[3.4rem]">
             {dict.hero.titleLine1}
             <br />
             <span className="text-sunlit">{dict.hero.titleLine2}</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-[0.95rem] leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-lg">
+          <p className="mt-4 max-w-xl text-[0.92rem] leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-base">
             {dict.hero.subtitle}
           </p>
 
-          <div className="mt-9 flex flex-wrap items-end gap-x-10 gap-y-5 border-t border-white/15 pt-6">
-            {stats.map((s) => (
-              <div key={s.label}>
-                <p className="font-display text-3xl font-black leading-none text-sun-400 sm:text-4xl">
-                  {s.value}
-                </p>
-                <p className="mt-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white/55">
+          {/* The search form now sits below the showcase, so the hero carries
+              the way to it. One tap, from the first screen, either way. */}
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <a
+              href="#plan"
+              className="inline-flex items-center gap-2 rounded-xl bg-sun-400 px-6 py-3.5 text-sm font-bold text-navy-950 shadow-lg shadow-sun-900/20 transition hover:-translate-y-0.5 hover:bg-sun-300 sm:text-base"
+            >
+              {dict.home.heroPlanCta}
+              <span aria-hidden="true">↓</span>
+            </a>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 ps-1">
+              {stats.map((s) => (
+                <p key={s.label} className="text-sm font-semibold text-white/70">
+                  <span className="font-display text-xl font-black text-sun-400">{s.value}</span>{" "}
                   {s.label}
                 </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -163,202 +175,52 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         )}
       </section>
 
-      {/* ── The planner ─────────────────────────────────────────────────
-          Lifted so it straddles the seam between photograph and page: the
-          card is the first thing that isn't scenery, which is exactly the
-          emphasis the site's one differentiating feature deserves. */}
-      <section id="plan" className="relative z-10 -mt-16 px-4 sm:-mt-20 sm:px-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="rounded-[1.75rem] bg-white/95 p-5 shadow-[var(--shadow-lift)] ring-1 ring-navy-950/5 backdrop-blur-xl sm:p-7">
-            <div className="mb-5 text-center">
-              <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-sun-700">
-                {dict.home.planEyebrow}
-              </p>
-              <h2 className="mt-1.5 font-display text-xl font-extrabold text-navy-900 sm:text-2xl">
-                {dict.home.planTitle}
-              </h2>
-            </div>
-            <Suspense fallback={null}>
-              <SearchModeSwitcher locale={loc} />
-            </Suspense>
-          </div>
-
-          {/* ── How it works ──────────────────────────────────────────
-              Three steps, directly under the form they describe. This used
-              to be the last thing on the page: a visitor had to scroll past
-              every destination on the site before finding out what the site
-              actually does with the box at the top. As a caption to that box
-              it explains itself at the moment the question is asked, and it
-              costs a strip rather than a screen. */}
-          <p className="mt-9 text-center font-display text-sm font-extrabold text-navy-500">
-            {dict.home.stepsTitle}
-          </p>
-
-          <ol className="mx-auto mt-5 grid max-w-3xl grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
-            {[
-              { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
-              { n: "2", title: dict.home.step2Title, body: dict.home.step2Body },
-              { n: "3", title: dict.home.step3Title, body: dict.home.step3Body },
-            ].map((s) => (
-              <li key={s.n} className="flex gap-3 sm:flex-col sm:gap-2.5 sm:text-center">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-black text-sun-400 sm:mx-auto">
-                  {s.n}
-                </span>
-                <div className="min-w-0">
-                  <h3 className="font-display text-[0.95rem] font-extrabold text-navy-900">
-                    {s.title}
-                  </h3>
-                  <p className="mt-1 text-[0.82rem] leading-relaxed text-navy-600">{s.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ── In season now ───────────────────────────────────────────────
-          A calendar answer to "when", placed where a traveller is already
-          thinking about where. It is also the only part of the homepage
-          that changes by itself, month to month — so it leads the browsing,
-          ahead of the evergreen favourites below it. */}
-      {inSeason.length > 0 && (
-        <section className="mt-16 bg-navy-990 sm:mt-20">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <SectionHeading
-              tone="light"
-              eyebrow={dict.home.seasonEyebrow}
-              title={dict.home.seasonTitle.replace("{month}", monthName(month, loc))}
-              subtitle={dict.home.seasonSubtitle}
-              action={
-                <Link
-                  href={`/${loc}/seasons`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-sun-400 px-4 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-sun-300"
-                >
-                  {dict.home.seasonCta}
-                  <span aria-hidden="true">{isAr ? "←" : "→"}</span>
-                </Link>
-              }
-            />
-
-            <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-6">
-              {inSeason.map((d) => (
-                <Link
-                  key={d.code}
-                  href={`/${loc}/attractions/${d.code}`}
-                  className="group relative isolate block aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:-translate-y-1 sm:w-auto"
-                >
-                  <Photo
-                    src={d.photo}
-                    className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    fallback={<div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-700 to-navy-990" />}
-                  />
-                  <div className="scrim-soft absolute inset-0 -z-10" />
-                  <p className="absolute inset-x-0 bottom-0 truncate p-3 font-display text-sm font-bold text-white">
-                    {d.name}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Featured destinations ───────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeading
-          eyebrow={dict.home.featuredEyebrow}
-          title={dict.home.featuredTitle}
-          subtitle={dict.home.featuredSubtitle}
-          action={
-            <Link
-              href={`/${loc}/attractions`}
-              className="inline-flex items-center gap-1.5 rounded-full bg-navy-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-800"
-            >
-              {dict.home.featuredCta}
-              <span aria-hidden="true">{isAr ? "←" : "→"}</span>
-            </Link>
-          }
+      {/* ── What the site is ────────────────────────────────────────────
+          Four sections of the old page, now four tabs in one panel that
+          straddles the seam below the photograph. See HomeShowcase. */}
+      <section className="relative z-10 -mt-12 pb-16 sm:-mt-14 sm:pb-20">
+        <HomeShowcase
+          locale={loc}
+          featured={featured}
+          inSeason={inSeason.map((d) => ({ ...d, cities: 0 }))}
+          tools={tools}
+          steps={steps}
+          dict={{
+            tabFeatured: dict.home.tabFeatured,
+            tabSeason: dict.home.tabSeason,
+            tabTools: dict.home.tabTools,
+            tabHow: dict.home.tabHow,
+            featuredSubtitle: dict.home.featuredSubtitle,
+            featuredCta: dict.home.featuredCta,
+            seasonTitle: dict.home.seasonTitle.replace("{month}", monthName(month, loc)),
+            seasonSubtitle: dict.home.seasonSubtitle,
+            seasonCta: dict.home.seasonCta,
+            toolsSubtitle: dict.home.toolsSubtitle,
+            toolCta: dict.home.toolCta,
+            stepsTitle: dict.home.stepsTitle,
+            cityCount: dict.home.cityCount,
+          }}
         />
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-          {featured.map((d, i) => (
-            <Link
-              key={d.code}
-              href={`/${loc}/attractions/${d.code}`}
-              className={`group relative isolate block overflow-hidden rounded-2xl ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)] ${
-                // The first card earns twice the room — a grid of identical
-                // tiles has no entry point, and the eye needs one.
-                i === 0 ? "col-span-2 row-span-2" : "aspect-[4/5]"
-              }`}
-            >
-              <Photo
-                src={d.photo}
-                className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]"
-                fallback={<div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-700 to-navy-990" />}
-              />
-              <div className="scrim-soft absolute inset-0 -z-10" />
-              <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-                <p
-                  className={`font-display font-extrabold text-white drop-shadow-sm ${
-                    i === 0 ? "text-xl sm:text-3xl" : "text-sm sm:text-base"
-                  }`}
-                >
-                  {d.name}
-                </p>
-                {d.cities > 0 && (
-                  <p className="mt-0.5 text-[0.7rem] font-semibold text-sun-300">
-                    {dict.home.cityCount.replace("{count}", String(d.cities))}
-                  </p>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
       </section>
 
-      {/* ── Traveller tools ─────────────────────────────────────────────
-          The site's real depth — maps, visas, rates — was previously
-          reachable only from the nav bar, so most visitors never learned it
-          existed. */}
-      <section className="border-t border-mist-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeading
-            align="center"
-            eyebrow={dict.home.toolsEyebrow}
-            title={dict.home.toolsTitle}
-            subtitle={dict.home.toolsSubtitle}
-          />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {tools.map((t) => (
-              <Link
-                key={t.href}
-                href={t.href}
-                className="group relative flex flex-col overflow-hidden rounded-2xl bg-mist-50 p-6 ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[var(--shadow-lift)]"
-              >
-                <span
-                  className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-400 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
-                  aria-hidden="true"
-                />
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sun-50 text-2xl ring-1 ring-sun-200">
-                  {t.icon}
-                </span>
-                <h3 className="mt-4 font-display text-lg font-extrabold text-navy-900">{t.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-navy-600">{t.body}</p>
-                {/* Pushed to the bottom edge so the four links sit on one
-                    line however long the descriptions above them run. */}
-                <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-bold text-sun-700">
-                  {dict.home.toolCta}
-                  <span
-                    className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
-                    aria-hidden="true"
-                  >
-                    {isAr ? "←" : "→"}
-                  </span>
-                </span>
-              </Link>
-            ))}
+      {/* ── The planner ─────────────────────────────────────────────────
+          Below the showcase, where it was asked to be: a visitor who has just
+          seen what the site holds is readier to type a budget into it than
+          one who has seen nothing yet. The hero's button jumps straight here,
+          so it is never more than a tap away. */}
+      <section id="plan" className="scroll-mt-20 border-t border-mist-200 bg-white">
+        <div className="mx-auto max-w-4xl px-4 pb-12 pt-14 sm:px-6 sm:pb-14 sm:pt-16">
+          <div className="mb-6 text-center">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-sun-700">
+              {dict.home.planEyebrow}
+            </p>
+            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-2xl font-extrabold text-navy-900 sm:text-3xl">
+              {dict.home.planTitle}
+            </h2>
           </div>
+          <Suspense fallback={null}>
+            <SearchModeSwitcher locale={loc} />
+          </Suspense>
         </div>
       </section>
     </div>

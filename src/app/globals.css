@@ -301,14 +301,24 @@ h1, h2, h3, .font-display {
    being split across two pages.
 --------------------------------------------------------------------------- */
 @media print {
-  header,
-  footer,
+  /* The site's own header and footer go; the document's letterhead stays. */
+  body > header,
+  body > footer,
   .print\:hidden {
     display: none !important;
   }
 
   :root {
     padding: 0 !important;
+  }
+
+  /* Browsers throw away background colours when printing unless asked not to,
+     which is the right default for a web page and the wrong one for a
+     document that is meant to carry a brand. Without this the navy day-number
+     badges print as white text on white paper — invisible. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body {
@@ -335,8 +345,72 @@ h1, h2, h3, .font-display {
   .print-block {
     break-inside: avoid;
     page-break-inside: avoid;
-    border: 1px solid #ddd !important;
+    /* The site's own navy, at a tenth strength — a printed card that belongs
+       to Sfratna rather than a generic grey box. */
+    border: 1px solid color-mix(in srgb, var(--navy-900) 22%, #fff) !important;
     box-shadow: none !important;
+  }
+
+  /* ---- The letterhead -------------------------------------------------
+     Once, at the top of the document. Repeating it on every sheet would
+     mean position:fixed, which Chrome honours and other engines do not —
+     and a header that silently overlaps the text on one browser is worse
+     than one that appears only on page one. The closing "a plan from
+     Sfratna" line carries the name to the end instead. */
+  .print-header {
+    display: block !important;
+    margin-bottom: 14pt;
+  }
+
+  .print-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12pt;
+    padding-bottom: 8pt;
+    /* Navy rule, orange underline: the site's two colours, in its own order. */
+    border-bottom: 2.5pt solid var(--navy-900);
+    box-shadow: 0 2.5pt 0 0 var(--sun-400);
+    margin-bottom: 12pt;
+  }
+
+  .print-logo {
+    height: 30pt;
+    width: auto;
+  }
+
+  .print-tagline {
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--navy-600);
+    text-align: end;
+  }
+
+  .print-title {
+    font-size: 17pt;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--navy-900);
+    margin: 0;
+  }
+
+  .print-subtitle {
+    margin: 3pt 0 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--navy-600);
+  }
+
+  /* The sign-off. Small, but in the site's navy with its orange rule above
+     it, so the last page is as clearly ours as the first. */
+  .print-signoff {
+    margin-top: 10pt !important;
+    padding-top: 6pt;
+    border-top: 1.5pt solid var(--sun-400);
+    font-size: 8.5pt !important;
+    font-weight: 700;
+    color: var(--navy-700) !important;
+    text-align: end;
   }
 
   a[href]::after {

@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import type { Locale } from "@/lib/types";
 import type { Continent } from "@/lib/countries";
 import DestinationFilters, {
-  CONTINENT_ORDER,
   type CityOption,
   type FilterState,
   type FiltersDict,
@@ -66,13 +65,6 @@ export default function AttractionsExplorer({
     [featured, filters]
   );
 
-  const byContinent = useMemo(() => {
-    const map = new Map<Continent, DestinationCountry[]>();
-    for (const continent of CONTINENT_ORDER) map.set(continent, []);
-    for (const country of filtered) map.get(country.continent)?.push(country);
-    return map;
-  }, [filtered]);
-
   return (
     <div>
       <PageHero
@@ -102,28 +94,16 @@ export default function AttractionsExplorer({
             {dict.noResults}
           </p>
         ) : (
-          <div className="mt-10 space-y-12">
-            {CONTINENT_ORDER.map((continent) => {
-              const countries = byContinent.get(continent) ?? [];
-              if (countries.length === 0) return null;
-              return (
-                <section key={continent}>
-                  <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-brand-900">
-                    <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
-                    {dict.continents[continent]}
-                    <span className="text-sm font-semibold text-navy-400">
-                      ({countries.length})
-                    </span>
-                  </h2>
-                  <CountryCardGrid
-                    locale={locale}
-                    countries={countries}
-                    hrefBase={`/${locale}/attractions`}
-                    continentLabels={dict.continents}
-                  />
-                </section>
-              );
-            })}
+          // The grid does its own grouping and prints its own continent
+          // heading — wrapping it in a second one printed every continent
+          // twice.
+          <div className="mt-10">
+            <CountryCardGrid
+              locale={locale}
+              countries={filtered}
+              hrefBase={`/${locale}/attractions`}
+              continentLabels={dict.continents}
+            />
           </div>
         )}
       </div>

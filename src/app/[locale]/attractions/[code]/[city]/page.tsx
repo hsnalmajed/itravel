@@ -5,6 +5,8 @@ import type { Locale } from "@/lib/types";
 import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
 import { fetchPlacesAroundCities } from "@/lib/mapPins";
+import { fetchCityHighlights } from "@/lib/guideHighlights";
+import { BOOKING_SHORT_LABELS } from "@/lib/countryGuides";
 import { fetchWikiSummary } from "@/lib/wikipedia";
 import { fetchCitiesForCountry, fetchToursForCity } from "@/lib/viator";
 import { type PlaceListItem } from "@/components/CityPlacesExplorer";
@@ -55,13 +57,23 @@ export default async function CityPlacesPage({
   const cityEntry = findCity(country.code, city);
   if (!cityEntry) notFound();
 
-  const [places, citySummary, viatorCities] = await Promise.all([
+  const [places, citySummary, viatorCities, highlights] = await Promise.all([
     fetchPlacesAroundCities([cityEntry], { locale: loc, withPhotos: true }),
     fetchWikiSummary(cityEntry.wikiTitle),
     // Empty (and instant) with no Viator key configured, so the guide below
     // stands on its own until one is added.
     fetchCitiesForCountry(country.code),
+    // The country's hand-checked landmarks that actually sit in this city —
+    // see guideHighlights.ts for why they now live here rather than a level up.
+    fetchCityHighlights(country.code, cityEntry),
   ]);
+
+  // Keyed by English article title, which is the one name both sides share.
+  const highlightByTitle = new Map(highlights.map((h) => [h.wikiTitle, h]));
+  const bookingLabelFor = (enTitle: string) => {
+    const hit = highlightByTitle.get(enTitle);
+    return hit ? BOOKING_SHORT_LABELS[hit.booking][loc] : undefined;
+  };
 
   // Viator names its destinations in English, same as our `nameEn`, so an
   // exact case-insensitive match is a safe join. Anything short of an exact
@@ -88,8 +100,14 @@ export default async function CityPlacesPage({
       category: p.category,
       wikiUrl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`,
       englishOnly: p.englishOnly,
+      bookingLabel: bookingLabelFor(p.enTitle),
     };
   });
+
+  // The curated landmarks first, in each category. They are the ones somebody
+  // checked by hand, and they are what a visitor came to this city for — they
+  // should not be on page three of an alphabet of three hundred places.
+  items.sort((a, b) => Number(Boolean(b.bookingLabel)) - Number(Boolean(a.bookingLabel)));
 
   const cityName = loc === "ar" ? cityEntry.nameAr : cityEntry.nameEn;
 

@@ -43,27 +43,73 @@ export default function CountryCardGrid({
   continentLabels: Record<Continent, string>;
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 sm:space-y-12">
       {CONTINENT_ORDER.map((continent) => {
         const inContinent = countries.filter((c) => c.continent === continent);
         if (inContinent.length === 0) return null;
 
-        return (
-          <section key={continent}>
-            <h3 className="mb-3.5 flex items-center gap-2.5">
-              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-sun-300 to-sun-600" aria-hidden="true" />
-              <span className="font-display text-base font-extrabold text-navy-900">
-                {continentLabels[continent]}
-              </span>
-              <span className="text-sm font-medium text-navy-300">({inContinent.length})</span>
-            </h3>
+        // South America has one country here. Oceania has one. North America
+        // has two. Given a full-width heading and a five-column grid, each
+        // printed a banner across the page with a single card stranded under
+        // one end of it and four empty columns beside it — which does not
+        // read as "a small continent", it reads as a page that failed to
+        // load. So a section of three or fewer turns on its side: the
+        // heading takes the first column and the cards sit beside it, and
+        // the row is full because it was always meant to be that size.
+        const compact = inContinent.length <= 3;
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+        const heading = (
+          <h3 className={`flex items-center gap-3 ${compact ? "mb-4 lg:mb-0 lg:w-44 lg:shrink-0" : "mb-4"}`}>
+            <span className="font-display text-h3 font-extrabold text-navy-900">
+              {continentLabels[continent]}
+            </span>
+            <span className="rounded-full bg-navy-50 px-2.5 py-0.5 text-2xs font-bold text-navy-500">
+              {inContinent.length}
+            </span>
+            {/* The rule is what gives the page its horizontal structure —
+                without it the continents read as unrelated grids. In a
+                compact section it would only underline empty space, so it
+                stops at the large breakpoint where the layout turns. */}
+            <span
+              className={`h-px flex-1 bg-gradient-to-l from-transparent to-mist-300 rtl:bg-gradient-to-r ${
+                compact ? "lg:hidden" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </h3>
+        );
+
+        return (
+          <section
+            key={continent}
+            className={compact ? "lg:flex lg:items-center lg:gap-7" : undefined}
+          >
+            {heading}
+
+            {/* Compact sections stop being a grid at the large breakpoint and
+                become a line: the cards keep the exact width they have in
+                every other section and simply run out, the way a line of
+                type runs out. Sharing the row's width between one or two
+                cards would have made Brazil twice the size of Turkey for no
+                reason other than that Brazil is alone. */}
+            <div
+              className={`grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 ${
+                compact ? "lg:flex lg:flex-wrap" : "lg:grid-cols-5"
+              }`}
+            >
               {inContinent.map((c) => (
                 <Link
                   key={c.code}
                   href={`${hrefBase}/${c.code}`}
-                  className="group relative isolate block aspect-[4/5] overflow-hidden rounded-2xl ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
+                  // Landscape, not portrait. Forty-one portrait tiles five
+                  // across ran the page past four thousand pixels, which is
+                  // not a directory, it is a scroll. The same forty-one in
+                  // 3:2 fit in little over half that, and a country photo is
+                  // a landscape photograph anyway — the portrait crop was
+                  // throwing away the horizon to gain height nobody wanted.
+                  className={`card-hover group relative isolate block aspect-[3/2] overflow-hidden rounded-2xl ring-1 ring-navy-950/5 ${
+                    compact ? "lg:w-[13.25rem]" : ""
+                  }`}
                 >
                   <Photo
                     src={c.photo}
@@ -86,7 +132,7 @@ export default function CountryCardGrid({
                       {locale === "ar" ? c.nameAr : c.nameEn}
                     </p>
                     {c.subtitle && (
-                      <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-sun-300">
+                      <p className="mt-0.5 truncate text-2xs font-semibold text-sun-300">
                         {c.subtitle}
                       </p>
                     )}

@@ -42,7 +42,7 @@ export default function Footer({ locale }: { locale: Locale }) {
           </div>
 
           <div>
-            <p className="mb-3.5 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sun-400/85">
+            <p className="mb-3.5 text-2xs font-bold uppercase tracking-[0.18em] text-sun-400/85">
               {dict.footer.exploreHeading}
             </p>
             <ul className="space-y-2.5">
@@ -57,7 +57,7 @@ export default function Footer({ locale }: { locale: Locale }) {
           </div>
 
           <div>
-            <p className="mb-3.5 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sun-400/85">
+            <p className="mb-3.5 text-2xs font-bold uppercase tracking-[0.18em] text-sun-400/85">
               {dict.footer.toolsHeading}
             </p>
             <ul className="space-y-2.5">
@@ -72,14 +72,14 @@ export default function Footer({ locale }: { locale: Locale }) {
           </div>
 
           <div>
-            <p className="mb-3.5 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sun-400/85">
+            <p className="mb-3.5 text-2xs font-bold uppercase tracking-[0.18em] text-sun-400/85">
               {dict.footer.partnersHeading}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {PARTNER_NAMES.map((name) => (
                 <span
                   key={name}
-                  className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[0.72rem] font-medium text-white/55 ring-1 ring-white/10"
+                  className="rounded-full bg-white/[0.06] px-2.5 py-1 text-2xs font-medium text-white/55 ring-1 ring-white/10"
                 >
                   {name}
                 </span>

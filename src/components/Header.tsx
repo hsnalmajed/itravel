@@ -82,7 +82,7 @@ export default function Header({ locale }: { locale: Locale }) {
             <Logo variant="lockup" alt={dict.siteName} priority className="h-6 w-auto sm:h-7" />
           </Link>
 
-          <nav className="hidden items-center gap-0.5 text-[0.82rem] font-semibold lg:flex">
+          <nav className="hidden items-center gap-0.5 text-sm font-semibold lg:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -102,7 +102,7 @@ export default function Header({ locale }: { locale: Locale }) {
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href={`/${locale}#plan`}
-              className="hidden rounded-full bg-sun-400 px-4 py-2 text-[0.82rem] font-bold text-navy-950 shadow-[var(--shadow-sun)] transition hover:-translate-y-0.5 hover:bg-sun-300 md:inline-flex"
+              className="hidden rounded-full bg-sun-400 px-4 py-2 text-sm font-bold text-navy-950 shadow-[var(--shadow-sun)] transition hover:-translate-y-0.5 hover:bg-sun-300 md:inline-flex"
             >
               {dict.nav.planCta}
             </Link>

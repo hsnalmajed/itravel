@@ -106,7 +106,7 @@ export default function HomeShowcase({
   };
 
   const tabClass = (on: boolean) =>
-    `shrink-0 rounded-full px-4 py-2.5 text-sm font-bold transition duration-200 sm:px-5 sm:text-[0.95rem] ${
+    `shrink-0 rounded-full px-4 py-2.5 text-sm font-bold transition duration-200 sm:px-5 sm:text-base ${
       on
         ? "bg-sun-400 text-navy-950 shadow-lg shadow-sun-900/25"
         : "text-white/60 hover:bg-white/10 hover:text-white"
@@ -133,7 +133,7 @@ export default function HomeShowcase({
           {d.name}
         </p>
         {d.cities > 0 && (
-          <p className="mt-0.5 truncate text-[0.7rem] font-semibold text-sun-300">
+          <p className="mt-0.5 truncate text-2xs font-semibold text-sun-300">
             {dict.cityCount.replace("{count}", String(d.cities))}
           </p>
         )}
@@ -145,7 +145,7 @@ export default function HomeShowcase({
     <div className="mx-auto max-w-7xl px-3 sm:px-6">
       <div className="overflow-hidden rounded-[2rem] bg-gradient-to-b from-navy-900 to-navy-990 shadow-[0_30px_80px_-20px_rgba(4,24,47,0.6)] ring-1 ring-white/10">
         {/* ── The strip ─────────────────────────────────────────────── */}
-        <div className="rail flex items-center gap-2 overflow-x-auto border-b border-white/10 bg-white/[0.04] px-3 py-3 sm:px-5">
+        <div className="rail rail-fade flex items-center gap-2 overflow-x-auto border-b border-white/10 bg-white/[0.04] px-3 py-3 sm:px-5">
           {tabs
             .filter((t) => !t.hidden)
             .map((t) => (
@@ -211,7 +211,7 @@ export default function HomeShowcase({
                     <h3 className="mt-3.5 font-display text-base font-extrabold text-white">
                       {t.title}
                     </h3>
-                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{t.body}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/60">{t.body}</p>
                     <span className="mt-auto inline-flex items-center gap-1 pt-3.5 text-sm font-bold text-sun-300">
                       {dict.toolCta}
                       <span
@@ -239,7 +239,7 @@ export default function HomeShowcase({
                     <h3 className="mt-3.5 font-display text-base font-extrabold text-white">
                       {s.title}
                     </h3>
-                    <p className="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{s.body}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/60">{s.body}</p>
                   </li>
                 ))}
               </ol>

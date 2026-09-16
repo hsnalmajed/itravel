@@ -54,7 +54,7 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
               {dict.modeSelect.knownTitle}
             </span>
             <span
-              className={`mt-0.5 block text-[0.8rem] leading-snug ${
+              className={`mt-0.5 block text-sm leading-snug ${
                 mode === "known" ? "text-white/60" : "text-navy-600"
               }`}
             >
@@ -80,7 +80,7 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
               {dict.modeSelect.discoverTitle}
             </span>
             <span
-              className={`mt-0.5 block text-[0.8rem] leading-snug ${
+              className={`mt-0.5 block text-sm leading-snug ${
                 mode === "discover" ? "text-white/60" : "text-navy-600"
               }`}
             >
@@ -92,8 +92,16 @@ export default function SearchModeSwitcher({ locale }: { locale: Locale }) {
 
       {mode === "known" && <SearchForm locale={locale} />}
       {mode === "discover" && <DiscoverForm locale={locale} />}
+      {/* An invitation, not a warning. This was a solid amber bar — the same
+          colour and weight the visa page uses for "check before you book" —
+          which meant the very first thing a new visitor met was a page
+          telling them off for not having done anything yet. Dashed, quiet,
+          and pointing up at the two choices above it. */}
       {mode === null && (
-        <p className="rounded-xl bg-sun-50 px-4 py-3 text-center text-[0.82rem] font-semibold text-sun-800 ring-1 ring-sun-200">
+        <p className="rounded-xl border border-dashed border-mist-300 bg-mist-50 px-4 py-5 text-center text-sm font-semibold text-navy-500">
+          <span className="me-1.5" aria-hidden="true">
+            ↑
+          </span>
           {dict.modeSelect.chooseModeFirst}
         </p>
       )}

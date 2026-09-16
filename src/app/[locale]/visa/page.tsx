@@ -131,8 +131,6 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
                 noResults: dict.visa.noResults,
                 allowedStay: dict.visa.allowedStay,
                 canApply: dict.visa.canApply,
-                summaryFree: dict.visa.summaryFree,
-                summaryEasy: dict.visa.summaryEasy,
                 labels,
                 hints,
                 continents: dict.attractions.continents,

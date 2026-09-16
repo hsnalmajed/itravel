@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel, formatDuration } from "@/lib/format";
-import type { FlightOffer, HotelOffer, Locale, TripType } from "@/lib/types";
+import type { FlightOffer, HotelOffer, Locale, SearchParams, TripType } from "@/lib/types";
+import { flightBookingHandoff, hotelBookingHandoff } from "@/lib/affiliateLinks";
 import AirlineLogo from "@/components/ui/AirlineLogo";
 import HotelThumb from "@/components/ui/HotelThumb";
 
@@ -203,6 +204,11 @@ function HotelChips({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
       <Chip tone="mute">
         <span aria-hidden="true">🛏️</span>
         {dict.roomType[hotel.roomType]}
+        {/* Above one, the party needs more than one unit and the total
+            already reflects that — saying so is the difference between a
+            price that looks wrong and one that adds up. */}
+        {(hotel.units ?? 1) > 1 &&
+          ` ${dict.results.roomUnits.replace("{count}", String(hotel.units))}`}
       </Chip>
     </div>
   );
@@ -239,6 +245,8 @@ export default function TripBuilder({
   travelers,
   departDate,
   returnDate,
+  search,
+  destinationName,
 }: {
   flights: FlightOffer[];
   hotels: HotelOffer[];
@@ -250,6 +258,10 @@ export default function TripBuilder({
   travelers: number;
   departDate: string;
   returnDate?: string;
+  /** The search this trip came out of, for building the partner handoff. */
+  search: SearchParams;
+  /** The destination city as a person would write it, for the hotel search. */
+  destinationName: string;
 }) {
   const dict = getDictionary(locale);
 
@@ -301,6 +313,18 @@ export default function TripBuilder({
 
   const isCheapestTrip =
     (!flight || flight.id === cheapestFlights[0]?.id) && (!hotel || hotel.id === cheapestHotels[0]?.id);
+
+  // Rebuilt whenever the traveller swaps a flight or a hotel, so the handoff
+  // always points at what is currently on screen.
+  const flightHandoff = useMemo(() => flightBookingHandoff(search, flight), [search, flight]);
+  const hotelHandoff = useMemo(
+    () => hotelBookingHandoff(search, destinationName, hotel),
+    [search, destinationName, hotel]
+  );
+  // On a phone there is room for one button. The hotel is the better default:
+  // a flight handoff only ever opens a search, whereas the hotel link carries
+  // the property name the traveller just chose.
+  const primaryHandoff = hotelHandoff ?? flightHandoff;
 
   const travelersText = travelersLabel(travelers, dict);
   const stayDates = returnDate
@@ -437,8 +461,31 @@ export default function TripBuilder({
           )}
         </div>
 
-        {(flight?.isMock || hotel?.isMock) && (
-          <p className="border-t border-gray-100 px-5 py-2 text-[11px] text-amber-600 sm:px-6">Demo</p>
+        {/* ---- The way out ----------------------------------------------
+            Sfratna compares and hands over; it never takes a booking. For a
+            while this row did not exist at all, so the site's only job had
+            no button. Each partner is named *before* the traveller leaves,
+            and the price disclaimer is not fine print: our number came from
+            a different source and the partner's is the one they will pay. */}
+        {(flightHandoff || hotelHandoff) && (
+          <div className="border-t border-gray-100 px-5 py-4 sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {flightHandoff && (
+                <BookingButton
+                  href={flightHandoff.url}
+                  label={dict.results.bookFlight}
+                  note={dict.results.handoffNote.replace("{partner}", flightHandoff.partner)}
+                />
+              )}
+              {hotelHandoff && (
+                <BookingButton
+                  href={hotelHandoff.url}
+                  label={dict.results.bookHotel}
+                  note={dict.results.handoffNote.replace("{partner}", hotelHandoff.partner)}
+                />
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -527,6 +574,68 @@ export default function TripBuilder({
           ))}
         </OptionList>
       )}
+
+      {/* ---- The phone's booking bar ----------------------------------
+          On a phone the trip card scrolls away long before the traveller has
+          finished reading the alternatives, taking the only way to book with
+          it. This keeps the total and one button in reach the whole time.
+          Hidden on desktop, where the card is never far from the eye, and
+          hidden while a picker is open so it cannot sit on top of the list
+          the traveller is choosing from. */}
+      {primaryHandoff && !picker && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-950/10 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(6,38,83,0.35)] backdrop-blur-md sm:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0">
+              <p dir="ltr" className="text-base font-extrabold leading-none text-navy-900">
+                {total.toLocaleString()} {currency}
+              </p>
+              <p className="mt-1 truncate text-2xs text-gray-500">
+                {travelersText}
+                {hotel ? ` · ${nightsLabel(hotel.nights, dict)}` : ""}
+              </p>
+            </div>
+            <a
+              href={primaryHandoff.url}
+              target="_blank"
+              rel="noopener noreferrer nofollow sponsored"
+              className="ms-auto shrink-0 rounded-xl bg-sun-400 px-5 py-3 text-sm font-bold text-navy-950 shadow-[var(--shadow-sun)]"
+            >
+              {hotelHandoff && flightHandoff
+                ? dict.results.bookNow
+                : hotelHandoff
+                  ? dict.results.bookHotel
+                  : dict.results.bookFlight}
+            </a>
+          </div>
+        </div>
+      )}
+      {/* Clearance so the bar never covers the last row of content. */}
+      {(flightHandoff || hotelHandoff) && <div className="h-20 sm:hidden" aria-hidden="true" />}
+    </div>
+  );
+}
+
+/**
+ * The button that leaves the site.
+ *
+ * Orange, because it is the one action on the page that completes the job,
+ * and the palette reserves orange for exactly that. `rel` carries `sponsored`
+ * as well as `nofollow`: these are commercial links and saying so is both
+ * Google's requirement and the honest thing.
+ */
+function BookingButton({ href, label, note }: { href: string; label: string; note: string }) {
+  return (
+    <div className="flex-1">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer nofollow sponsored"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-sun-400 px-5 py-3.5 text-sm font-bold text-navy-950 shadow-[var(--shadow-sun)] transition hover:-translate-y-0.5 hover:bg-sun-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-500 focus-visible:ring-offset-2"
+      >
+        {label}
+        <span aria-hidden="true">↗</span>
+      </a>
+      <p className="mt-1.5 text-center text-2xs leading-relaxed text-gray-500">{note}</p>
     </div>
   );
 }

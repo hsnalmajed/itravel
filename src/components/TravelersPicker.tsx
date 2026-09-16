@@ -3,22 +3,50 @@
 import { useEffect, useRef, useState } from "react";
 import type { Locale, TravelerCounts } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
+import { countLabel } from "@/lib/format";
 
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 6;
 const MAX_INFANTS = 4;
 const DEFAULT_CHILD_AGE = 6;
 
+/**
+ * "بالغان · 3 أطفال" — the party, in Arabic that a native speaker wrote.
+ *
+ * This used to concatenate a number and one of two words, which is how
+ * English counts. It produced "2 بالغين": the three-and-up plural stuck to a
+ * pair, where Arabic has a dual. Each noun now carries all four shapes and
+ * the number is inside the string, because for one and two it disappears.
+ */
 function summarize(value: TravelerCounts, dict: ReturnType<typeof getDictionary>): string {
-  const parts: string[] = [];
-  parts.push(`${value.adults} ${value.adults === 1 ? dict.travelers.adultShort : dict.travelers.adultsShort}`);
+  const t = dict.travelers;
+  const parts: string[] = [
+    countLabel(value.adults, {
+      one: t.adultOne,
+      two: t.adultTwo,
+      few: t.adultFew,
+      many: t.adultMany,
+    }),
+  ];
   if (value.childrenAges.length > 0) {
     parts.push(
-      `${value.childrenAges.length} ${value.childrenAges.length === 1 ? dict.travelers.childShort : dict.travelers.childrenShort}`
+      countLabel(value.childrenAges.length, {
+        one: t.childOne,
+        two: t.childTwo,
+        few: t.childFew,
+        many: t.childMany,
+      })
     );
   }
   if (value.infants > 0) {
-    parts.push(`${value.infants} ${value.infants === 1 ? dict.travelers.infantShort : dict.travelers.infantsShort}`);
+    parts.push(
+      countLabel(value.infants, {
+        one: t.infantOne,
+        two: t.infantTwo,
+        few: t.infantFew,
+        many: t.infantMany,
+      })
+    );
   }
   return parts.join(" · ");
 }

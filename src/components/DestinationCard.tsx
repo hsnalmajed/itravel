@@ -4,6 +4,14 @@ import { getDictionary } from "@/lib/dictionaries";
 import { formatDuration } from "@/lib/format";
 import { serializeChildrenAges } from "@/lib/searchParamsUtil";
 
+/** The stay's last night, when discover priced it in nights rather than dates. */
+function addDaysIso(dateStr: string, days: number): string {
+  if (!dateStr) return "";
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function DestinationCard({
   suggestion,
   locale,
@@ -16,6 +24,8 @@ export default function DestinationCard({
   directOnly,
   minStars,
   roomType,
+  baggageIncluded = false,
+  breakfastIncluded = false,
 }: {
   suggestion: DestinationSuggestion;
   locale: Locale;
@@ -28,16 +38,41 @@ export default function DestinationCard({
   directOnly: boolean;
   minStars: number;
   roomType?: RoomType;
+  baggageIncluded?: boolean;
+  breakfastIncluded?: boolean;
 }) {
   const dict = getDictionary(locale);
   const name = locale === "ar" ? suggestion.destinationNameAr : suggestion.destinationNameEn;
 
+  /**
+   * The link has to describe the *same trip* the card just priced.
+   *
+   * It did not, and this is why a card offering Cairo for 4,545 riyals opened
+   * a page offering 3,610 with a different hotel and a different stopover.
+   * Two things were wrong:
+   *
+   *  - It sent `destination: name` — the localised city name, "طوكيو". The
+   *    search that produced this card ran on the IATA code, "TYO". Every
+   *    price on the site is derived from a seed built out of that string, so
+   *    a different string is a different trip: different airline, different
+   *    hotel, different price. Sending the code makes the two agree.
+   *  - It dropped the trip length. Discover works in nights and computes the
+   *    return date itself; the card forwarded an empty `returnDate`, and the
+   *    results page reads a missing return date as a one-night stay. A
+   *    five-night hotel total silently became one night.
+   *
+   * The remaining filters travel too, for the same reason: a filter the
+   * suggestion was priced under but the results page never sees is a filter
+   * that changes the answer.
+   */
+  const stayEnd = returnDate || addDaysIso(departDate, suggestion.nights);
+
   const resultsParams = new URLSearchParams({
     tripType,
     origin,
-    destination: name,
+    destination: suggestion.destinationCode,
     departDate,
-    returnDate,
+    returnDate: stayEnd,
     adults: String(travelers.adults),
     childrenAges: serializeChildrenAges(travelers.childrenAges),
     infants: String(travelers.infants),
@@ -46,6 +81,8 @@ export default function DestinationCard({
     directOnly: String(directOnly),
     minStars: String(minStars),
     roomType: roomType || "",
+    baggageIncluded: String(baggageIncluded),
+    breakfastIncluded: String(breakfastIncluded),
   });
 
   return (

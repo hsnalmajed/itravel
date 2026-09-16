@@ -9,6 +9,7 @@ import { flagImageUrl } from "@/lib/visaProviders";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
 import { VISA_ORDER, VISA_STYLES } from "@/components/VisaBadge";
 import { searchMatches, searchEquals } from "@/lib/search";
+import { formatAllowedStay } from "@/lib/format";
 
 export interface VisaCountry {
   code: string;
@@ -208,8 +209,20 @@ export default function VisaDirectory({
                           </span>
 
                           {c.stay && (
+                            // Arabic when we can parse it, the source's own
+                            // English when we cannot — never a guess. The
+                            // dir override only applies to text we left in
+                            // English; translated text belongs to the page.
                             <p className="mt-1.5 text-[10px] font-semibold text-gray-500">
-                              {dict.allowedStay}: <span dir="ltr">{c.stay}</span>
+                              {dict.allowedStay}:{" "}
+                              {(() => {
+                                const stay = formatAllowedStay(c.stay, locale);
+                                return stay === c.stay && locale === "ar" ? (
+                                  <span dir="ltr">{stay}</span>
+                                ) : (
+                                  <span>{stay}</span>
+                                );
+                              })()}
                             </p>
                           )}
 

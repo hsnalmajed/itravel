@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import Photo from "@/components/Photo";
+import { countLabel } from "@/lib/format";
 
 export interface ShowcaseDestination {
   code: string;
@@ -38,7 +39,10 @@ interface ShowcaseDict {
   toolsSubtitle: string;
   toolCta: string;
   stepsTitle: string;
-  cityCount: string;
+  cityCountOne: string;
+  cityCountTwo: string;
+  cityCountFew: string;
+  cityCountMany: string;
 }
 
 type TabKey = "featured" | "season" | "tools" | "how";
@@ -134,7 +138,12 @@ export default function HomeShowcase({
         </p>
         {d.cities > 0 && (
           <p className="mt-0.5 truncate text-2xs font-semibold text-sun-300">
-            {dict.cityCount.replace("{count}", String(d.cities))}
+            {countLabel(d.cities, {
+              one: dict.cityCountOne,
+              two: dict.cityCountTwo,
+              few: dict.cityCountFew,
+              many: dict.cityCountMany,
+            })}
           </p>
         )}
       </div>

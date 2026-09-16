@@ -6,7 +6,7 @@ import type { DestinationCategory, FlightRoute, Locale, TravelerCounts, TripType
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
-import DateInput from "@/components/DateInput";
+import DateRangeInput from "@/components/DateRangeInput";
 import HotelPreferences from "@/components/HotelPreferences";
 import {
   occupancy,
@@ -16,12 +16,7 @@ import {
   type StayType,
 } from "@/lib/stayType";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
-
-function todayPlus(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+import { focusFirstError, hasErrors, type FieldErrors } from "@/lib/formErrors";
 
 function nightsBetween(a: string, b: string) {
   const t1 = new Date(a).getTime();
@@ -86,6 +81,8 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
   // A party that outgrows a room moves to an apartment on its own, derived
   // rather than patched in an effect.
+  const [errors, setErrors] = useState<FieldErrors>({});
+
   const guests = occupancy(travelers);
   const effectiveStayType: StayType | "" =
     stayType === "room" && !roomFitsParty(guests) ? "apartment" : stayType;
@@ -101,9 +98,30 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
         ? dict.form.budgetHotel
         : dict.form.budgetBoth;
 
+  /** See the note in formErrors.ts — every gap gets its own message. */
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    if (!tripType) next.tripType = dict.form.errorTripType;
+    if (!origin.trim()) next.origin = dict.form.errorOrigin;
+    if (!departDate) next.departDate = dict.form.errorDepartDate;
+    if (tripRoute !== "oneway" && !returnDate) next.returnDate = dict.form.errorReturnDate;
+    if (!budget.trim()) next.budget = dict.form.errorBudget;
+    else if (Number(budget) <= 0) next.budget = dict.form.errorBudgetPositive;
+    return next;
+  }
+
+  const FIELD_ORDER = ["tripType", "origin", "budget", "departDate", "returnDate"];
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!tripType) return;
+
+    const found = validate();
+    setErrors(found);
+    if (hasErrors(found)) {
+      focusFirstError(found, FIELD_ORDER);
+      return;
+    }
+
     const isOneWay = tripRoute === "oneway";
     const nights = isOneWay ? Math.max(1, oneWayNights) : nightsBetween(departDate, returnDate);
     const roomType = resolveRoomType(effectiveStayType, guests);
@@ -148,6 +166,13 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
 
   return (
     <form
+      // Our own validation, not the browser's. A native `required`
+      // blocks submit before onSubmit ever fires, so the handler below
+      // never ran and no message was ever shown — the button simply did
+      // nothing. Chrome's own bubble is no substitute: it shows one
+      // field at a time, is not translated to match the page, and is
+      // positioned for an LTR layout.
+      noValidate
       onSubmit={handleSubmit}
       className="relative z-10 w-full max-w-4xl mx-auto overflow-hidden rounded-3xl bg-white shadow-2xl shadow-brand-950/10 ring-1 ring-black/5"
     >
@@ -224,19 +249,27 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div>
+            <div data-field="origin">
               <label className={labelClass}>{dict.discoverForm.origin}</label>
               <AirportInput
                 locale={locale}
                 value={origin}
-                onChange={setOrigin}
+                onChange={(v) => {
+                  setOrigin(v);
+                  setErrors((prev) => ({ ...prev, origin: "" }));
+                }}
                 placeholder={dict.form.originPlaceholder}
                 required
               />
+              {errors.origin && (
+                <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                  {errors.origin}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div data-field="budget">
                 <label className={labelClass}>{budgetLabel}</label>
                 <input
                   type="number"
@@ -245,9 +278,17 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
                   className={inputClass}
                   value={budget}
                   placeholder={dict.form.budgetPlaceholder}
-                  onChange={(e) => setBudget(e.target.value)}
+                  onChange={(e) => {
+                    setBudget(e.target.value);
+                    setErrors((prev) => ({ ...prev, budget: "" }));
+                  }}
                   required
                 />
+              {errors.budget && (
+                <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                  {errors.budget}
+                </p>
+              )}
               </div>
               <div>
                 <label className={labelClass}>{dict.discoverForm.currency}</label>
@@ -260,18 +301,26 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            <div>
-              <label className={labelClass}>{dict.discoverForm.departDate}</label>
-              <DateInput
-                className={inputClass}
-                value={departDate}
-                min={todayPlus(0)}
-                onChange={setDepartDate}
+            <div data-field="departDate" className={tripRoute === "oneway" ? undefined : "sm:col-span-2"}>
+              <label className={labelClass}>
+                {tripRoute === "oneway" ? dict.discoverForm.departDate : dict.form.dates}
+              </label>
+              <DateRangeInput
+                locale={locale}
+                departDate={departDate}
+                returnDate={returnDate}
+                withReturn={tripRoute !== "oneway"}
                 required
+                error={errors.departDate || errors.returnDate}
+                onChange={({ departDate: d, returnDate: r }) => {
+                  setDepartDate(d);
+                  setReturnDate(r);
+                  setErrors((prev) => ({ ...prev, departDate: "", returnDate: "" }));
+                }}
               />
             </div>
 
-            {tripRoute === "oneway" ? (
+            {tripRoute === "oneway" && (
               <div>
                 <label className={labelClass}>{dict.discoverForm.nights}</label>
                 <input
@@ -281,17 +330,6 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
                   className={inputClass}
                   value={oneWayNights}
                   onChange={(e) => setOneWayNights(Number(e.target.value))}
-                  required
-                />
-              </div>
-            ) : (
-              <div>
-                <label className={labelClass}>{dict.form.returnDate}</label>
-                <DateInput
-                  className={inputClass}
-                  value={returnDate}
-                  min={departDate || todayPlus(0)}
-                  onChange={setReturnDate}
                   required
                 />
               </div>

@@ -6,7 +6,7 @@ import type { FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types"
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
-import DateInput from "@/components/DateInput";
+import DateRangeInput from "@/components/DateRangeInput";
 import HotelPreferences from "@/components/HotelPreferences";
 import {
   occupancy,
@@ -16,12 +16,7 @@ import {
   type StayType,
 } from "@/lib/stayType";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
-
-function todayPlus(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+import { focusFirstError, hasErrors, type FieldErrors } from "@/lib/formErrors";
 
 interface LegDraft {
   destination: string;
@@ -101,6 +96,8 @@ export default function SearchForm({ locale }: { locale: Locale }) {
   const effectiveStayType: StayType | "" =
     stayType === "room" && !roomFitsParty(guests) ? "apartment" : stayType;
 
+  const [errors, setErrors] = useState<FieldErrors>({});
+
   const showTripRoute = tripType === "both" || tripType === "flight";
   const showReturnDate = tripRoute === "multicity" ? false : tripType === "hotel" || tripRoute === "roundtrip";
   const showHotelFields = tripRoute === "multicity" || tripType === "both" || tripType === "hotel";
@@ -116,9 +113,42 @@ export default function SearchForm({ locale }: { locale: Locale }) {
     setLegs((prev) => (prev.length > 2 ? prev.filter((_, i) => i !== index) : prev));
   }
 
+  /**
+   * Everything the form needs before it can search.
+   *
+   * Returned as a map rather than thrown at the first problem, so a visitor
+   * who left three boxes empty is told about all three at once instead of
+   * discovering them one submit at a time.
+   */
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    if (!tripType) next.tripType = dict.form.errorTripType;
+    if (showFlightFields && !origin.trim()) next.origin = dict.form.errorOrigin;
+    if (tripRoute !== "multicity" && !destination.trim()) {
+      next.destination = dict.form.errorDestination;
+    }
+    if (!departDate) next.departDate = dict.form.errorDepartDate;
+    if (showReturnDate && !returnDate) next.returnDate = dict.form.errorReturnDate;
+    if (!budget.trim()) next.budget = dict.form.errorBudget;
+    else if (Number(budget) <= 0) next.budget = dict.form.errorBudgetPositive;
+    if (tripRoute === "multicity" && legs.filter((l) => l.destination.trim()).length < 2) {
+      next.legs = dict.form.errorLegs;
+    }
+    return next;
+  }
+
+  const FIELD_ORDER = ["tripType", "origin", "destination", "legs", "departDate", "returnDate", "budget"];
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!tripType) return;
+
+    const found = validate();
+    setErrors(found);
+    if (hasErrors(found)) {
+      focusFirstError(found, FIELD_ORDER);
+      return;
+    }
+
     const resolvedBudget = String(Number(budget) || 6000);
     // The hotel API and the offer data speak in room types, so the two-way
     // choice is translated back here rather than leaking into the URL.
@@ -126,7 +156,6 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
     if (tripRoute === "multicity") {
       const validLegs = legs.filter((l) => l.destination.trim().length > 0);
-      if (validLegs.length < 2) return;
       const params = new URLSearchParams({
         origin,
         departDate,
@@ -183,6 +212,13 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
   return (
     <form
+      // Our own validation, not the browser's. A native `required`
+      // blocks submit before onSubmit ever fires, so the handler below
+      // never ran and no message was ever shown — the button simply did
+      // nothing. Chrome's own bubble is no substitute: it shows one
+      // field at a time, is not translated to match the page, and is
+      // positioned for an LTR layout.
+      noValidate
       onSubmit={handleSubmit}
       className="relative z-10 w-full max-w-4xl mx-auto overflow-hidden rounded-3xl bg-white shadow-2xl shadow-brand-950/10 ring-1 ring-black/5"
     >
@@ -231,52 +267,71 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         <div className={showTripRoute ? "" : "mt-4"}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {showFlightFields && (
-              <div>
+              <div data-field="origin">
                 <label className={labelClass}>{dict.form.origin}</label>
                 <AirportInput
                   locale={locale}
                   value={origin}
-                  onChange={setOrigin}
+                  onChange={(v) => {
+                    setOrigin(v);
+                    setErrors((prev) => ({ ...prev, origin: "" }));
+                  }}
                   placeholder={dict.form.originPlaceholder}
                   required
                 />
+                {errors.origin && (
+                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                    {errors.origin}
+                  </p>
+                )}
               </div>
             )}
 
             {tripRoute !== "multicity" && (
-              <div>
+              <div data-field="destination">
                 <label className={labelClass}>{dict.form.destination}</label>
                 <AirportInput
                   locale={locale}
                   value={destination}
-                  onChange={setDestination}
+                  onChange={(v) => {
+                    setDestination(v);
+                    setErrors((prev) => ({ ...prev, destination: "" }));
+                  }}
                   placeholder={dict.form.destinationPlaceholder}
                   required
                 />
+                {errors.destination && (
+                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                    {errors.destination}
+                  </p>
+                )}
               </div>
             )}
 
-            <div>
-              <label className={labelClass}>{tripRoute === "multicity" ? dict.multicity.departDate : dict.form.departDate}</label>
-              <DateInput
-                className={inputClass}
-                value={departDate}
-                min={todayPlus(0)}
-                onChange={setDepartDate}
+            <div data-field="departDate" className={showReturnDate ? "sm:col-span-2" : undefined}>
+              <label className={labelClass}>
+                {tripRoute === "multicity"
+                  ? dict.multicity.departDate
+                  : showReturnDate
+                    ? dict.form.dates
+                    : dict.form.departDate}
+              </label>
+              {/* One control for both ends of the trip — see DateRangeInput
+                  for why the native date input had to go. */}
+              <DateRangeInput
+                locale={locale}
+                departDate={departDate}
+                returnDate={returnDate}
+                withReturn={showReturnDate}
                 required
+                error={errors.departDate || errors.returnDate}
+                onChange={({ departDate: d, returnDate: r }) => {
+                  setDepartDate(d);
+                  setReturnDate(r);
+                  setErrors((prev) => ({ ...prev, departDate: "", returnDate: "" }));
+                }}
               />
             </div>
-            {showReturnDate && (
-              <div>
-                <label className={labelClass}>{dict.form.returnDate}</label>
-                <DateInput
-                  className={inputClass}
-                  value={returnDate}
-                  min={departDate || todayPlus(0)}
-                  onChange={setReturnDate}
-                />
-              </div>
-            )}
 
             <div>
               <label className={labelClass}>{dict.travelers.label}</label>
@@ -284,7 +339,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div data-field="budget">
                 {/* The label names exactly what the number has to cover, so
                     nobody enters a flight-only figure against a trip that
                     also has to pay for the hotel. */}
@@ -296,9 +351,17 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                   className={inputClass}
                   value={budget}
                   placeholder={dict.form.budgetPlaceholder}
-                  onChange={(e) => setBudget(e.target.value)}
+                  onChange={(e) => {
+                    setBudget(e.target.value);
+                    setErrors((prev) => ({ ...prev, budget: "" }));
+                  }}
                   required
                 />
+                {errors.budget && (
+                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                    {errors.budget}
+                  </p>
+                )}
               </div>
               <div>
                 <label className={labelClass}>{dict.form.currency}</label>

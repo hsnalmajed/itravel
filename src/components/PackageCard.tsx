@@ -116,9 +116,6 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
         </span>
       </div>
 
-      {(combo.flight?.isMock || combo.hotel?.isMock) && (
-        <p className="mt-2 text-[11px] text-amber-600">Demo</p>
-      )}
     </div>
   );
 }

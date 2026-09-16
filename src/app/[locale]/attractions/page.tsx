@@ -18,18 +18,18 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
 
   // The destination list and the hero are independent lookups, so they run
   // together rather than one after the other.
+  // Only countries with cities. A country page is now a list of its cities,
+  // so one with none leads to an empty page — and a directory entry that
+  // opens onto nothing is worse than no entry at all.
   const [{ countries, cities }, hero] = await Promise.all([
-    fetchDestinationList(loc),
+    fetchDestinationList(loc, { onlyWithCities: true }),
     sectionHero("attractions", loc),
   ]);
 
-  const featured = countries.map((c) => {
-    const cityCount = COUNTRY_CITIES[c.code]?.length ?? 0;
-    return {
-      ...c,
-      subtitle: cityCount > 0 ? `🏙️ ${cityCountLabel(cityCount, dict.attractions)}` : undefined,
-    };
-  });
+  const featured = countries.map((c) => ({
+    ...c,
+    subtitle: `🏙️ ${cityCountLabel(COUNTRY_CITIES[c.code]?.length ?? 0, dict.attractions)}`,
+  }));
 
   return (
     <AttractionsExplorer
@@ -52,9 +52,6 @@ export default async function AttractionsPage({ params }: PageProps<"/[locale]/a
       dict={{
         title: dict.attractions.title,
         subtitle: dict.attractions.subtitle,
-        featuredTitle: dict.attractions.featuredTitle,
-        featuredSubtitle: dict.attractions.featuredSubtitle,
-        moreDestinations: dict.attractions.moreDestinations,
         noResults: dict.filters.noResults,
         statCountries: dict.home.statCountries,
         statCities: dict.home.statCities,

@@ -5,7 +5,6 @@ import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib
 import VisaWarning from "@/components/VisaWarning";
 import VisaDirectory, { type VisaCountry } from "@/components/VisaDirectory";
 import { applicableCountryCodes } from "@/lib/visaProviders";
-import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { sectionHero } from "@/lib/sectionHero";
@@ -19,18 +18,16 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  // The countries a traveller can actually act on, and a photo for each.
+  // Which countries have somewhere to apply. A local lookup, no network.
   const applyCodes = applicableCountryCodes().filter((code) => findCountry(code));
-  // The hero goes first, on its own. This page makes more outbound lookups
-  // than any other — the visa table plus a photo for every country a Saudi
-  // traveller can apply to — and a Worker is allowed only so many per render.
-  // Bundled in with the rest, the background was the request that lost, and
-  // the page came up as a navy gradient.
+
+  // Two outbound lookups on this page, and no more. It used to also fetch a
+  // photograph per country, which cost dozens of requests and was starving the
+  // one that matters — the visa table itself, whose failure left the page
+  // saying it could not check. The cards carry flags instead; see
+  // VisaDirectory.
   const hero = await sectionHero("visa", loc);
-  const [data, applyPhotos] = await Promise.all([
-    fetchVisaRequirements(),
-    fetchCountryPhotos(applyCodes),
-  ]);
+  const data = await fetchVisaRequirements();
 
   const labels: Record<VisaCategory, string> = {
     free: dict.visa.free,
@@ -69,11 +66,6 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
             category: entry.category,
             status: entry.status,
             stay: entry.stay,
-            // Photographs exist only for the countries we already look up for
-            // their application links — fetching one for all hundred and
-            // ninety-three would cost more outbound requests than a Worker
-            // gets. The rest fall back to their flag.
-            photo: applyPhotos.get(country.code),
             canApply: applySet.has(country.code),
           };
         })

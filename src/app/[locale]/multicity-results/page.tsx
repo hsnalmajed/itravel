@@ -139,9 +139,9 @@ function MultiCityResultsContent() {
 
       {!loading && !error && result && (
         <>
-          {result.isMock && (
-            <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-              {dict.results.mockNotice}
+          {result.isMock && process.env.NODE_ENV === "development" && (
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Generated data (no provider key configured). Hidden in production.
             </div>
           )}
 

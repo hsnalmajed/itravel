@@ -31,8 +31,6 @@ interface DirectoryDict {
   noResults: string;
   allowedStay: string;
   canApply: string;
-  summaryFree: string;
-  summaryEasy: string;
   labels: Record<VisaCategory, string>;
   hints: Record<VisaCategory, string>;
   continents: Record<Continent, string>;
@@ -110,22 +108,10 @@ export default function VisaDirectory({
 
   return (
     <div>
-      {/* The two numbers worth knowing before reading anything else. */}
-      <div className="mb-5 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
-          <p className="text-2xl font-extrabold text-emerald-900">{counts.free}</p>
-          <p className="text-sm font-semibold text-emerald-800">
-            {dict.summaryFree.replace("{count}", String(counts.free))}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-200">
-          <p className="text-2xl font-extrabold text-sky-900">{counts.arrival + counts.eta}</p>
-          <p className="text-sm font-semibold text-sky-800">
-            {dict.summaryEasy.replace("{count}", String(counts.arrival + counts.eta))}
-          </p>
-        </div>
-      </div>
-
+      {/* No summary tiles. They printed each number twice over — once as a
+          big figure and again in the sentence beneath it — and then the filter
+          chips immediately below printed the same counts a third time, while
+          also being able to act on them. */}
       <div className="rounded-2xl bg-gray-50 p-4 ring-1 ring-black/5">
         <input
           value={query}

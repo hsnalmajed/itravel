@@ -27,7 +27,7 @@ export default function AirlineLogo({
   if (!src || failed) {
     return (
       <span
-        className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-brand-50 text-[0.7rem] font-extrabold text-brand-800 ring-1 ring-brand-100 ${className}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-brand-50 text-2xs font-extrabold text-brand-800 ring-1 ring-brand-100 ${className}`}
         aria-hidden="true"
       >
         {airlineMonogram(name)}

@@ -32,16 +32,10 @@ export default function SectionHeading({
     >
       <div className={centered ? "" : "min-w-0"}>
         {eyebrow && (
-          <p
-            className={`mb-2 text-[0.7rem] font-bold uppercase tracking-[0.2em] ${
-              onDark ? "text-sun-300" : "text-sun-700"
-            }`}
-          >
-            {eyebrow}
-          </p>
+          <p className={`eyebrow mb-2 ${onDark ? "eyebrow-light" : ""}`}>{eyebrow}</p>
         )}
         <h2
-          className={`rule-sun ${centered ? "rule-sun-center" : ""} font-display text-2xl font-extrabold leading-tight sm:text-3xl ${
+          className={`rule-sun ${centered ? "rule-sun-center" : ""} font-display text-h2 font-extrabold ${
             onDark ? "text-white" : "text-navy-900"
           }`}
         >
@@ -49,7 +43,7 @@ export default function SectionHeading({
         </h2>
         {subtitle && (
           <p
-            className={`mt-3 max-w-2xl text-sm leading-relaxed sm:text-[0.95rem] ${
+            className={`mt-3.5 max-w-2xl text-lead ${
               onDark ? "text-white/65" : "text-navy-600"
             }`}
           >

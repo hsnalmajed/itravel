@@ -46,10 +46,15 @@ export default function PageHero({
   size?: "sm" | "md" | "lg";
   align?: "start" | "center";
 }) {
+  // Heights in svh rather than rem. A hero measured in rem is a fixed slab
+  // that happens to look right on a laptop: on a phone it eats the whole
+  // screen and on a 4K monitor it becomes a letterbox. Measured against the
+  // viewport it keeps the same proportion of the first screen everywhere,
+  // and the rem floor stops it collapsing in a short browser window.
   const heights = {
-    sm: "min-h-[16rem] sm:min-h-[18rem]",
-    md: "min-h-[20rem] sm:min-h-[24rem]",
-    lg: "min-h-[25rem] sm:min-h-[31rem]",
+    sm: "min-h-[15rem] sm:min-h-[34svh]",
+    md: "min-h-[18rem] sm:min-h-[46svh]",
+    lg: "min-h-[22rem] sm:min-h-[60svh]",
   } as const;
 
   return (
@@ -76,17 +81,13 @@ export default function PageHero({
           align === "center" ? "text-center" : ""
         }`}
       >
-        {eyebrow && (
-          <p className="mb-2.5 text-[0.7rem] font-bold uppercase tracking-[0.22em] text-sun-300">
-            {eyebrow}
-          </p>
-        )}
-        <h1 className="font-display text-3xl font-extrabold leading-[1.15] text-white drop-shadow-[0_2px_12px_rgba(4,24,47,0.5)] sm:text-5xl">
+        {eyebrow && <p className="eyebrow eyebrow-light mb-2.5">{eyebrow}</p>}
+        <h1 className="max-w-4xl font-display text-h1 font-extrabold text-white drop-shadow-[0_2px_12px_rgba(4,24,47,0.5)]">
           {title}
         </h1>
         {subtitle && (
           <p
-            className={`mt-3 max-w-2xl text-sm leading-relaxed text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-base ${
+            className={`mt-3.5 max-w-2xl text-lead text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] ${
               align === "center" ? "mx-auto" : ""
             }`}
           >
@@ -94,20 +95,24 @@ export default function PageHero({
           </p>
         )}
 
+        {/* The facts sit on their own dark plate rather than floating on the
+            photograph. Numbers this size need a baseline to read against —
+            over a busy picture they were doing the work of decoration. */}
         {facts && facts.length > 0 && (
           <div
-            className={`mt-6 flex flex-wrap gap-x-8 gap-y-4 ${
+            className={`mt-7 inline-flex flex-wrap items-center gap-x-7 gap-y-4 rounded-2xl bg-navy-990/45 px-5 py-3.5 ring-1 ring-white/10 backdrop-blur-md ${
               align === "center" ? "justify-center" : ""
             }`}
           >
-            {facts.map((f) => (
-              <div key={f.label}>
-                <p className="font-display text-2xl font-extrabold leading-none text-sun-400 sm:text-3xl">
-                  {f.value}
-                </p>
-                <p className="mt-1.5 text-[0.72rem] font-semibold uppercase tracking-wider text-white/55">
-                  {f.label}
-                </p>
+            {facts.map((f, i) => (
+              <div key={f.label} className="flex items-center gap-7">
+                {i > 0 && <span className="h-8 w-px bg-white/15" aria-hidden="true" />}
+                <div>
+                  <p className="font-display text-h2 font-extrabold leading-none text-sun-400">
+                    {f.value}
+                  </p>
+                  <p className="mt-1.5 text-2xs font-semibold text-white/60">{f.label}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -123,7 +128,7 @@ export default function PageHero({
           href={photoCredit.href}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute bottom-1.5 end-3 z-10 text-[0.6rem] text-white/45 transition hover:text-white/75"
+          className="absolute bottom-1.5 end-3 z-10 text-2xs text-white/45 transition hover:text-white/75"
         >
           {photoCredit.text}
         </a>

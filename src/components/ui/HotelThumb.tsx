@@ -47,7 +47,7 @@ export default function HotelThumb({
       <svg viewBox="0 0 24 24" className="h-6 w-6 opacity-70" fill="none" stroke="currentColor" strokeWidth="1.6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 20h18M5 20V6a1 1 0 011-1h7a1 1 0 011 1v14M14 20V10h4a1 1 0 011 1v9M8 8h3M8 11h3M8 14h3" />
       </svg>
-      {stars > 0 && <span className="text-[0.65rem] font-bold tracking-widest text-amber-600">{"★".repeat(Math.min(5, stars))}</span>}
+      {stars > 0 && <span className="text-2xs font-bold tracking-widest text-amber-600">{"★".repeat(Math.min(5, stars))}</span>}
     </span>
   );
 }

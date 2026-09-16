@@ -112,8 +112,22 @@ export function formatAllowedStay(raw: string, locale: Locale): string {
   const text = raw.trim();
   if (!text || locale !== "ar") return text;
 
-  const phrase = STAY_PHRASES_AR[text.toLowerCase()];
+  // "30 days / 60 days" — the source gives two options for countries whose
+  // allowance differs by entry type. Each side is a duration in its own
+  // right, so translate both and keep the separator.
+  if (text.includes("/")) {
+    const parts = text.split("/").map((part) => formatAllowedStay(part.trim(), locale));
+    return parts.join(" / ");
+  }
+
+  const lower = text.toLowerCase();
+  const phrase = STAY_PHRASES_AR[lower];
   if (phrase) return phrase;
+
+  // "Freedom of Movement" arrives with trailing qualifiers often enough that
+  // an exact match misses it.
+  const prefixed = Object.keys(STAY_PHRASES_AR).find((k) => lower.startsWith(k));
+  if (prefixed) return STAY_PHRASES_AR[prefixed];
 
   // "90 days within 180 day period" and friends: translate the leading
   // duration, keep the qualifier in a form we can state exactly.

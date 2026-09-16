@@ -7,7 +7,7 @@ import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
-import { cityCountLabel } from "@/lib/format";
+import { cityCountLabel, placeCountLabel } from "@/lib/format";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
@@ -103,7 +103,7 @@ export default async function CountryAttractionsPage({
       name: loc === "ar" ? c.nameAr : c.nameEn,
       photo: overview?.photo,
       subtitle: overview?.count
-        ? dict.attractions.placesCount.replace("{count}", String(overview.count))
+        ? placeCountLabel(overview.count, dict.attractions)
         : undefined,
     };
   });

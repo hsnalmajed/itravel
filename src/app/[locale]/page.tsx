@@ -198,7 +198,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             toolsSubtitle: dict.home.toolsSubtitle,
             toolCta: dict.home.toolCta,
             stepsTitle: dict.home.stepsTitle,
-            cityCount: dict.home.cityCount,
+            cityCountOne: dict.home.cityCountOne,
+            cityCountTwo: dict.home.cityCountTwo,
+            cityCountFew: dict.home.cityCountFew,
+            cityCountMany: dict.home.cityCountMany,
           }}
         />
       </section>

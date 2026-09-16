@@ -1,12 +1,10 @@
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { COUNTRIES, findCountry } from "@/lib/countries";
-import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
-import VisaExplorer, { type VisaRow } from "@/components/VisaExplorer";
 import VisaWarning from "@/components/VisaWarning";
-import VisaApplyGrid, { type ApplyCountry } from "@/components/VisaApplyGrid";
-import { applicableCountryCodes, directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
+import VisaDirectory, { type VisaCountry } from "@/components/VisaDirectory";
+import { applicableCountryCodes } from "@/lib/visaProviders";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -34,22 +32,6 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
     fetchCountryPhotos(applyCodes),
   ]);
 
-  const applyCountries: ApplyCountry[] = applyCodes
-    .map((code): ApplyCountry | null => {
-      const country = findCountry(code);
-      if (!country) return null;
-      return {
-        code,
-        name: loc === "ar" ? country.nameAr : country.nameEn,
-        photo: applyPhotos.get(code),
-        category: data?.byCountry.get(code)?.category ?? "unknown",
-        hasOfficial: Boolean(officialVisaUrl(code)),
-        hasDirect: Boolean(directVisaUrl(code, loc)),
-      };
-    })
-    .filter((c): c is ApplyCountry => c !== null)
-    .sort((a, b) => a.name.localeCompare(b.name, loc === "ar" ? "ar" : "en"));
-
   const labels: Record<VisaCategory, string> = {
     free: dict.visa.free,
     arrival: dict.visa.arrival,
@@ -68,9 +50,15 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
 
   // Saudi Arabia itself is dropped: "can a Saudi passport enter Saudi Arabia"
   // is not a question, and the source doesn't list it either.
-  const rows: VisaRow[] = data
+  //
+  // One list for the whole page. Every country the source publishes, each
+  // carrying the two things the page used to split across two sections: what
+  // it takes to get in, and whether there is somewhere to apply. See
+  // VisaDirectory for why that split was worth ending.
+  const applySet = new Set(applyCodes);
+  const directory: VisaCountry[] = data
     ? COUNTRIES.filter((c) => c.code !== "SA")
-        .map((country): VisaRow | null => {
+        .map((country): VisaCountry | null => {
           const entry = data.byCountry.get(country.code);
           if (!entry) return null;
           return {
@@ -81,17 +69,22 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
             category: entry.category,
             status: entry.status,
             stay: entry.stay,
-            hasGuide: Boolean(COUNTRY_GUIDES[country.code]),
+            // Photographs exist only for the countries we already look up for
+            // their application links — fetching one for all hundred and
+            // ninety-three would cost more outbound requests than a Worker
+            // gets. The rest fall back to their flag.
+            photo: applyPhotos.get(country.code),
+            canApply: applySet.has(country.code),
           };
         })
-        .filter((r): r is VisaRow => r !== null)
+        .filter((c): c is VisaCountry => c !== null)
     : [];
 
-  const countBy = (cat: VisaCategory) => rows.filter((r) => r.category === cat).length;
+  const countBy = (cat: VisaCategory) => directory.filter((r) => r.category === cat).length;
   // Only shown when the table actually loaded — a row of zeroes would read
   // as "nowhere is visa-free" rather than "we could not check".
   const heroFacts =
-    rows.length > 0
+    directory.length > 0
       ? [
           { value: String(countBy("free")), label: dict.visa.free },
           { value: String(countBy("eta")), label: dict.visa.eta },
@@ -127,50 +120,34 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
           />
         </div>
 
-        <section className="mb-12">
-          <SectionHeading title={dict.visa.applyHeading} subtitle={dict.visa.applySubtitle} />
-          <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-xs leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-            {dict.visa.applySectionNote}
-          </p>
+        <SectionHeading title={dict.visa.statusHeading} subtitle={dict.visa.applySubtitle} />
 
-          <VisaApplyGrid
-            locale={loc}
-            countries={applyCountries}
-            dict={{
-              searchPlaceholder: dict.visa.applySearchPlaceholder,
-              countriesCount: dict.visa.applyCountriesCount,
-              noResults: dict.visa.applyNoResults,
-              filterByType: dict.visa.filterByType,
-              allStatuses: dict.visa.allStatuses,
-              labels,
-            }}
-          />
-          <p className="mt-3 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
-        </section>
-
-        <SectionHeading title={dict.visa.statusHeading} />
-
-        {rows.length === 0 ? (
+        {directory.length === 0 ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-sm leading-relaxed text-amber-800">
             {dict.visa.unavailable}
           </p>
         ) : (
-          <VisaExplorer
-            locale={loc}
-            rows={rows}
-            dict={{
-              searchPlaceholder: dict.visa.searchPlaceholder,
-              allStatuses: dict.visa.allStatuses,
-              countriesCount: dict.visa.countriesCount,
-              noResults: dict.visa.noResults,
-              allowedStay: dict.visa.allowedStay,
-              summaryFree: dict.visa.summaryFree,
-              summaryEasy: dict.visa.summaryEasy,
-              labels,
-              hints,
-              continents: dict.attractions.continents,
-            }}
-          />
+          <>
+            <VisaDirectory
+              locale={loc}
+              countries={directory}
+              dict={{
+                searchPlaceholder: dict.visa.searchPlaceholder,
+                allStatuses: dict.visa.allStatuses,
+                filterByType: dict.visa.filterByType,
+                countriesCount: dict.visa.countriesCount,
+                noResults: dict.visa.noResults,
+                allowedStay: dict.visa.allowedStay,
+                canApply: dict.visa.canApply,
+                summaryFree: dict.visa.summaryFree,
+                summaryEasy: dict.visa.summaryEasy,
+                labels,
+                hints,
+                continents: dict.attractions.continents,
+              }}
+            />
+            <p className="mt-4 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
+          </>
         )}
       </div>
     </div>

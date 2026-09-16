@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import CountryGuideExplorer, { type GuideItem } from "@/components/CountryGuideExplorer";
 import PlanActions from "@/components/PlanActions";
+import PrintHeader from "@/components/PrintHeader";
 
 type CategoryKey = "attractions" | "activities" | "cuisine";
 
@@ -65,6 +66,15 @@ export default function CountryGuidePlanner({
     return fromSearch >= 1 && fromSearch <= 21 ? fromSearch : 3;
   });
   const [showPlan, setShowPlan] = useState(false);
+  // See CityPlacesPlanner: the plan appears below a long list, so every press
+  // of "build" has to take the traveller to it or the button looks dead.
+  const [builds, setBuilds] = useState(0);
+  const planRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (builds === 0) return;
+    planRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [builds]);
 
   const selectedKeys = useMemo(() => new Set(picked.map((p) => p.key)), [picked]);
 
@@ -111,7 +121,16 @@ export default function CountryGuidePlanner({
 
       {/* ---- The plan itself ---- */}
       {showPlan && picked.length > 0 && (
-        <div className="mt-8 space-y-4">
+        <div ref={planRef} className="mt-8 space-y-4 scroll-mt-24">
+          <PrintHeader
+            locale={locale}
+            title={d.picker.planTitle.replace("{country}", countryName)}
+            subtitle={`${d.itinerary.daysCount.replace("{count}", String(days))} · ${d.picker.itemsCount.replace(
+              "{count}",
+              String(picked.length)
+            )}`}
+          />
+
           <PlanActions
             locale={locale}
             countryCode={countryCode}
@@ -130,10 +149,11 @@ export default function CountryGuidePlanner({
           )}
 
           <div className="print-block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <h2 className="text-lg font-extrabold text-gray-900">
+            {/* Both of these are on the letterhead when printing. */}
+            <h2 className="print:hidden text-lg font-extrabold text-gray-900">
               {d.picker.planTitle.replace("{country}", countryName)}
             </h2>
-            <p className="mt-1 text-sm font-semibold text-gray-500">
+            <p className="print:hidden mt-1 text-sm font-semibold text-gray-500">
               {d.itinerary.daysCount.replace("{count}", String(days))} ·{" "}
               {d.picker.itemsCount.replace("{count}", String(picked.length))}
             </p>
@@ -175,7 +195,7 @@ export default function CountryGuidePlanner({
             </div>
           ))}
 
-          <p className="hidden text-xs text-gray-400 print:block">{d.plan.printedFrom}</p>
+          <p className="print-signoff hidden print:block">{d.plan.printedFrom}</p>
         </div>
       )}
 
@@ -213,7 +233,10 @@ export default function CountryGuidePlanner({
               </label>
               <button
                 type="button"
-                onClick={() => setShowPlan(true)}
+                onClick={() => {
+                  setShowPlan(true);
+                  setBuilds((n) => n + 1);
+                }}
                 className="rounded-xl bg-sun-400 px-4 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-sun-300"
               >
                 {d.picker.build}

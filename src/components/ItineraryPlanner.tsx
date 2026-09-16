@@ -9,6 +9,7 @@ import { findAirport } from "@/lib/airports";
 import { findCountry, findCountryByEnglishName } from "@/lib/countries";
 import PlanActions from "@/components/PlanActions";
 import PageHero from "@/components/ui/PageHero";
+import PrintHeader from "@/components/PrintHeader";
 import type { SectionHero } from "@/lib/heroPhotos";
 import { countLabel } from "@/lib/format";
 
@@ -293,6 +294,18 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
 
       {result && (
         <div className="mt-8 space-y-4">
+          <PrintHeader
+            locale={locale}
+            title={dict.itinerary.planTitleForCity.replace("{city}", city)}
+            subtitle={[
+              dict.itinerary.daysCount.replace("{count}", String(days)),
+              Number(budget) > 0 ? `${Number(budget).toLocaleString()} ${currency}` : "",
+              tripSummary,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+
           <PlanActions
             locale={locale}
             countryCode={resolved.country?.code}
@@ -311,10 +324,13 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
           {/* The printed document starts here. */}
           <div className="space-y-4">
             <div className="print-block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <h2 className="text-lg font-extrabold text-gray-900">
+              {/* On paper the letterhead above already says both of these,
+                  and a document that opens by repeating its own title twice
+                  reads as a mistake. */}
+              <h2 className="print:hidden text-lg font-extrabold text-gray-900">
                 {dict.itinerary.planTitleForCity.replace("{city}", city)}
               </h2>
-              <p className="mt-1 text-sm font-semibold text-gray-500">
+              <p className="print:hidden mt-1 text-sm font-semibold text-gray-500">
                 {dict.itinerary.daysCount.replace("{count}", String(days))}
                 {Number(budget) > 0 ? ` · ${Number(budget).toLocaleString()} ${currency}` : ""}
               </p>
@@ -371,7 +387,7 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
               </div>
             )}
 
-            <p className="hidden text-xs text-gray-400 print:block">{dict.plan.printedFrom}</p>
+            <p className="print-signoff hidden print:block">{dict.plan.printedFrom}</p>
           </div>
         </div>
       )}

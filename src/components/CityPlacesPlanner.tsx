@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import CityPlacesExplorer, { type PlaceListItem } from "@/components/CityPlacesExplorer";
 import PlanActions from "@/components/PlanActions";
+import PrintHeader from "@/components/PrintHeader";
 
 /**
  * More than this in one day and the day is travelling, not visiting.
@@ -55,6 +56,18 @@ export default function CityPlacesPlanner({
   const [picking, setPicking] = useState(false);
   const [picked, setPicked] = useState<PlaceListItem[]>([]);
   const [showPlan, setShowPlan] = useState(false);
+  // Counts presses of "build", not whether a plan exists. The plan is
+  // rendered under a list that can run to hundreds of cards, so building one
+  // while standing at the top of that list looked exactly like nothing
+  // happening. Every press scrolls to the result, including the second press
+  // after adding more places — which a boolean would have swallowed.
+  const [builds, setBuilds] = useState(0);
+  const planRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (builds === 0) return;
+    planRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [builds]);
 
   // Their own stay when they came from a search; a sane default when they
   // arrived here cold.
@@ -131,7 +144,16 @@ export default function CityPlacesPlanner({
 
       {/* ---- The plan ---- */}
       {showPlan && picked.length > 0 && (
-        <div className="mt-8 space-y-4">
+        <div ref={planRef} className="mt-8 space-y-4 scroll-mt-24">
+          <PrintHeader
+            locale={locale}
+            title={planTitle}
+            subtitle={`${d.itinerary.daysCount.replace("{count}", String(days))} · ${d.picker.itemsCount.replace(
+              "{count}",
+              String(picked.length)
+            )}`}
+          />
+
           <PlanActions
             locale={locale}
             countryCode={countryCode}
@@ -150,8 +172,9 @@ export default function CityPlacesPlanner({
           )}
 
           <div className="print-block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <h2 className="text-lg font-extrabold text-gray-900">{planTitle}</h2>
-            <p className="mt-1 text-sm font-semibold text-gray-500">
+            {/* Both of these are on the letterhead when printing. */}
+            <h2 className="print:hidden text-lg font-extrabold text-gray-900">{planTitle}</h2>
+            <p className="print:hidden mt-1 text-sm font-semibold text-gray-500">
               {d.itinerary.daysCount.replace("{count}", String(days))} ·{" "}
               {d.picker.itemsCount.replace("{count}", String(picked.length))}
             </p>
@@ -197,7 +220,7 @@ export default function CityPlacesPlanner({
             </div>
           ))}
 
-          <p className="hidden text-xs text-gray-400 print:block">{d.plan.printedFrom}</p>
+          <p className="print-signoff hidden print:block">{d.plan.printedFrom}</p>
         </div>
       )}
 
@@ -235,7 +258,10 @@ export default function CityPlacesPlanner({
               </label>
               <button
                 type="button"
-                onClick={() => setShowPlan(true)}
+                onClick={() => {
+                  setShowPlan(true);
+                  setBuilds((n) => n + 1);
+                }}
                 className="rounded-xl bg-sun-400 px-4 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-sun-300"
               >
                 {d.picker.cityBuild}

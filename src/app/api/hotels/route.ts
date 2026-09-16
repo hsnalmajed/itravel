@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchHotels } from "@/lib/flights";
+import { parseChildrenAges } from "@/lib/searchParamsUtil";
 import type { RoomType, SearchParams } from "@/lib/types";
 
 function nightsBetween(checkin: string, checkout: string) {
@@ -20,6 +21,11 @@ export async function GET(req: NextRequest) {
     departDate,
     returnDate,
     adults: Number(sp.get("adults") || 1),
+    // Children were being dropped here, which is why a family of four was
+    // offered a double. The room has to sleep everyone in the party, and this
+    // route is the only place that knows how many that is.
+    childrenAges: parseChildrenAges(sp.get("childrenAges")),
+    infants: Number(sp.get("infants") || 0),
     budgetTotal: Number(sp.get("budget") || 0),
     currency: sp.get("currency") || "SAR",
     directFlightsOnly: false,

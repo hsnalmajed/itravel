@@ -106,7 +106,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           screen saying nothing a visitor could act on, and the page behind it
           was already too long. It keeps the picture, the promise and the
           numbers, and hands over at about two thirds of the fold. */}
-      <section className="relative isolate flex min-h-[62svh] items-end overflow-hidden bg-navy-990 sm:min-h-[66svh]">
+      <section className="relative isolate flex min-h-[58svh] items-end overflow-hidden bg-navy-990 sm:min-h-[62svh]">
         <Photo
           src={heroPhoto}
           priority
@@ -121,7 +121,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         />
         <div className="scrim-soft absolute inset-0 -z-10" />
 
-        <div className="mx-auto w-full max-w-6xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 sm:pb-28">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
@@ -178,7 +178,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       {/* ── What the site is ────────────────────────────────────────────
           Four sections of the old page, now four tabs in one panel that
           straddles the seam below the photograph. See HomeShowcase. */}
-      <section className="relative z-10 -mt-12 pb-16 sm:-mt-14 sm:pb-20">
+      <section className="relative z-10 -mt-20 pb-14 sm:-mt-24 sm:pb-16">
         <HomeShowcase
           locale={loc}
           featured={featured}
@@ -208,7 +208,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           seen what the site holds is readier to type a budget into it than
           one who has seen nothing yet. The hero's button jumps straight here,
           so it is never more than a tap away. */}
-      <section id="plan" className="scroll-mt-20 border-t border-mist-200 bg-white">
+      <section id="plan" className="scroll-mt-20 bg-mist-50">
         <div className="mx-auto max-w-4xl px-4 pb-12 pt-14 sm:px-6 sm:pb-14 sm:pt-16">
           <div className="mb-6 text-center">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-sun-700">

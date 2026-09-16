@@ -76,6 +76,16 @@ export interface HotelOffer {
   breakfastIncluded: boolean;
   roomType: RoomType;
   /**
+   * How many of that room the party needs.
+   *
+   * Almost always one. A group larger than the biggest single unit cannot be
+   * sold one room, and the honest answer is two — not an empty result list,
+   * which is what a party of seven used to get, and not a six-person
+   * apartment quietly offered to seven people. When this is above one the
+   * price already covers all of them.
+   */
+  units?: number;
+  /**
    * A photo of the property, when the booking provider supplies one. Absent
    * for demo data — the interface shows a designed tile rather than a stock
    * picture, since a generic image beside a hotel name reads as a photo of

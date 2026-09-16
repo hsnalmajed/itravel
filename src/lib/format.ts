@@ -79,3 +79,56 @@ export function placeCountLabel(
     few: dict.placeFew,
   });
 }
+
+/**
+ * "30 days" → "30 يوماً".
+ *
+ * The visa table is scraped from Wikipedia, so the allowed-stay column
+ * arrives in English — and it was being printed straight into the Arabic
+ * page, eighty-six times over. Translating it is not a lookup: Arabic counts
+ * nouns in four shapes, so "1 day", "2 days", "5 days" and "30 days" are four
+ * different words.
+ *
+ * Anything this does not recognise is returned untouched. A visa rule is
+ * exactly the kind of text where a confident wrong translation is far worse
+ * than an honest English string — so the parser only claims the handful of
+ * forms the source actually uses, and hands back the rest.
+ */
+const STAY_UNITS_AR = {
+  day: { one: "يوم واحد", two: "يومان", few: "{count} أيام", many: "{count} يوماً" },
+  week: { one: "أسبوع واحد", two: "أسبوعان", few: "{count} أسابيع", many: "{count} أسبوعاً" },
+  month: { one: "شهر واحد", two: "شهران", few: "{count} أشهر", many: "{count} شهراً" },
+  year: { one: "سنة واحدة", two: "سنتان", few: "{count} سنوات", many: "{count} سنة" },
+} as const;
+
+/** Whole phrases the source uses in place of a duration. */
+const STAY_PHRASES_AR: Record<string, string> = {
+  "freedom of movement": "حرية تنقل",
+  unlimited: "غير محدودة",
+  "visa not required": "بدون تأشيرة",
+};
+
+export function formatAllowedStay(raw: string, locale: Locale): string {
+  const text = raw.trim();
+  if (!text || locale !== "ar") return text;
+
+  const phrase = STAY_PHRASES_AR[text.toLowerCase()];
+  if (phrase) return phrase;
+
+  // "90 days within 180 day period" and friends: translate the leading
+  // duration, keep the qualifier in a form we can state exactly.
+  const windowed = text.match(/^(\d+)\s*days?\s*(?:with)?in\s*(?:any\s*)?(\d+)[-\s]*days?\s*period$/i);
+  if (windowed) {
+    const stay = countLabel(Number(windowed[1]), STAY_UNITS_AR.day);
+    const window = countLabel(Number(windowed[2]), STAY_UNITS_AR.day);
+    return `${stay} خلال ${window}`;
+  }
+
+  const simple = text.match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i);
+  if (simple) {
+    const unit = simple[2].toLowerCase().replace(/s$/, "") as keyof typeof STAY_UNITS_AR;
+    return countLabel(Number(simple[1]), STAY_UNITS_AR[unit]);
+  }
+
+  return text;
+}

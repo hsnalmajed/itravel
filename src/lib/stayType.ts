@@ -47,6 +47,37 @@ export function roomFitsParty(guests: number): boolean {
 }
 
 /**
+ * How many people each concrete room type sleeps.
+ *
+ * The inverse of resolveRoomType, and the thing that was missing: the form
+ * knew a party of five needs an apartment, but nothing downstream ever
+ * checked that the room in an offer could hold the people in the search. A
+ * traveller searching for two adults was shown "single · one bed".
+ *
+ * These are deliberately the conservative numbers a hotel would honour, not
+ * the most a bed could physically take.
+ */
+export function roomCapacity(roomType: string | null | undefined): number {
+  switch (roomType) {
+    case "single":
+      return 1;
+    case "twin":
+    case "double":
+      return 2;
+    case "triple":
+      return 3;
+    case "suite":
+      return 4;
+    case "apartment":
+      return 6;
+    default:
+      // No stated room type constrains nothing — an unknown room is not a
+      // reason to hide an offer.
+      return Number.POSITIVE_INFINITY;
+  }
+}
+
+/**
  * The concrete room type to search for.
  *
  * "" means the traveller expressed no preference and the search should not

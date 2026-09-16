@@ -126,26 +126,45 @@ export default function CityPlacesPlanner({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setPicking((on) => !on);
-              // Leaving selection mode puts the page back as it was rather
-              // than leaving a basket hanging over a list with no buttons.
-              if (picking) {
-                setPicked([]);
-                setShowPlan(false);
-              }
-            }}
-            aria-pressed={picking}
-            className={`shrink-0 rounded-xl px-5 py-3 text-sm font-bold shadow-sm transition ${
-              picking
-                ? "bg-white/15 text-white ring-1 ring-white/25 hover:bg-white/25"
-                : "bg-sun-400 text-navy-950 hover:bg-sun-300"
-            }`}
-          >
-            {picking ? d.picker.cityStop : d.picker.cityStart}
-          </button>
+          <div className="flex shrink-0 flex-wrap items-end gap-3">
+            {/* The trip length, asked for the moment picking starts rather
+                than hidden in the bar at the bottom of the screen — it is
+                half of what the plan is built from. */}
+            {picking && (
+              <label className="text-xs font-semibold text-white/70">
+                <span className="mb-1.5 block">{d.picker.cityDaysLabel}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={21}
+                  value={days}
+                  onChange={(e) => setDays(Math.min(21, Math.max(1, Number(e.target.value) || 1)))}
+                  className="w-20 rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-center text-sm font-bold text-white outline-none focus:border-sun-400"
+                />
+              </label>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setPicking((on) => !on);
+                // Leaving selection mode puts the page back as it was rather
+                // than leaving a basket hanging over a list with no buttons.
+                if (picking) {
+                  setPicked([]);
+                  setShowPlan(false);
+                }
+              }}
+              aria-pressed={picking}
+              className={`rounded-xl px-5 py-3 text-sm font-bold shadow-sm transition ${
+                picking
+                  ? "bg-white/15 text-white ring-1 ring-white/25 hover:bg-white/25"
+                  : "bg-sun-400 text-navy-950 hover:bg-sun-300"
+              }`}
+            >
+              {picking ? d.picker.cityStop : d.picker.cityStart}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -14,6 +14,15 @@ export interface PlaceListItem {
   wikiUrl: string;
   /** Name and description are English because no article exists in Arabic. */
   englishOnly: boolean;
+  /**
+   * How you get in — free, official site, tour operator, on arrival.
+   *
+   * Only on the landmarks the guide covers by hand. Wikipedia knows what a
+   * place is; it does not know whether you need to book it, and that is the
+   * line a traveller planning a day actually needs. Present on a handful of
+   * places per city, absent on the rest, and never invented.
+   */
+  bookingLabel?: string;
 }
 
 interface ExplorerDict {
@@ -179,6 +188,13 @@ export default function CityPlacesExplorer({
                       dir={p.englishOnly ? "ltr" : undefined}
                     >
                       {p.description}
+                    </p>
+                  )}
+
+                  {p.bookingLabel && (
+                    <p className="mt-2.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-sun-50 px-2.5 py-1 text-[11px] font-bold text-sun-800 ring-1 ring-sun-200">
+                      <span aria-hidden="true">🎟️</span>
+                      {p.bookingLabel}
                     </p>
                   )}
 

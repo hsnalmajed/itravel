@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import type { Locale } from "@/lib/types";
-import { COUNTRIES, flagEmoji, type Continent, type Country } from "@/lib/countries";
+import type { Continent } from "@/lib/countries";
 import DestinationFilters, {
   CONTINENT_ORDER,
   type CityOption,
@@ -15,26 +14,31 @@ import CountryCardGrid, {
   type DestinationCountry,
 } from "@/components/CountryCardGrid";
 import PageHero from "@/components/ui/PageHero";
-import SectionHeading from "@/components/ui/SectionHeading";
 import type { SectionHero } from "@/lib/heroPhotos";
-import { searchMatches, searchEquals } from "@/lib/search";
 
 interface ExplorerDict {
   title: string;
   subtitle: string;
-  featuredTitle: string;
-  featuredSubtitle: string;
-  moreDestinations: string;
   noResults: string;
   statCountries: string;
   statCities: string;
   continents: Record<Continent, string>;
 }
 
-// Two tiers, both grouped by continent: the countries with a full guide get
-// photo cards, and every other country stays reachable as a plain entry in
-// the directory below. The filters above narrow both at once, so a search for
-// "Peru" finds it whether or not it has a guide yet.
+/**
+ * One list, by continent.
+ *
+ * This page used to be two: a row of "featured destinations" with photographs,
+ * and a long directory of every other country underneath as bare name chips.
+ * That split promised something it couldn't keep — the chips led to pages with
+ * nothing on them, because a country is only worth opening here if we have
+ * cities and documented places for it. So there is now one list, every entry
+ * in it goes somewhere real, and the continent is a heading rather than a
+ * second tier.
+ *
+ * The countries arrive already filtered to the ones that have cities; this
+ * component's job is only to group and narrow them.
+ */
 export default function AttractionsExplorer({
   locale,
   featured,
@@ -44,6 +48,7 @@ export default function AttractionsExplorer({
   hero,
 }: {
   locale: Locale;
+  /** Countries with at least one city to open. */
   featured: DestinationCountry[];
   cities: CityOption[];
   filtersDict: FiltersDict;
@@ -56,39 +61,17 @@ export default function AttractionsExplorer({
     month: "all",
   });
 
-  const featuredCodes = useMemo(() => new Set(featured.map((f) => f.code)), [featured]);
-  const restCountries = useMemo(
-    () => COUNTRIES.filter((c) => !featuredCodes.has(c.code)),
-    [featuredCodes]
-  );
-
-  const filteredFeatured = useMemo(
+  const filtered = useMemo(
     () => featured.filter((c) => matchesFilters(c, filters)),
     [featured, filters]
   );
 
-  const filteredRest = useMemo(() => {
-    // A month filter can only speak for countries that have a guide, and the
-    // directory below is precisely the countries that don't. Rather than show
-    // them all as though they were recommended for the chosen month, the
-    // directory steps aside while a month is selected.
-    if (filters.month !== "all") return [];
-    const q = filters.query.trim();
-    return restCountries.filter((c) => {
-      if (filters.continent !== "all" && c.continent !== filters.continent) return false;
-      if (!q) return true;
-      return searchMatches([c.nameAr, c.nameEn], q) || searchEquals(c.code, q);
-    });
-  }, [restCountries, filters]);
-
-  const groupedRest = useMemo(() => {
-    const map = new Map<Continent, Country[]>();
+  const byContinent = useMemo(() => {
+    const map = new Map<Continent, DestinationCountry[]>();
     for (const continent of CONTINENT_ORDER) map.set(continent, []);
-    for (const country of filteredRest) map.get(country.continent)?.push(country);
+    for (const country of filtered) map.get(country.continent)?.push(country);
     return map;
-  }, [filteredRest]);
-
-  const nothingFound = filteredFeatured.length === 0 && filteredRest.length === 0;
+  }, [filtered]);
 
   return (
     <div>
@@ -110,60 +93,38 @@ export default function AttractionsExplorer({
           cities={cities}
           cityHrefBase={`/${locale}/attractions`}
           dict={filtersDict}
-          resultCount={filteredFeatured.length + filteredRest.length}
+          resultCount={filtered.length}
           resultLabel={filtersDict.countriesCount}
         />
 
-        {filteredFeatured.length > 0 && (
-          <section className="mt-10">
-            <SectionHeading title={dict.featuredTitle} subtitle={dict.featuredSubtitle} />
-            <CountryCardGrid
-              locale={locale}
-              countries={filteredFeatured}
-              hrefBase={`/${locale}/attractions`}
-              continentLabels={dict.continents}
-            />
-          </section>
-        )}
-
-        {filteredRest.length > 0 && (
-          <section className="mt-12">
-            <SectionHeading title={dict.moreDestinations} />
-            <div className="space-y-8">
-              {CONTINENT_ORDER.map((continent) => {
-                const countries = groupedRest.get(continent) ?? [];
-                if (countries.length === 0) return null;
-                return (
-                  <div key={continent}>
-                    <h3 className="mb-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-navy-400">
-                      {dict.continents[continent]}{" "}
-                      <span className="text-navy-300">({countries.length})</span>
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                      {countries.map((country) => (
-                        <Link
-                          key={country.code}
-                          href={`/${locale}/attractions/${country.code}`}
-                          className="flex items-center gap-2.5 rounded-xl bg-white px-3.5 py-3 shadow-[var(--shadow-card)] ring-1 ring-navy-950/5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] hover:ring-sun-300"
-                        >
-                          <span className="text-xl leading-none">{flagEmoji(country.code)}</span>
-                          <span className="text-sm font-semibold text-navy-800">
-                            {locale === "ar" ? country.nameAr : country.nameEn}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {nothingFound && (
+        {filtered.length === 0 ? (
           <p className="mt-8 rounded-2xl bg-mist-100 px-4 py-12 text-center text-sm text-navy-500 ring-1 ring-mist-200">
             {dict.noResults}
           </p>
+        ) : (
+          <div className="mt-10 space-y-12">
+            {CONTINENT_ORDER.map((continent) => {
+              const countries = byContinent.get(continent) ?? [];
+              if (countries.length === 0) return null;
+              return (
+                <section key={continent}>
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-brand-900">
+                    <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+                    {dict.continents[continent]}
+                    <span className="text-sm font-semibold text-navy-400">
+                      ({countries.length})
+                    </span>
+                  </h2>
+                  <CountryCardGrid
+                    locale={locale}
+                    countries={countries}
+                    hrefBase={`/${locale}/attractions`}
+                    continentLabels={dict.continents}
+                  />
+                </section>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

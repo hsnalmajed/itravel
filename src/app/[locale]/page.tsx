@@ -167,7 +167,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           Lifted so it straddles the seam between photograph and page: the
           card is the first thing that isn't scenery, which is exactly the
           emphasis the site's one differentiating feature deserves. */}
-      <section id="plan" className="relative z-10 -mt-16 px-4 pb-16 sm:-mt-20 sm:px-6 sm:pb-20">
+      <section id="plan" className="relative z-10 -mt-16 px-4 sm:-mt-20 sm:px-6">
         <div className="mx-auto max-w-4xl">
           <div className="rounded-[1.75rem] bg-white/95 p-5 shadow-[var(--shadow-lift)] ring-1 ring-navy-950/5 backdrop-blur-xl sm:p-7">
             <div className="mb-5 text-center">
@@ -182,11 +182,89 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
               <SearchModeSwitcher locale={loc} />
             </Suspense>
           </div>
+
+          {/* ── How it works ──────────────────────────────────────────
+              Three steps, directly under the form they describe. This used
+              to be the last thing on the page: a visitor had to scroll past
+              every destination on the site before finding out what the site
+              actually does with the box at the top. As a caption to that box
+              it explains itself at the moment the question is asked, and it
+              costs a strip rather than a screen. */}
+          <p className="mt-9 text-center font-display text-sm font-extrabold text-navy-500">
+            {dict.home.stepsTitle}
+          </p>
+
+          <ol className="mx-auto mt-5 grid max-w-3xl grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
+            {[
+              { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
+              { n: "2", title: dict.home.step2Title, body: dict.home.step2Body },
+              { n: "3", title: dict.home.step3Title, body: dict.home.step3Body },
+            ].map((s) => (
+              <li key={s.n} className="flex gap-3 sm:flex-col sm:gap-2.5 sm:text-center">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-black text-sun-400 sm:mx-auto">
+                  {s.n}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-display text-[0.95rem] font-extrabold text-navy-900">
+                    {s.title}
+                  </h3>
+                  <p className="mt-1 text-[0.82rem] leading-relaxed text-navy-600">{s.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
+      {/* ── In season now ───────────────────────────────────────────────
+          A calendar answer to "when", placed where a traveller is already
+          thinking about where. It is also the only part of the homepage
+          that changes by itself, month to month — so it leads the browsing,
+          ahead of the evergreen favourites below it. */}
+      {inSeason.length > 0 && (
+        <section className="mt-16 bg-navy-990 sm:mt-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <SectionHeading
+              tone="light"
+              eyebrow={dict.home.seasonEyebrow}
+              title={dict.home.seasonTitle.replace("{month}", monthName(month, loc))}
+              subtitle={dict.home.seasonSubtitle}
+              action={
+                <Link
+                  href={`/${loc}/seasons`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-sun-400 px-4 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-sun-300"
+                >
+                  {dict.home.seasonCta}
+                  <span aria-hidden="true">{isAr ? "←" : "→"}</span>
+                </Link>
+              }
+            />
+
+            <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-6">
+              {inSeason.map((d) => (
+                <Link
+                  key={d.code}
+                  href={`/${loc}/attractions/${d.code}`}
+                  className="group relative isolate block aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:-translate-y-1 sm:w-auto"
+                >
+                  <Photo
+                    src={d.photo}
+                    className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    fallback={<div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-700 to-navy-990" />}
+                  />
+                  <div className="scrim-soft absolute inset-0 -z-10" />
+                  <p className="absolute inset-x-0 bottom-0 truncate p-3 font-display text-sm font-bold text-white">
+                    {d.name}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Featured destinations ───────────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <SectionHeading
           eyebrow={dict.home.featuredEyebrow}
           title={dict.home.featuredTitle}
@@ -238,120 +316,47 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         </div>
       </section>
 
-      {/* ── In season now ───────────────────────────────────────────────
-          A calendar answer to "when", placed where a traveller is already
-          thinking about where. It is also the only part of the homepage
-          that changes by itself, month to month. */}
-      {inSeason.length > 0 && (
-        <section className="bg-navy-990">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-            <SectionHeading
-              tone="light"
-              eyebrow={dict.home.seasonEyebrow}
-              title={dict.home.seasonTitle.replace("{month}", monthName(month, loc))}
-              subtitle={dict.home.seasonSubtitle}
-              action={
-                <Link
-                  href={`/${loc}/seasons`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-sun-400 px-4 py-2.5 text-sm font-bold text-navy-950 transition hover:bg-sun-300"
-                >
-                  {dict.home.seasonCta}
-                  <span aria-hidden="true">{isAr ? "←" : "→"}</span>
-                </Link>
-              }
-            />
-
-            <div className="rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-6">
-              {inSeason.map((d) => (
-                <Link
-                  key={d.code}
-                  href={`/${loc}/attractions/${d.code}`}
-                  className="group relative isolate block aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10 transition hover:-translate-y-1 sm:w-auto"
-                >
-                  <Photo
-                    src={d.photo}
-                    className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    fallback={<div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-700 to-navy-990" />}
-                  />
-                  <div className="scrim-soft absolute inset-0 -z-10" />
-                  <p className="absolute inset-x-0 bottom-0 truncate p-3 font-display text-sm font-bold text-white">
-                    {d.name}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── Traveller tools ─────────────────────────────────────────────
           The site's real depth — maps, visas, rates — was previously
           reachable only from the nav bar, so most visitors never learned it
           existed. */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeading
-          align="center"
-          eyebrow={dict.home.toolsEyebrow}
-          title={dict.home.toolsTitle}
-          subtitle={dict.home.toolsSubtitle}
-        />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {tools.map((t) => (
-            <Link
-              key={t.href}
-              href={t.href}
-              className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-[var(--shadow-card)] ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
-            >
-              <span
-                className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-400 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
-                aria-hidden="true"
-              />
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sun-50 text-2xl ring-1 ring-sun-200">
-                {t.icon}
-              </span>
-              <h3 className="mt-4 font-display text-lg font-extrabold text-navy-900">{t.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-navy-600">{t.body}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-sun-700">
-                {dict.home.toolCta}
-                <span
-                  className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
-                  aria-hidden="true"
-                >
-                  {isAr ? "←" : "→"}
-                </span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── How it works ──────────────────────────────────────────────── */}
       <section className="border-t border-mist-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <SectionHeading
             align="center"
-            eyebrow={dict.home.stepsEyebrow}
-            title={dict.home.stepsTitle}
+            eyebrow={dict.home.toolsEyebrow}
+            title={dict.home.toolsTitle}
+            subtitle={dict.home.toolsSubtitle}
           />
 
-          <div className="relative grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
-            <div
-              className="absolute inset-x-[16%] top-7 hidden h-px bg-gradient-to-r from-transparent via-sun-300 to-transparent sm:block"
-              aria-hidden="true"
-            />
-            {[
-              { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
-              { n: "2", title: dict.home.step2Title, body: dict.home.step2Body },
-              { n: "3", title: dict.home.step3Title, body: dict.home.step3Body },
-            ].map((s) => (
-              <div key={s.n} className="relative text-center">
-                <span className="relative z-10 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-900 font-display text-xl font-black text-sun-400 ring-4 ring-white">
-                  {s.n}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {tools.map((t) => (
+              <Link
+                key={t.href}
+                href={t.href}
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-mist-50 p-6 ring-1 ring-navy-950/5 transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[var(--shadow-lift)]"
+              >
+                <span
+                  className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-gradient-to-r from-sun-400 to-sun-600 transition-transform duration-300 group-hover:scale-x-100 rtl:origin-right"
+                  aria-hidden="true"
+                />
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sun-50 text-2xl ring-1 ring-sun-200">
+                  {t.icon}
                 </span>
-                <h3 className="mt-4 font-display text-lg font-extrabold text-navy-900">{s.title}</h3>
-                <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-navy-600">{s.body}</p>
-              </div>
+                <h3 className="mt-4 font-display text-lg font-extrabold text-navy-900">{t.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-navy-600">{t.body}</p>
+                {/* Pushed to the bottom edge so the four links sit on one
+                    line however long the descriptions above them run. */}
+                <span className="mt-auto pt-4 inline-flex items-center gap-1 text-sm font-bold text-sun-700">
+                  {dict.home.toolCta}
+                  <span
+                    className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+                    aria-hidden="true"
+                  >
+                    {isAr ? "←" : "→"}
+                  </span>
+                </span>
+              </Link>
             ))}
           </div>
         </div>

@@ -83,14 +83,19 @@ export default function SeasonsExplorer({
   dict: SeasonsDict;
 }) {
   /**
-   * The page opens on this month, not on a question.
+   * The page opens on the question, not on an answer to it.
    *
-   * It used to render a two-card "how would you like to browse?" chooser and
-   * nothing else, so the most common question — "where should I go *now*" —
-   * cost a click to ask. Opening on the month-by-month view answers it
-   * immediately; the by-country view is still one tap away.
+   * For a while it opened straight into the month-by-month view, on the
+   * argument that "where should I go now" is the common case and shouldn't
+   * cost a click. That reasoning was wrong about what this page is. The two
+   * views answer genuinely different questions — "which countries suit
+   * September" and "which months suit Japan" — and dropping someone into one
+   * of them hides the other behind a control they have no reason to look
+   * for, especially when the view they landed in isn't the one they came
+   * for. The chooser is the page's table of contents; both routes are named
+   * and one tap away.
    */
-  const [mode, setMode] = useState<Mode>("month");
+  const [mode, setMode] = useState<Mode>(null);
   const [filters, setFilters] = useState<FilterState>({
     query: "",
     continent: "all",

@@ -115,7 +115,7 @@ function MultiCityResultsContent() {
           </p>
         </div>
         <Link
-          href={`/${locale}?${editSearchParams}`}
+          href={`/${locale}?${editSearchParams}#plan`}
           className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand-800 shadow-sm ring-1 ring-brand-100 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
         >
           <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>

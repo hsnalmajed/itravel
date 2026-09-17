@@ -11,6 +11,17 @@ export interface PlaceListItem {
   description?: string;
   photo?: string;
   category: PinCategory;
+  /**
+   * Where the place is.
+   *
+   * Carried purely so the day planner can put places that are near each
+   * other on the same day — a plan that sends someone across the city and
+   * back is a worse plan than one that doesn't, and the coordinates were
+   * already fetched. Optional because the hand-curated landmarks are matched
+   * to a city by name rather than discovered by position.
+   */
+  lat?: number;
+  lon?: number;
   wikiUrl: string;
   /** Name and description are English because no article exists in Arabic. */
   englishOnly: boolean;
@@ -44,6 +55,17 @@ interface ExplorerDict {
 const PAGE = 24;
 
 const TAB_ORDER: PinCategory[] = ["historic", "activity", "food", "place"];
+
+/** How well known a place probably is, from how well documented it is. */
+function score(p: PlaceListItem): number {
+  let n = 0;
+  if (p.key.startsWith("guide-")) n += 10; // hand-picked by us
+  if (p.bookingLabel) n += 4; // we know how you get in
+  if (p.photo) n += 3;
+  if (p.description) n += 2;
+  if (!p.englishOnly) n += 1; // has an article in the reader's language
+  return n;
+}
 
 // The three sections the site has always had — sights, things to do, places
 // to eat — plus the honest fourth: documented places that Wikipedia's own
@@ -95,7 +117,18 @@ export default function CityPlacesExplorer({
     const q = query.trim();
     return places
       .filter((p) => p.category === active)
-      .filter((p) => searchMatches([p.name, p.description], q));
+      .filter((p) => searchMatches([p.name, p.description], q))
+      // Best-documented first.
+      //
+      // The source order is whatever Wikipedia's geosearch returned, which is
+      // by distance from the city centre — so an unremarkable side street can
+      // open the list while the thing everyone comes to see is forty cards
+      // down. We have no popularity data and will not invent a ranking, but
+      // how well documented a place is turns out to be a decent proxy for how
+      // known it is: a photograph and a written description mean somebody
+      // cared enough to add them. Curated landmarks, which we wrote
+      // ourselves, come first of all.
+      .sort((a, b) => score(b) - score(a));
   }, [places, active, query]);
 
   function pick(tab: PinCategory) {

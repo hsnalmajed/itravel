@@ -16,6 +16,98 @@ import PrintHeader from "@/components/PrintHeader";
  */
 const COMFORTABLE_ITEMS_PER_DAY = 4;
 
+function hasCoords(p: PlaceListItem): boolean {
+  return typeof p.lat === "number" && typeof p.lon === "number";
+}
+
+/** Straight-line kilometres between two places. */
+function distanceKm(a: PlaceListItem, b: PlaceListItem): number {
+  const R = 6371;
+  const dLat = (((b.lat as number) - (a.lat as number)) * Math.PI) / 180;
+  const dLon = (((b.lon as number) - (a.lon as number)) * Math.PI) / 180;
+  const la1 = ((a.lat as number) * Math.PI) / 180;
+  const la2 = ((b.lat as number) * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+/** The furthest apart any two places in a day are. */
+function spreadKm(day: PlaceListItem[]): number {
+  const withCoords = day.filter(hasCoords);
+  let max = 0;
+  for (let i = 0; i < withCoords.length; i++) {
+    for (let j = i + 1; j < withCoords.length; j++) {
+      max = Math.max(max, distanceKm(withCoords[i], withCoords[j]));
+    }
+  }
+  return max;
+}
+
+/**
+ * Days made of places that are near each other.
+ *
+ * The old spread was round-robin in pick order, which put Hagia Sophia on
+ * day one and Topkapı Palace on day two — two buildings you can see from
+ * each other's steps. A day spent crossing a city and coming back is a worse
+ * day than one spent in a neighbourhood, and the coordinates to know the
+ * difference were already being fetched.
+ *
+ * The method is deliberately simple: walk from the place furthest from the
+ * middle and repeatedly take the nearest unassigned place, filling one day
+ * before starting the next. That produces geographic runs without pretending
+ * to be a routing engine — we still have no opening hours and no travel
+ * times, so "a sensible starting point" remains the honest claim.
+ *
+ * Places without coordinates (the hand-curated landmarks) are dealt out
+ * afterwards to the lightest days, so they are never dropped.
+ */
+function groupByProximity(picked: PlaceListItem[], days: number): PlaceListItem[][] {
+  const buckets: PlaceListItem[][] = Array.from({ length: days }, () => []);
+  if (picked.length === 0 || days < 1) return buckets;
+
+  const located = picked.filter(hasCoords);
+  const unlocated = picked.filter((p) => !hasCoords(p));
+
+  if (located.length === 0) {
+    picked.forEach((item, i) => buckets[i % days].push(item));
+    return buckets;
+  }
+
+  const perDay = Math.ceil(located.length / days);
+  const remaining = [...located];
+
+  // Start from the place furthest from the centre of gravity, so the first
+  // day is an edge of the city rather than its middle — otherwise the last
+  // day inherits whatever is left over on both sides.
+  const midLat = located.reduce((n, p) => n + (p.lat as number), 0) / located.length;
+  const midLon = located.reduce((n, p) => n + (p.lon as number), 0) / located.length;
+  const centre = { lat: midLat, lon: midLon } as PlaceListItem;
+
+  let cursor =
+    remaining.sort((a, b) => distanceKm(centre, b) - distanceKm(centre, a))[0] ?? remaining[0];
+
+  for (let day = 0; day < days && remaining.length > 0; day++) {
+    for (let n = 0; n < perDay && remaining.length > 0; n++) {
+      const idx = remaining.reduce(
+        (best, p, i) => (distanceKm(cursor, p) < distanceKm(cursor, remaining[best]) ? i : best),
+        0
+      );
+      const [next] = remaining.splice(idx, 1);
+      buckets[day].push(next);
+      cursor = next;
+    }
+  }
+  // Anything left over (rounding) joins the lightest day.
+  for (const leftover of remaining) {
+    buckets.reduce((a, b) => (a.length <= b.length ? a : b)).push(leftover);
+  }
+  for (const p of unlocated) {
+    buckets.reduce((a, b) => (a.length <= b.length ? a : b)).push(p);
+  }
+  return buckets;
+}
+
 /**
  * Turning a city's list of places into that traveller's own days.
  *
@@ -102,14 +194,41 @@ export default function CityPlacesPlanner({
     );
   }
 
-  const schedule = useMemo(() => {
-    const buckets: PlaceListItem[][] = Array.from({ length: days }, () => []);
-    picked.forEach((item, i) => buckets[i % days].push(item));
-    return buckets;
-  }, [picked, days]);
+  const schedule = useMemo(() => groupByProximity(picked, days), [picked, days]);
 
   const busiestDay = schedule.reduce((max, day) => Math.max(max, day.length), 0);
   const overloaded = busiestDay > COMFORTABLE_ITEMS_PER_DAY;
+
+  /**
+   * Days with nothing in them, and something to do about it.
+   *
+   * Picking two places for a three-day trip used to produce a day three that
+   * was simply blank, with no acknowledgement — which reads as the planner
+   * having failed rather than the traveller having picked two things. Naming
+   * the empty day and offering the nearest unpicked places turns a silence
+   * into the obvious next step.
+   */
+  const emptyDays = schedule
+    .map((day, i) => (day.length === 0 ? i + 1 : 0))
+    .filter((n) => n > 0);
+
+  const suggestions = useMemo(() => {
+    if (picked.length === 0 || emptyDays.length === 0) return [];
+    const chosen = new Set(picked.map((p) => p.key));
+    const anchors = picked.filter(hasCoords);
+    const rest = places.filter((p) => !chosen.has(p.key) && hasCoords(p));
+    if (anchors.length === 0) return rest.slice(0, 3);
+    // Nearest to anything already chosen, so a suggestion is somewhere they
+    // were going to be anyway.
+    return [...rest]
+      .map((p) => ({
+        place: p,
+        d: Math.min(...anchors.map((a) => distanceKm(a, p))),
+      }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3)
+      .map((x) => x.place);
+  }, [picked, places, emptyDays.length]);
 
   const planTitle = d.picker.cityPlanTitle.replace("{city}", cityName);
   const planLines = picked.map((p) => p.name);
@@ -234,7 +353,29 @@ export default function CityPlacesPlanner({
               </h3>
 
               {items.length === 0 ? (
-                <p className="text-sm text-gray-400">{d.picker.freeDay}</p>
+                <div>
+                  <p className="text-sm font-semibold text-navy-500">
+                    {d.picker.emptyDayTitle.replace("{day}", String(index + 1))}
+                  </p>
+                  {suggestions.length > 0 && (
+                    <div className="print:hidden mt-2">
+                      <p className="text-xs text-navy-500">{d.picker.emptyDayBody}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {suggestions.map((sug) => (
+                          <button
+                            key={sug.key}
+                            type="button"
+                            onClick={() => toggle(sug)}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-mist-100 px-3 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-mist-200 transition hover:bg-sun-100 hover:ring-sun-300"
+                          >
+                            <span aria-hidden="true">＋</span>
+                            <span dir={sug.englishOnly ? "ltr" : undefined}>{sug.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <ul className="space-y-1.5 text-sm text-gray-700">
                   {items.map((item) => (
@@ -251,6 +392,15 @@ export default function CityPlacesPlanner({
                     </li>
                   ))}
                 </ul>
+              )}
+
+              {/* Only when there is a real distance to report: "0 km" under a
+                  single place is noise, and a day in one neighbourhood does
+                  not need a number to say so. */}
+              {items.length > 1 && spreadKm(items) >= 1 && (
+                <p className="mt-2.5 text-2xs font-semibold text-navy-400">
+                  {d.picker.daySpread.replace("{km}", spreadKm(items).toFixed(1))}
+                </p>
               )}
             </div>
           ))}

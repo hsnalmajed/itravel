@@ -28,12 +28,25 @@ export default function Footer({ locale }: { locale: Locale }) {
     { href: `/${locale}/visa`, label: dict.nav.visa },
     { href: `/${locale}/currency`, label: dict.nav.currency },
   ];
+  /**
+   * The pages that say who is behind this.
+   *
+   * A travel site asking someone to trust a price, with no "about", no way
+   * to write to it and no terms, reads as a site that might not be there
+   * next week. These are cheap to provide and expensive to be missing.
+   */
+  const legal = [
+    { href: `/${locale}/about`, label: dict.legal.aboutTitle },
+    { href: `/${locale}/contact`, label: dict.legal.contactTitle },
+    { href: `/${locale}/privacy`, label: dict.legal.privacyTitle },
+    { href: `/${locale}/terms`, label: dict.legal.termsTitle },
+  ];
 
   return (
     <footer className="mt-20 bg-navy-990">
       <div className="h-px bg-gradient-to-r from-transparent via-sun-400/60 to-transparent" />
       <div className="mx-auto max-w-6xl px-4 py-14 text-sm sm:px-6">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 border-b border-white/10 pb-10 sm:grid-cols-[1.5fr_0.7fr_0.7fr_1fr]">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 border-b border-white/10 pb-10 sm:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr_1fr]">
           <div className="col-span-2 max-w-sm space-y-4 sm:col-span-1">
             <span className="inline-flex rounded-xl bg-white px-3 py-2 shadow-sm">
               <Logo variant="full" alt={dict.siteName} className="h-11 w-auto" />
@@ -62,6 +75,21 @@ export default function Footer({ locale }: { locale: Locale }) {
             </p>
             <ul className="space-y-2.5">
               {tools.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-white/60 transition hover:text-sun-300">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-3.5 text-2xs font-bold uppercase tracking-[0.18em] text-sun-400/85">
+              {dict.footer.legalHeading}
+            </p>
+            <ul className="space-y-2.5">
+              {legal.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-white/60 transition hover:text-sun-300">
                     {link.label}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/types";
 import { airportLabel, searchAirports } from "@/lib/airports";
 
-const inputClass =
+const defaultInputClass =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition placeholder:text-gray-400 placeholder:font-normal";
 
 export default function AirportInput({
@@ -13,12 +13,26 @@ export default function AirportInput({
   onChange,
   placeholder,
   required,
+  /** Overridden on the hero, where the field sits on a photograph. */
+  className,
+  /**
+   * Read out in place of the visible label.
+   *
+   * The visible labels on both search forms are plain <label> elements with
+   * no htmlFor, and the input they describe lives inside this component, so
+   * nothing connects them: a screen reader announces "edit text" and the
+   * question goes unasked. Passing the same words here is the smallest
+   * honest fix that does not require threading ids through three layers.
+   */
+  ariaLabel,
 }: {
   locale: Locale;
   value: string;
   onChange: (code: string) => void;
   placeholder?: string;
   required?: boolean;
+  className?: string;
+  ariaLabel?: string;
 }) {
   const [query, setQuery] = useState(() => (value ? airportLabel(value, locale) : ""));
   const [open, setOpen] = useState(false);
@@ -44,7 +58,8 @@ export default function AirportInput({
   return (
     <div className="relative" ref={containerRef}>
       <input
-        className={inputClass}
+        className={className ?? defaultInputClass}
+        aria-label={ariaLabel ?? placeholder}
         value={query}
         placeholder={placeholder}
         required={required}

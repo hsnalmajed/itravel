@@ -26,6 +26,7 @@ export default function Header({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   // Subscribe only — no synchronous setState in the effect body. The bar
   // always starts transparent because every page starts at the top of a
@@ -37,13 +38,29 @@ export default function Header({ locale }: { locale: Locale }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /**
+   * Four items, not seven.
+   *
+   * "Home" went first: the logo has always gone there, and a nav item that
+   * duplicates the logo spends a slot on nothing. "Attractions" and "Maps"
+   * were two views of the same places under two names, which made a visitor
+   * choose between them before knowing they were the same thing — they
+   * share one heading now. The two reference tools sit together under one,
+   * because nobody arrives wanting "currency"; they arrive wanting to know
+   * what a trip costs, and find it there.
+   *
+   * A seven-item bar on a phone is a scroll; four fit.
+   */
   const navLinks = [
-    { href: `/${locale}`, label: dict.nav.home },
-    { href: `/${locale}/attractions`, label: dict.nav.attractions },
+    { href: `/${locale}/attractions`, label: dict.nav.destinations },
+    { href: `/${locale}/seasons`, label: dict.nav.whenToTravel },
+  ];
+
+  const toolLinks = [
     { href: `/${locale}/maps`, label: dict.nav.maps },
-    { href: `/${locale}/seasons`, label: dict.nav.seasons },
     { href: `/${locale}/visa`, label: dict.nav.visa },
     { href: `/${locale}/currency`, label: dict.nav.currency },
+    { href: `/${locale}/itinerary`, label: dict.nav.itinerary },
   ];
 
   const isActive = (href: string) =>
@@ -97,6 +114,49 @@ export default function Header({ locale }: { locale: Locale }) {
                 )}
               </Link>
             ))}
+
+            {/* Opens on hover *and* on click: hover alone is unreachable by
+                keyboard and unusable on a touchscreen that happens to be
+                wide. */}
+            <div
+              className="relative"
+              onMouseEnter={() => setToolsOpen(true)}
+              onMouseLeave={() => setToolsOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setToolsOpen((v) => !v)}
+                aria-expanded={toolsOpen}
+                aria-label={dict.nav.toolsAria}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 transition ${
+                  toolLinks.some((t) => isActive(t.href))
+                    ? "text-sun-400"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                {dict.nav.tools}
+                <span aria-hidden="true" className="text-[0.6em]">
+                  ▼
+                </span>
+              </button>
+
+              {toolsOpen && (
+                <div className="absolute end-0 top-full w-52 overflow-hidden rounded-xl border border-white/10 bg-navy-990/97 py-1.5 shadow-[0_18px_40px_-18px_rgba(4,24,47,0.9)] backdrop-blur-xl">
+                  {toolLinks.map((t) => (
+                    <Link
+                      key={t.href}
+                      href={t.href}
+                      onClick={() => setToolsOpen(false)}
+                      className={`block px-4 py-2.5 text-sm transition hover:bg-white/10 ${
+                        isActive(t.href) ? "text-sun-400" : "text-white/80"
+                      }`}
+                    >
+                      {t.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -142,6 +202,19 @@ export default function Header({ locale }: { locale: Locale }) {
                 }`}
               >
                 {link.label}
+              </Link>
+            ))}
+
+            <p className="eyebrow eyebrow-light mt-3 px-3 pb-1">{dict.nav.tools}</p>
+            {toolLinks.map((t) => (
+              <Link
+                key={t.href}
+                href={t.href}
+                className={`block rounded-xl px-3 py-3 text-sm font-semibold transition hover:bg-white/5 ${
+                  isActive(t.href) ? "text-sun-400" : "text-white/80"
+                }`}
+              >
+                {t.label}
               </Link>
             ))}
             <Link

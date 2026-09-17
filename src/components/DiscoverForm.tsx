@@ -6,6 +6,7 @@ import type { DestinationCategory, FlightRoute, Locale, TravelerCounts, TripType
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
+import CurrencySelect, { currencyForOrigin } from "@/components/CurrencySelect";
 import DateRangeInput from "@/components/DateRangeInput";
 import HotelPreferences from "@/components/HotelPreferences";
 import {
@@ -83,6 +84,21 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
   // rather than patched in an effect.
   const [errors, setErrors] = useState<FieldErrors>({});
 
+  /**
+   * The currency follows the departure city, until the traveller says
+   * otherwise.
+   *
+   * Opening on SAR for someone flying out of Kuwait City makes them convert
+   * their own budget before they can type it. But a form that keeps
+   * re-deciding would fight anyone who deliberately budgets in dollars, so
+   * this only fires while the choice is still the untouched default, and
+   * stops for good the moment the select is used.
+   */
+  const [currencyTouched, setCurrencyTouched] = useState(Boolean(sp.get("currency")));
+  const originCurrency = currencyForOrigin(origin);
+  const effectiveCurrency = !currencyTouched && originCurrency ? originCurrency : currency;
+
+
   const guests = occupancy(travelers);
   const effectiveStayType: StayType | "" =
     stayType === "room" && !roomFitsParty(guests) ? "apartment" : stayType;
@@ -130,7 +146,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
       tripType,
       origin,
       budget: String(Number(budget) || 6000),
-      currency,
+      currency: effectiveCurrency,
       departDate,
       returnDate: isOneWay ? "" : returnDate,
       nights: String(nights),
@@ -259,6 +275,7 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
                   setErrors((prev) => ({ ...prev, origin: "" }));
                 }}
                 placeholder={dict.form.originPlaceholder}
+                  ariaLabel={dict.discoverForm.origin}
                 required
               />
               {errors.origin && (
@@ -292,12 +309,15 @@ export default function DiscoverForm({ locale }: { locale: Locale }) {
               </div>
               <div>
                 <label className={labelClass}>{dict.discoverForm.currency}</label>
-                <select className={inputClass} value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                  <option value="SAR">SAR</option>
-                  <option value="USD">USD</option>
-                  <option value="AED">AED</option>
-                  <option value="EUR">EUR</option>
-                </select>
+                <CurrencySelect
+                  className={inputClass}
+                  value={effectiveCurrency}
+                  onChange={(c) => {
+                    setCurrency(c);
+                    setCurrencyTouched(true);
+                  }}
+                  label={dict.discoverForm.currency}
+                />
               </div>
             </div>
 

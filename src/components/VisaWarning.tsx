@@ -23,6 +23,7 @@ const MOFA_URL = "https://www.mofa.gov.sa/";
 export default function VisaWarning({
   dict,
   scope,
+  checkedAt,
   sourceUrl,
 }: {
   dict: {
@@ -31,9 +32,12 @@ export default function VisaWarning({
     checkIata: string;
     checkMofa: string;
     viewSource: string;
+    checkedAt: string;
   };
   /** Who these figures apply to — folded in rather than given its own bar. */
   scope?: string;
+  /** ISO date the source table was read, printed so staleness is visible. */
+  checkedAt?: string;
   /** Wikipedia article the figures came from; omitted when none loaded. */
   sourceUrl?: string;
 }) {
@@ -55,6 +59,13 @@ export default function VisaWarning({
           {dict.warningBody}
           {scope && <span className="text-amber-700"> {scope}</span>}
         </p>
+        {/* "From Wikipedia" is only half the disclosure; whether that reading
+            was this morning or last spring is the other half. */}
+        {checkedAt && (
+          <p className="mt-1.5 text-2xs font-semibold text-amber-700">
+            {dict.checkedAt.replace("{date}", checkedAt)}
+          </p>
+        )}
       </div>
 
       {/* The sources sit beside the warning rather than under it. On a wide

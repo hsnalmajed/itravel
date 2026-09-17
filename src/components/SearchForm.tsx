@@ -6,6 +6,7 @@ import type { FlightRoute, Locale, TravelerCounts, TripType } from "@/lib/types"
 import { getDictionary } from "@/lib/dictionaries";
 import TravelersPicker from "@/components/TravelersPicker";
 import AirportInput from "@/components/AirportInput";
+import CurrencySelect, { currencyForOrigin } from "@/components/CurrencySelect";
 import DateRangeInput from "@/components/DateRangeInput";
 import HotelPreferences from "@/components/HotelPreferences";
 import {
@@ -98,6 +99,21 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
   const [errors, setErrors] = useState<FieldErrors>({});
 
+  /**
+   * The currency follows the departure city, until the traveller says
+   * otherwise.
+   *
+   * Opening on SAR for someone flying out of Kuwait City makes them convert
+   * their own budget before they can type it. But a form that keeps
+   * re-deciding would fight anyone who deliberately budgets in dollars, so
+   * this only fires while the choice is still the untouched default, and
+   * stops for good the moment the select is used.
+   */
+  const [currencyTouched, setCurrencyTouched] = useState(Boolean(sp.get("currency")));
+  const originCurrency = currencyForOrigin(origin);
+  const effectiveCurrency = !currencyTouched && originCurrency ? originCurrency : currency;
+
+
   const showTripRoute = tripType === "both" || tripType === "flight";
   const showReturnDate = tripRoute === "multicity" ? false : tripType === "hotel" || tripRoute === "roundtrip";
   const showHotelFields = tripRoute === "multicity" || tripType === "both" || tripType === "hotel";
@@ -163,7 +179,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         childrenAges: serializeChildrenAges(travelers.childrenAges),
         infants: String(travelers.infants),
         budget: resolvedBudget,
-        currency,
+        currency: effectiveCurrency,
         directOnly: String(directOnly),
         minStars: String(minStars),
         roomType,
@@ -186,7 +202,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       childrenAges: serializeChildrenAges(travelers.childrenAges),
       infants: String(travelers.infants),
       budget: resolvedBudget,
-      currency,
+      currency: effectiveCurrency,
       directOnly: String(directOnly),
       minStars: String(minStars),
       roomType,
@@ -277,6 +293,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                     setErrors((prev) => ({ ...prev, origin: "" }));
                   }}
                   placeholder={dict.form.originPlaceholder}
+                  ariaLabel={dict.form.origin}
                   required
                 />
                 {errors.origin && (
@@ -298,6 +315,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                     setErrors((prev) => ({ ...prev, destination: "" }));
                   }}
                   placeholder={dict.form.destinationPlaceholder}
+                  ariaLabel={dict.form.destination}
                   required
                 />
                 {errors.destination && (
@@ -365,12 +383,15 @@ export default function SearchForm({ locale }: { locale: Locale }) {
               </div>
               <div>
                 <label className={labelClass}>{dict.form.currency}</label>
-                <select className={inputClass} value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                  <option value="SAR">SAR</option>
-                  <option value="USD">USD</option>
-                  <option value="AED">AED</option>
-                  <option value="EUR">EUR</option>
-                </select>
+                <CurrencySelect
+                  className={inputClass}
+                  value={effectiveCurrency}
+                  onChange={(c) => {
+                    setCurrency(c);
+                    setCurrencyTouched(true);
+                  }}
+                  label={dict.form.currency}
+                />
               </div>
             </div>
 

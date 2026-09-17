@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import type { Continent } from "@/lib/countries";
 import { flagEmoji } from "@/lib/countries";
-import { MONTHS } from "@/lib/seasons";
+import { MONTHS, seasonForCountry } from "@/lib/seasons";
 import Photo from "@/components/Photo";
 import DestinationFilters, {
   type CityOption,
@@ -82,7 +82,15 @@ export default function SeasonsExplorer({
   filtersDict: FiltersDict;
   dict: SeasonsDict;
 }) {
-  const [mode, setMode] = useState<Mode>(null);
+  /**
+   * The page opens on this month, not on a question.
+   *
+   * It used to render a two-card "how would you like to browse?" chooser and
+   * nothing else, so the most common question — "where should I go *now*" —
+   * cost a click to ask. Opening on the month-by-month view answers it
+   * immediately; the by-country view is still one tap away.
+   */
+  const [mode, setMode] = useState<Mode>("month");
   const [filters, setFilters] = useState<FilterState>({
     query: "",
     continent: "all",
@@ -100,10 +108,20 @@ export default function SeasonsExplorer({
 
   // A chosen month collapses the page to that one section; otherwise the
   // whole year is shown.
-  const visibleMonths = useMemo(
-    () => (filters.month === "all" ? MONTHS : MONTHS.filter((m) => m.number === filters.month)),
-    [filters.month]
-  );
+  /**
+   * The year starts now, not in January.
+   *
+   * Someone opening this page in September is deciding about September,
+   * October and November. Listing January first buries all three under eight
+   * months that have already gone, and the page reads as a reference table
+   * rather than an answer. It still runs a full twelve months — it just
+   * begins where the reader is.
+   */
+  const visibleMonths = useMemo(() => {
+    if (filters.month !== "all") return MONTHS.filter((m) => m.number === filters.month);
+    const now = new Date().getMonth(); // 0-based, so this is the current month's index
+    return [...MONTHS.slice(now), ...MONTHS.slice(0, now)];
+  }, [filters.month]);
 
   const countryOptions = useMemo(
     () =>
@@ -252,7 +270,11 @@ export default function SeasonsExplorer({
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {MONTHS.map((month) => {
                   const on = months.includes(month.number);
-                  const style = SEASON_STYLES[month.season];
+                  // March is spring in Istanbul and autumn in Sydney. The
+                  // season shown is the one the traveller would actually
+                  // land in.
+                  const season = seasonForCountry(month, countryCode);
+                  const style = SEASON_STYLES[season];
                   return (
                     <div
                       key={month.number}
@@ -275,7 +297,7 @@ export default function SeasonsExplorer({
                             on ? style.chip : "bg-mist-200 text-navy-400"
                           }`}
                         >
-                          {seasonLabel(month.season)}
+                          {seasonLabel(season)}
                         </span>
                         <span
                           className={`text-[11px] font-bold ${
@@ -324,6 +346,9 @@ export default function SeasonsExplorer({
         <div className="mt-8 space-y-8">
           {visibleMonths.map((month) => {
             const inMonth = matching.filter((c) => c.months.includes(month.number));
+            // This view spans every country at once, so the season shown is
+            // the northern one — qualified in the dictionary string rather
+            // than silently asserted, since it is wrong for Australia.
             const style = SEASON_STYLES[month.season];
 
             return (

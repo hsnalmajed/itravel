@@ -13,6 +13,8 @@ import CountryCardGrid, {
   type DestinationCountry,
 } from "@/components/CountryCardGrid";
 import PageHero from "@/components/ui/PageHero";
+import WorldMap from "@/components/WorldMap";
+import { COUNTRY_CENTROIDS } from "@/lib/countryCentroids";
 import type { SectionHero } from "@/lib/heroPhotos";
 
 interface MapsDict {
@@ -21,6 +23,8 @@ interface MapsDict {
   noResults: string;
   statCountries: string;
   statCities: string;
+  mapAttribution: string;
+  worldHint: string;
 }
 
 export default function MapsCountryList({
@@ -49,6 +53,29 @@ export default function MapsCountryList({
     [countries, filters]
   );
 
+  /**
+   * The map reflects the filters, so narrowing the list narrows the map too.
+   * A country with no centroid is skipped rather than guessed at — it is
+   * still in the grid below.
+   */
+  const worldPins = useMemo(
+    () =>
+      filtered
+        .map((c) => {
+          const at = COUNTRY_CENTROIDS[c.code];
+          if (!at) return null;
+          return {
+            code: c.code,
+            name: locale === "ar" ? c.nameAr : c.nameEn,
+            lat: at.lat,
+            lon: at.lon,
+            cities: c.cityNames.length,
+          };
+        })
+        .filter((p): p is NonNullable<typeof p> => p !== null),
+    [filtered, locale]
+  );
+
   return (
     <div>
       <PageHero
@@ -72,6 +99,16 @@ export default function MapsCountryList({
           resultCount={filtered.length}
           resultLabel={filtersDict.countriesCount}
         />
+
+        {/* The map first, because someone who clicked "maps" has already
+            said what they want to look at. The grid stays underneath for
+            anyone who would rather search than aim. */}
+        {worldPins.length > 0 && (
+          <div className="mt-8">
+            <WorldMap locale={locale} pins={worldPins} attribution={dict.mapAttribution} />
+            <p className="mt-2 text-center text-xs text-navy-500">{dict.worldHint}</p>
+          </div>
+        )}
 
         <div className="mt-8">
           {filtered.length === 0 ? (

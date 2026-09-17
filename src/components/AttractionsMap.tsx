@@ -12,7 +12,14 @@ export type { MapPin } from "@/lib/mapPins";
 // components and keep doing their data fetching on the server.
 const MapCanvas = dynamic(() => import("@/components/MapCanvas"), {
   ssr: false,
-  loading: () => <div className="h-[70vh] w-full rounded-2xl bg-gray-100 animate-pulse" aria-hidden="true" />,
+  // The skeleton mirrors the real layout — map beside list — so nothing
+  // jumps when Leaflet arrives.
+  loading: () => (
+    <div className="grid gap-3 lg:grid-cols-[1fr_22rem]" aria-hidden="true">
+      <div className="h-[65vh] w-full animate-pulse rounded-2xl bg-mist-100 lg:h-[70vh]" />
+      <div className="hidden h-[70vh] animate-pulse rounded-2xl bg-mist-100 lg:block" />
+    </div>
+  ),
 });
 
 export default function AttractionsMap(props: {
@@ -30,6 +37,21 @@ export default function AttractionsMap(props: {
     englishOnly: string;
     viewTours: string;
     mapAttribution: string;
+    legendHistoric: string;
+    legendFood: string;
+    legendCityActivity: string;
+    legendPlace: string;
+    placeSearchPlaceholder: string;
+    nearMe: string;
+    nearMeDenied: string;
+    showAll: string;
+    hideAll: string;
+    noMatches: string;
+    placesCount: string;
+    placeOne: string;
+    placeTwo: string;
+    placeFew: string;
+    listHeading: string;
   };
 }) {
   return <MapCanvas {...props} />;

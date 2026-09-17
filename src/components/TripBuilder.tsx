@@ -214,20 +214,47 @@ function HotelChips({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
   );
 }
 
-/** Name, stars and the guest rating, shared by the trip card and the picker. */
+/** The hotel's class, in words as well as stars. */
+function hotelClassLabel(stars: number, dict: Dict): string {
+  if (stars === 1) return dict.results.hotelClassStarsOne;
+  if (stars === 2) return dict.results.hotelClassStarsTwo;
+  return dict.results.hotelClassStars.replace("{count}", String(stars));
+}
+
+/** What a 0-10 guest score actually means. */
+function ratingWord(rating: number, dict: Dict): string {
+  if (rating >= 8.5) return dict.results.ratingExcellent;
+  if (rating >= 7.5) return dict.results.ratingVeryGood;
+  return dict.results.ratingGood;
+}
+
+/**
+ * Name, class and guest score — three separate facts, shown as three.
+ *
+ * They used to run together as "★ · 5 ليالي", which reads as a rating of
+ * five for a hotel that has one star, next to a stay length that has nothing
+ * to do with either. Stars now carry the words "1-star hotel" beside them,
+ * the guest score says it is a guest score and what it means, and the night
+ * count has moved out of this line entirely.
+ */
 function HotelHeading({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
   return (
     <>
       <p className="text-base font-bold leading-snug text-gray-900">{hotel.name}</p>
-      <div className="mt-0.5 flex flex-wrap items-center gap-2">
+      <div className="mt-1 flex flex-wrap items-center gap-2">
         {hotel.stars > 0 && (
-          <span className="text-sm text-amber-500" aria-hidden="true">
-            {"★".repeat(Math.min(5, hotel.stars))}
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600">
+            <span className="text-amber-500" aria-hidden="true">
+              {"★".repeat(Math.min(5, hotel.stars))}
+              <span className="text-gray-300">{"★".repeat(Math.max(0, 5 - hotel.stars))}</span>
+            </span>
+            {hotelClassLabel(hotel.stars, dict)}
           </span>
         )}
         {hotel.rating != null && (
-          <span className="rounded-md bg-brand-900 px-1.5 py-0.5 text-[11px] font-extrabold text-white">
-            {dict.results.ratingOutOf10.replace("{rating}", String(hotel.rating))}
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-900 px-2 py-0.5 text-[11px] font-extrabold text-white">
+            {dict.results.guestRating.replace("{rating}", String(hotel.rating))}
+            <span className="font-semibold text-white/70">{ratingWord(hotel.rating, dict)}</span>
           </span>
         )}
       </div>
@@ -268,10 +295,45 @@ export default function TripBuilder({
   const needsFlight = tripType !== "hotel";
   const needsHotel = tripType !== "flight";
 
+  /**
+   * Narrowing, before anything is chosen.
+   *
+   * The search form already asks about non-stop, baggage and breakfast, but
+   * those answers are locked in at search time — changing your mind meant
+   * going back and running the whole search again. These do the same work on
+   * what is already loaded, instantly, and the cheapest-trip default
+   * recomputes against whatever survives.
+   *
+   * Deliberately four switches and not a panel: every one of them is a
+   * yes/no a traveller already has an opinion about, and a filter nobody can
+   * answer at a glance is a filter nobody uses.
+   */
+  const [onlyDirect, setOnlyDirect] = useState(false);
+  const [onlyBaggage, setOnlyBaggage] = useState(false);
+  const [onlyBreakfast, setOnlyBreakfast] = useState(false);
+
+  const visibleFlights = useMemo(
+    () =>
+      flights.filter(
+        (f) => (!onlyDirect || f.stops === 0) && (!onlyBaggage || f.baggageIncluded)
+      ),
+    [flights, onlyDirect, onlyBaggage]
+  );
+  const visibleHotels = useMemo(
+    () => hotels.filter((h) => !onlyBreakfast || h.breakfastIncluded),
+    [hotels, onlyBreakfast]
+  );
+
   // The opening position: cheapest of each. Sorting a copy — the arrays come
   // from state upstream and must not be reordered under it.
-  const cheapestFlights = useMemo(() => [...flights].sort((a, b) => a.price - b.price), [flights]);
-  const cheapestHotels = useMemo(() => [...hotels].sort((a, b) => a.totalPrice - b.totalPrice), [hotels]);
+  const cheapestFlights = useMemo(
+    () => [...visibleFlights].sort((a, b) => a.price - b.price),
+    [visibleFlights]
+  );
+  const cheapestHotels = useMemo(
+    () => [...visibleHotels].sort((a, b) => a.totalPrice - b.totalPrice),
+    [visibleHotels]
+  );
 
   const [flightId, setFlightId] = useState<string | null>(null);
   const [hotelId, setHotelId] = useState<string | null>(null);
@@ -308,8 +370,8 @@ export default function TripBuilder({
     return arr;
   }, [cheapestHotels, hotelSort]);
 
-  const otherFlights = Math.max(0, flights.length - 1);
-  const otherHotels = Math.max(0, hotels.length - 1);
+  const otherFlights = Math.max(0, visibleFlights.length - 1);
+  const otherHotels = Math.max(0, visibleHotels.length - 1);
 
   const isCheapestTrip =
     (!flight || flight.id === cheapestFlights[0]?.id) && (!hotel || hotel.id === cheapestHotels[0]?.id);
@@ -333,10 +395,71 @@ export default function TripBuilder({
         .replace("{to}", shortDate(returnDate, locale))
     : "";
 
-  if (!flight && !hotel) return null;
+  const anyFilter = onlyDirect || onlyBaggage || onlyBreakfast;
+
+  /**
+   * What the total covers, said once above everything.
+   *
+   * A price with no headcount beside it reads as per-person and gets doubled
+   * in someone's head; a hotel total with no night count reads as a nightly
+   * rate. Both were only stated deep inside the card.
+   */
+  const scopeLine = dict.results.priceScope
+    .replace("{travelers}", travelersText)
+    .replace("{nights}", hotel ? ` · ${nightsLabel(hotel.nights, dict)}` : "");
+
+  const filterChip = (on: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition ${
+      on
+        ? "bg-navy-900 text-white ring-1 ring-navy-900"
+        : "bg-white text-navy-600 ring-1 ring-mist-300 hover:ring-navy-300"
+    }`;
+
+  // Filters are shown even when nothing survives them, because the way out of
+  // an empty result is to turn one off — hiding the switches would strand the
+  // traveller on a blank page.
+  const filterBar = (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-xs font-bold text-navy-500">{dict.results.filterLabel}</span>
+      {needsFlight && (
+        <>
+          <button type="button" aria-pressed={onlyDirect} onClick={() => setOnlyDirect((v) => !v)} className={filterChip(onlyDirect)}>
+            <span aria-hidden="true">➜</span>
+            {dict.results.filterDirect}
+          </button>
+          <button type="button" aria-pressed={onlyBaggage} onClick={() => setOnlyBaggage((v) => !v)} className={filterChip(onlyBaggage)}>
+            <span aria-hidden="true">🧳</span>
+            {dict.results.filterBaggage}
+          </button>
+        </>
+      )}
+      {needsHotel && (
+        <button type="button" aria-pressed={onlyBreakfast} onClick={() => setOnlyBreakfast((v) => !v)} className={filterChip(onlyBreakfast)}>
+          <span aria-hidden="true">🍳</span>
+          {dict.results.filterBreakfast}
+        </button>
+      )}
+      <span className="ms-auto text-xs font-semibold text-navy-500">{scopeLine}</span>
+    </div>
+  );
+
+  if (!flight && !hotel) {
+    return (
+      <div className="space-y-4">
+        {filterBar}
+        {anyFilter && (
+          <p className="card px-4 py-10 text-center text-sm text-navy-500">
+            {dict.results.filterNone}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
+      {filterBar}
+
       {/* ---- The trip as it currently stands ---- */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
         <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-br from-brand-800 to-brand-950 px-5 py-4 sm:px-6">

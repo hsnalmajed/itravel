@@ -557,6 +557,25 @@ html[lang="ar"] [class*="tracking-["] {
   letter-spacing: normal;
 }
 
+/* ---------------------------------------------------------------------------
+   A dropdown list is drawn by the operating system, not by us.
+
+   A <select> on a dark panel is given white text so it matches the fields
+   around it. The browser then hands that same colour to the list it opens —
+   but that list is drawn by the OS on its own white background, so every
+   option came out white on white and the menu looked empty.
+
+   The list is not ours to lay out, but its colours are, and they have to be
+   set without reference to the page's tone: the menu is always a white popup,
+   under the light form and the dark one alike. Setting it here is also the
+   only place that catches every <select> on the site at once.
+--------------------------------------------------------------------------- */
+select option,
+select optgroup {
+  background-color: #ffffff;
+  color: var(--navy-900);
+}
+
 @media print {
   /* The site's own header and footer go; the document's letterhead stays. */
   body > header,

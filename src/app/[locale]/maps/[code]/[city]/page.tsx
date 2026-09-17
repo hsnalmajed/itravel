@@ -26,7 +26,12 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
   // The city's own Wikipedia article gives us its real centre point; every
   // pin is then a documented article within 10 km of it, named in the
   // reader's own language wherever Wikipedia has an article in it.
-  const places = await fetchPlacesAroundCities([cityEntry], { locale: loc });
+  // 180 rather than the default 300. Three hundred pins is past the point
+  // where a map tells you anything a list would not, and every one of them
+  // costs a slice of the Worker's subrequest budget in the metadata lookups
+  // that follow — which is what made a click through from the country page
+  // sit for over a minute while opening the same URL directly was fine.
+  const places = await fetchPlacesAroundCities([cityEntry], { locale: loc, perCity: 180 });
   const pins = places.map((p) => placeToPin(p, loc));
 
   // Only show a legend entry for a kind of place this city actually has.
@@ -49,6 +54,21 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
     englishOnly: dict.maps.englishOnly,
     viewTours: dict.maps.viewTours,
     mapAttribution: dict.maps.mapAttribution,
+    legendHistoric: dict.maps.legendHistoric,
+    legendFood: dict.maps.legendFood,
+    legendCityActivity: dict.maps.legendCityActivity,
+    legendPlace: dict.maps.legendPlace,
+    placeSearchPlaceholder: dict.maps.placeSearchPlaceholder,
+    nearMe: dict.maps.nearMe,
+    nearMeDenied: dict.maps.nearMeDenied,
+    showAll: dict.maps.showAll,
+    hideAll: dict.maps.hideAll,
+    noMatches: dict.maps.noMatches,
+    placesCount: dict.attractions.placesCount,
+    placeOne: dict.attractions.placeOne,
+    placeTwo: dict.attractions.placeTwo,
+    placeFew: dict.attractions.placeFew,
+    listHeading: dict.maps.listHeading,
   };
 
   return (

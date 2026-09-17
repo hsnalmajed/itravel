@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchDestinationList } from "@/lib/destinationList";
@@ -10,6 +12,18 @@ import { sectionHero } from "@/lib/sectionHero";
 // the build, so a renamed article or a newly-added country guide shows up
 // without a redeploy.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/attractions">): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  return pageMetadata({
+    locale: loc,
+    path: "/attractions",
+    title: dict.attractions.title,
+    description: dict.attractions.subtitle,
+  });
+}
 
 export default async function AttractionsPage({ params }: PageProps<"/[locale]/attractions">) {
   const { locale } = await params;

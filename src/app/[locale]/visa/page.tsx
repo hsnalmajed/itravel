@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import { COUNTRIES, findCountry } from "@/lib/countries";
 import { fetchVisaRequirements, VISA_SOURCE_URL, type VisaCategory } from "@/lib/visa";
@@ -12,6 +14,18 @@ import { sectionHero } from "@/lib/sectionHero";
 // Fetched per request behind a daily cache, never frozen into the build — a
 // visa table baked into a deploy is stale the moment a rule changes.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/visa">): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  return pageMetadata({
+    locale: loc,
+    path: "/visa",
+    title: dict.visa.title,
+    description: dict.visa.subtitle,
+  });
+}
 
 export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) {
   const { locale } = await params;
@@ -103,8 +117,10 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
               checkIata: dict.visa.checkIata,
               checkMofa: dict.visa.checkMofa,
               viewSource: dict.visa.viewSource,
+              checkedAt: dict.visa.checkedAt,
             }}
             scope={dict.visa.onlySaudi}
+            checkedAt={data?.checkedAt}
             sourceUrl={data ? data.sourceUrl : VISA_SOURCE_URL}
           />
         </div>

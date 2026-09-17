@@ -9,9 +9,8 @@ import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import { fetchCommonsImage } from "@/lib/commonsImage";
 import { heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
-import SearchModeSwitcher from "@/components/SearchModeSwitcher";
 import HomeShowcase from "@/components/HomeShowcase";
-import HeroSearch from "@/components/HeroSearch";
+import HeroPlanner from "@/components/HeroPlanner";
 import Photo from "@/components/Photo";
 
 export const dynamic = "force-dynamic";
@@ -110,12 +109,15 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   return (
     <div className="bg-mist-50">
       {/* ── Hero ─────────────────────────────────────────────────────────
-          Shorter than it was. A full-screen photograph is a fine opening for
-          a magazine and a poor one for a tool: it spent the whole first
-          screen saying nothing a visitor could act on, and the page behind it
-          was already too long. It keeps the picture, the promise and the
-          numbers, and hands over at about two thirds of the fold. */}
-      <section className="relative isolate flex min-h-[74svh] items-end overflow-hidden bg-navy-990 sm:min-h-[78svh]">
+          The photograph and the planner, together.
+
+          It is no longer measured in svh. A fixed slab worked when the hero
+          held a headline and a button; now that the whole form lives in it —
+          and that form changes height as options open and as the mode
+          switches — a fixed height would either clip it or leave a gap under
+          the short version. It takes the height its contents need, with a
+          floor so it still reads as a hero on a short window. */}
+      <section className="relative isolate flex min-h-[46rem] items-center overflow-hidden bg-navy-990 lg:min-h-[44rem]">
         <Photo
           src={heroPhoto}
           priority
@@ -130,26 +132,26 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         />
         <div className="scrim-soft absolute inset-0 -z-10" />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 sm:px-6 sm:pb-24">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-2xs font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
 
-          <h1 className="max-w-3xl font-display text-hero font-black text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)]">
+          <h1 className="max-w-3xl font-display text-h1 font-black text-white drop-shadow-[0_2px_18px_rgba(4,24,47,0.55)]">
             {dict.hero.titleLine1}
             <br />
             <span className="text-sunlit">{dict.hero.titleLine2}</span>
           </h1>
 
-          <p className="mt-4 max-w-xl text-lead text-white/85 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)]">
+          <p className="mt-3 max-w-xl text-sm text-white/80 drop-shadow-[0_1px_10px_rgba(4,24,47,0.75)] sm:text-base">
             {dict.hero.subtitle}
           </p>
 
-          {/* The search itself, not a button that leads to it. Reaching the
-              first input used to take three clicks, each asking something a
-              first-time visitor could not answer yet. See HeroSearch. */}
+          {/* The whole planner, not a cut-down version of it. Both modes and
+              every option now live here; see HeroPlanner for why the full
+              form moved up and the section at the foot of the page went. */}
           <Suspense fallback={null}>
-            <HeroSearch locale={loc} />
+            <HeroPlanner locale={loc} />
           </Suspense>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -210,36 +212,6 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         />
       </section>
 
-      {/* ── The planner ─────────────────────────────────────────────────
-          Below the showcase, where it was asked to be: a visitor who has just
-          seen what the site holds is readier to type a budget into it than
-          one who has seen nothing yet. The hero's button jumps straight here,
-          so it is never more than a tap away. */}
-      <section id="plan" className="scroll-mt-20 bg-mist-50">
-        <div className="mx-auto max-w-4xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 sm:pt-12">
-          <div className="mb-6 text-center">
-            <p className="eyebrow">{dict.home.planEyebrow}</p>
-            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-h2 font-extrabold text-navy-900">
-              {dict.home.planTitle}
-            </h2>
-          </div>
-
-          {/* On a card, not on the background.
-
-              This is the one thing on the page a visitor is meant to *do*,
-              and it was the only major block with no surface under it: two
-              grey buttons and a form, adrift on the same pale wash as the
-              margins. A white plate with real elevation says "this is the
-              instrument" before a word of it is read — and it is the same
-              plate the search results, the trip builder and the planner all
-              sit on, so the promise made here is kept on the next page. */}
-          <div className="card p-5 sm:p-7">
-            <Suspense fallback={null}>
-              <SearchModeSwitcher locale={loc} />
-            </Suspense>
-          </div>
-        </div>
-      </section>
 
       {/* ── What people ask before they trust a price ────────────────────
           A comparison site is asking a stranger to believe a number. The

@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
@@ -37,6 +39,25 @@ function safeBackHref(raw: string | string[] | undefined): string | undefined {
   if (typeof raw !== "string") return undefined;
   if (!raw.startsWith("/") || raw.startsWith("//")) return undefined;
   return raw;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/attractions/[code]/[city]">): Promise<Metadata> {
+  const { locale, code, city } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  const country = findCountry(code);
+  const entry = country ? findCity(country.code, city) : undefined;
+  if (!country || !entry) return {};
+
+  const name = loc === "ar" ? entry.nameAr : entry.nameEn;
+  return pageMetadata({
+    locale: loc,
+    path: `/attractions/${country.code}/${entry.slug}`,
+    title: dict.attractions.metaCityTitle.replace("{city}", name),
+    description: dict.attractions.metaCityDescription.replace("{city}", name),
+  });
 }
 
 export default async function CityPlacesPage({
@@ -99,6 +120,8 @@ export default async function CityPlacesPage({
       description: p.description,
       photo: p.photo,
       category: p.category,
+      lat: p.lat,
+      lon: p.lon,
       wikiUrl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`,
       englishOnly: p.englishOnly,
       bookingLabel: bookingLabelFor(p.enTitle),

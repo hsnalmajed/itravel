@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import { fetchRates } from "@/lib/rates";
 import CurrencyConverter from "@/components/CurrencyConverter";
@@ -8,6 +10,18 @@ import { sectionHero } from "@/lib/sectionHero";
 // Rates are fetched per request (behind an hourly cache in the fetch itself),
 // so the page never serves a rate frozen at build time.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/currency">): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  return pageMetadata({
+    locale: loc,
+    path: "/currency",
+    title: dict.currency.title,
+    description: dict.currency.subtitle,
+  });
+}
 
 export default async function CurrencyPage({ params, searchParams }: PageProps<"/[locale]/currency">) {
   const { locale } = await params;

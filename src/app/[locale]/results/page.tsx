@@ -323,7 +323,7 @@ function ResultsContent() {
           </div>
 
           <Link
-            href={`/${locale}?${editSearchParams}`}
+            href={`/${locale}?${editSearchParams}#plan`}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400"
           >
             <span aria-hidden="true">{locale === "ar" ? "→" : "←"}</span>

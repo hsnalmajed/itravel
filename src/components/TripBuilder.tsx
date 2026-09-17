@@ -7,6 +7,8 @@ import type { FlightOffer, HotelOffer, Locale, SearchParams, TripType } from "@/
 import { flightBookingHandoff, hotelBookingHandoff } from "@/lib/affiliateLinks";
 import AirlineLogo from "@/components/ui/AirlineLogo";
 import HotelThumb from "@/components/ui/HotelThumb";
+import BudgetNotice from "@/components/BudgetNotice";
+import { budgetStanding, money } from "@/lib/budget";
 
 /**
  * One trip, priced — not a wall of near-identical packages.
@@ -326,14 +328,85 @@ export default function TripBuilder({
 
   // The opening position: cheapest of each. Sorting a copy — the arrays come
   // from state upstream and must not be reordered under it.
-  const cheapestFlights = useMemo(
+  const sortedFlights = useMemo(
     () => [...visibleFlights].sort((a, b) => a.price - b.price),
     [visibleFlights]
   );
-  const cheapestHotels = useMemo(
+  const sortedHotels = useMemo(
     () => [...visibleHotels].sort((a, b) => a.totalPrice - b.totalPrice),
     [visibleHotels]
   );
+
+  /**
+   * The budget, applied to the results rather than printed beside them.
+   *
+   * This page used to show every offer the providers returned and mark the
+   * chosen combination green or red afterwards, which turns the number the
+   * traveller typed into a label on somebody else's answer. Here the budget
+   * decides what is on the page.
+   *
+   * An option is judged against the cheapest possible partner, not against
+   * whatever is selected: a flight belongs on the list if *some* affordable
+   * trip contains it, and pairing it with the cheapest hotel is the test for
+   * that. Judging it against the current selection would make options appear
+   * and vanish as the traveller browsed, which is unusable.
+   *
+   * `allowOver` is the traveller's own decision, never the default — see
+   * budget.ts for why the tolerance is fixed and small.
+   */
+  const [allowOver, setAllowOver] = useState(false);
+
+  const floorFlight = needsFlight ? (sortedFlights[0]?.price ?? 0) : 0;
+  const floorHotel = needsHotel ? (sortedHotels[0]?.totalPrice ?? 0) : 0;
+  const standing = budgetStanding(
+    budgetTotal,
+    floorFlight + floorHotel,
+    allowOver,
+    currency
+  );
+
+  // When the budget cannot buy even the cheapest trip, filtering would empty
+  // the page. The notice above explains the gap instead, and the offers stay
+  // so the traveller can see what they are being asked to pay for.
+  const budgetApplies = !standing.unlimited && standing.shortfall === 0;
+
+  const cheapestFlights = useMemo(
+    () =>
+      budgetApplies
+        ? sortedFlights.filter((f) => f.price + floorHotel <= standing.ceiling)
+        : sortedFlights,
+    [sortedFlights, budgetApplies, floorHotel, standing.ceiling]
+  );
+  const cheapestHotels = useMemo(
+    () =>
+      budgetApplies
+        ? sortedHotels.filter((h) => h.totalPrice + floorFlight <= standing.ceiling)
+        : sortedHotels,
+    [sortedHotels, budgetApplies, floorFlight, standing.ceiling]
+  );
+
+  // How many more would appear if the tolerance were allowed — counted only
+  // up to the tolerance, so the button can never promise more than it shows.
+  const nearbyCount = useMemo(() => {
+    if (!budgetApplies || allowOver) return 0;
+    const limit = budgetTotal + standing.allowance;
+    const f = sortedFlights.filter(
+      (x) => x.price + floorHotel > budgetTotal && x.price + floorHotel <= limit
+    ).length;
+    const h = sortedHotels.filter(
+      (x) => x.totalPrice + floorFlight > budgetTotal && x.totalPrice + floorFlight <= limit
+    ).length;
+    return f + h;
+  }, [
+    budgetApplies,
+    allowOver,
+    sortedFlights,
+    sortedHotels,
+    budgetTotal,
+    standing.allowance,
+    floorFlight,
+    floorHotel,
+  ]);
 
   const [flightId, setFlightId] = useState<string | null>(null);
   const [hotelId, setHotelId] = useState<string | null>(null);
@@ -370,8 +443,8 @@ export default function TripBuilder({
     return arr;
   }, [cheapestHotels, hotelSort]);
 
-  const otherFlights = Math.max(0, visibleFlights.length - 1);
-  const otherHotels = Math.max(0, visibleHotels.length - 1);
+  const otherFlights = Math.max(0, cheapestFlights.length - 1);
+  const otherHotels = Math.max(0, cheapestHotels.length - 1);
 
   const isCheapestTrip =
     (!flight || flight.id === cheapestFlights[0]?.id) && (!hotel || hotel.id === cheapestHotels[0]?.id);
@@ -443,9 +516,69 @@ export default function TripBuilder({
     </div>
   );
 
+  /**
+   * The budget, said out loud.
+   *
+   * Without this line the filtering above would be invisible: a traveller
+   * would see six hotels, not know that four more had been held back, and
+   * have no way to ask for them. The bar states the rule and offers the one
+   * exception, with the tolerance named in money rather than left vague.
+   */
+  const budgetBar = budgetApplies && (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-navy-50 px-4 py-3 ring-1 ring-navy-100">
+      <span className="text-xs font-bold text-navy-700">
+        {allowOver
+          ? dict.results.budgetIncludingNearby.replace(
+              "{amount}",
+              money(standing.allowance, currency)
+            )
+          : dict.results.budgetOnlyAffordable.replace("{budget}", money(budgetTotal, currency))}
+      </span>
+      {allowOver ? (
+        <button
+          type="button"
+          onClick={() => setAllowOver(false)}
+          className="rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-navy-200 transition hover:ring-navy-400"
+        >
+          {dict.results.budgetHideNearby}
+        </button>
+      ) : (
+        nearbyCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setAllowOver(true)}
+            className="rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-navy-200 transition hover:ring-navy-400"
+          >
+            {dict.results.budgetShowNearby
+              .replace("{amount}", money(standing.allowance, currency))
+              .replace(
+                "{count}",
+                countLabel(nearbyCount, {
+                  one: dict.results.budgetNearbyOne,
+                  two: dict.results.budgetNearbyTwo,
+                  few: dict.results.budgetNearbyFew,
+                  many: dict.results.budgetNearbyMany,
+                })
+              )}
+          </button>
+        )
+      )}
+    </div>
+  );
+
+  const shortfallNotice = !standing.unlimited && standing.shortfall > 0 && (
+    <BudgetNotice
+      locale={locale}
+      currency={currency}
+      budgetTotal={budgetTotal}
+      cheapest={standing.floor}
+    />
+  );
+
   if (!flight && !hotel) {
     return (
       <div className="space-y-4">
+        {shortfallNotice}
         {filterBar}
         {anyFilter && (
           <p className="card px-4 py-10 text-center text-sm text-navy-500">
@@ -458,7 +591,9 @@ export default function TripBuilder({
 
   return (
     <div className="space-y-4">
+      {shortfallNotice}
       {filterBar}
+      {budgetBar}
 
       {/* ---- The trip as it currently stands ---- */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">

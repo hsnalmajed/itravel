@@ -21,6 +21,22 @@ function nightsBetween(a: string, b: string) {
   return Math.max(1, Math.round((t2 - t1) / (1000 * 60 * 60 * 24)));
 }
 
+/**
+ * The night the traveller checks out.
+ *
+ * A round trip says so with its return date. A one-way trip with a hotel in
+ * it has no return date at all, and the hotel search was being handed the
+ * departure date as the checkout — pricing a month in Paris as a single
+ * night. The planner asks how long the stay is in that case, and this is
+ * where the answer is used.
+ */
+function addDays(date: string, days: number) {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return date;
+  d.setDate(d.getDate() + Math.max(1, days));
+  return d.toISOString().slice(0, 10);
+}
+
 export default function ResultsPage() {
   return (
     <Suspense fallback={null}>
@@ -55,6 +71,9 @@ function ResultsContent() {
     }),
     [sp]
   );
+
+  // Only consulted when there is no return date to measure the stay against.
+  const statedNights = Number(sp.get("nights") || 0);
 
   const [flights, setFlights] = useState<FlightOffer[]>([]);
   const [hotels, setHotels] = useState<HotelOffer[]>([]);
@@ -95,7 +114,7 @@ function ResultsContent() {
       const q = new URLSearchParams({
         destination: search.destination,
         departDate: search.departDate,
-        returnDate: search.returnDate || search.departDate,
+        returnDate: search.returnDate || addDays(search.departDate, statedNights || 1),
         adults: String(search.adults),
         // The hotel search needs the whole party, not just the adults —
         // otherwise a family of four gets offered a double bed.
@@ -116,7 +135,7 @@ function ResultsContent() {
     Promise.all(tasks)
       .catch(() => setError("error"))
       .finally(() => setLoading(false));
-  }, [search]);
+  }, [search, statedNights]);
 
   // Whether there is anything to build a trip out of at all. A flight-only
   // search needs flights; a hotel-only search needs hotels; "both" needs one

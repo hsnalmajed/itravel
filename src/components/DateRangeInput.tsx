@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
+import { formStyles, type FormTone } from "@/lib/formTone";
 
 /**
  * Departure and return, chosen in one calendar.
@@ -114,6 +115,7 @@ export default function DateRangeInput({
   withReturn = true,
   required = false,
   error,
+  tone = "light",
 }: {
   locale: Locale;
   departDate: string;
@@ -122,6 +124,8 @@ export default function DateRangeInput({
   withReturn?: boolean;
   required?: boolean;
   error?: string;
+  /** Only the trigger changes; the calendar popover stays light. */
+  tone?: FormTone;
 }) {
   const dict = getDictionary(locale);
   const isAr = locale === "ar";
@@ -239,14 +243,24 @@ export default function DateRangeInput({
         }}
         aria-expanded={open}
         aria-controls={panelId}
-        className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-white px-4 py-3 text-start text-sm transition focus:outline-none focus:ring-2 focus:ring-sun-400/30 ${
-          error ? "border-red-400" : "border-mist-300 focus:border-sun-400"
+        className={`${formStyles(tone).input} flex items-center justify-between gap-3 text-start ${
+          error ? "!border-red-400" : ""
         }`}
       >
-        <span className={departDate ? "text-navy-900" : "text-navy-400"}>
+        <span
+          className={
+            departDate
+              ? tone === "dark"
+                ? "text-white"
+                : "text-navy-900"
+              : tone === "dark"
+                ? "text-white/45"
+                : "text-navy-400"
+          }
+        >
           {summary || dict.form.pickDates}
         </span>
-        <span aria-hidden="true" className="shrink-0 text-navy-400">
+        <span aria-hidden="true" className={`shrink-0 ${tone === "dark" ? "text-white/50" : "text-navy-400"}`}>
           📅
         </span>
       </button>

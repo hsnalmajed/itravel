@@ -1,6 +1,7 @@
 "use client";
 
 import type { Locale, TravelerCounts } from "@/lib/types";
+import { formStyles, type FormTone } from "@/lib/formTone";
 import { getDictionary } from "@/lib/dictionaries";
 import {
   MAX_GUESTS_PER_ROOM,
@@ -30,6 +31,7 @@ export default function HotelPreferences({
   onMinStarsChange,
   stayType,
   onStayTypeChange,
+  tone = "light",
 }: {
   locale: Locale;
   /** Who is travelling — what decides whether a room is even an option. */
@@ -38,23 +40,28 @@ export default function HotelPreferences({
   onMinStarsChange: (value: number) => void;
   stayType: StayType | "";
   onStayTypeChange: (value: StayType | "") => void;
+  /** Inherited from whichever form is hosting this — see formTone.ts. */
+  tone?: FormTone;
 }) {
   const dict = getDictionary(locale);
   const guests = occupancy(travelers);
   const roomPossible = roomFitsParty(guests);
 
-  const inputClass =
-    "w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm transition outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100 hover:border-gray-300";
-  const labelClass = "block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5";
+  const st = formStyles(tone);
+  const dark = tone === "dark";
+  const inputClass = st.input;
+  const labelClass = st.label;
 
+  // A disabled choice has to read as unavailable in both tones — on dark, a
+  // grey fill is invisible, so the signal is opacity plus the cursor.
   const choiceClass = (active: boolean, disabled: boolean) =>
-    `rounded-lg px-3 py-2.5 text-sm font-bold transition border ${
-      disabled
-        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-300"
-        : active
-          ? "border-brand-800 bg-gradient-to-br from-brand-700 to-brand-900 text-white shadow-sm"
-          : "border-gray-200 bg-white text-gray-600 hover:border-brand-200 hover:text-brand-800"
-    }`;
+    disabled
+      ? `rounded-lg px-3 py-2.5 text-sm font-bold border cursor-not-allowed ${
+          dark
+            ? "border-white/10 bg-white/[0.04] text-white/25"
+            : "border-gray-200 bg-gray-100 text-gray-300"
+        }`
+      : st.segment(active);
 
   const choices: { value: StayType | ""; label: string; disabled: boolean }[] = [
     { value: "", label: dict.stayType.any, disabled: false },
@@ -102,7 +109,7 @@ export default function HotelPreferences({
 
         {/* Why the choice looks the way it does. A greyed-out button with no
             explanation reads as a bug; with one, it reads as advice. */}
-        <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+        <p className={`mt-1.5 text-xs leading-relaxed ${dark ? "text-white/55" : "text-gray-500"}`}>
           {roomPossible
             ? dict.stayType.roomFitsHint.replace("{max}", String(MAX_GUESTS_PER_ROOM))
             : dict.stayType.apartmentOnlyHint.replace("{count}", String(guests))}

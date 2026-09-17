@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Locale, TravelerCounts } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
+import { formStyles, type FormTone } from "@/lib/formTone";
 
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 6;
@@ -99,10 +100,13 @@ export default function TravelersPicker({
   locale,
   value,
   onChange,
+  tone = "light",
 }: {
   locale: Locale;
   value: TravelerCounts;
   onChange: (next: TravelerCounts) => void;
+  /** Only the trigger changes; the counter popover stays light. */
+  tone?: FormTone;
 }) {
   const dict = getDictionary(locale);
   const [open, setOpen] = useState(false);
@@ -118,8 +122,10 @@ export default function TravelersPicker({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none transition";
+  // The trigger follows the form's tone; the counter popover below stays
+  // light, because a floating white panel reads over anything and a dark one
+  // over a photograph does not.
+  const inputClass = formStyles(tone).input;
 
   return (
     <div className="relative" ref={containerRef}>

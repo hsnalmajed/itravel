@@ -18,13 +18,21 @@ import {
 } from "@/lib/stayType";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { focusFirstError, hasErrors, type FieldErrors } from "@/lib/formErrors";
+import { formStyles, type FormTone } from "@/lib/formTone";
 
 interface LegDraft {
   destination: string;
   nights: number;
 }
 
-export default function SearchForm({ locale }: { locale: Locale }) {
+export default function SearchForm({
+  locale,
+  tone = "light",
+}: {
+  locale: Locale;
+  /** "dark" when the form sits on the hero photograph — see formTone.ts. */
+  tone?: FormTone;
+}) {
   const dict = getDictionary(locale);
   const router = useRouter();
   const sp = useSearchParams();
@@ -212,17 +220,12 @@ export default function SearchForm({ locale }: { locale: Locale }) {
     router.push(`/${locale}/results?${params.toString()}`);
   }
 
-  const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.75 text-sm text-gray-800 shadow-sm transition outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100 hover:border-gray-300 placeholder:text-gray-400 placeholder:font-normal";
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
-  const checkboxLabelClass = "flex items-center gap-2 text-sm text-gray-700";
-  const checkboxClass = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600";
-  const segmentClass = (active: boolean) =>
-    `rounded-xl px-4 py-3 text-sm font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
-      active
-        ? "bg-gradient-to-br from-brand-700 to-brand-900 text-white border-brand-800 shadow-md shadow-brand-900/25"
-        : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-white hover:border-brand-200 hover:text-brand-800"
-    }`;
+  const st = formStyles(tone);
+  const inputClass = st.input;
+  const labelClass = st.label;
+  const checkboxLabelClass = st.checkboxRow;
+  const checkboxClass = st.checkbox;
+  const segmentClass = st.segment;
   const tripTypeIcon: Record<TripType, string> = { both: "✈️🏨", flight: "✈️", hotel: "🏨" };
   const tripRouteIcon: Record<FlightRoute, string> = { roundtrip: "🔁", oneway: "➜", multicity: "🧭" };
 
@@ -236,10 +239,15 @@ export default function SearchForm({ locale }: { locale: Locale }) {
       // positioned for an LTR layout.
       noValidate
       onSubmit={handleSubmit}
-      className="relative z-10 w-full max-w-4xl mx-auto overflow-hidden rounded-3xl bg-white shadow-2xl shadow-brand-950/10 ring-1 ring-black/5"
+      className={st.surface}
     >
-      <div className="h-1.5 bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
-      <div className="p-5 sm:p-8">
+      {/* The sunset rule belongs to the standalone white card; inside the
+          hero panel the panel's own chrome already frames the form, and a
+          second bar would be a border on a border. */}
+      {tone === "light" && (
+        <div className="h-1.5 bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
+      )}
+      <div className={tone === "light" ? "p-5 sm:p-8" : ""}>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {(["both", "flight", "hotel"] as TripType[]).map((t) => (
           <button
@@ -257,7 +265,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
         ))}
       </div>
 
-      {!tripType && <p className="mt-3 text-sm text-gray-400">{dict.form.chooseTripTypeFirst}</p>}
+      {!tripType && <p className={`mt-3 ${st.muted}`}>{dict.form.chooseTripTypeFirst}</p>}
 
       {showTripRoute && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 mb-4">
@@ -281,7 +289,11 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
       {tripType && (
         <div className={showTripRoute ? "" : "mt-4"}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            className={`grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 ${
+              tone === "dark" ? "lg:grid-cols-4" : ""
+            }`}
+          >
             {showFlightFields && (
               <div data-field="origin">
                 <label className={labelClass}>{dict.form.origin}</label>
@@ -293,11 +305,12 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                     setErrors((prev) => ({ ...prev, origin: "" }));
                   }}
                   placeholder={dict.form.originPlaceholder}
+                  className={inputClass}
                   ariaLabel={dict.form.origin}
                   required
                 />
                 {errors.origin && (
-                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                  <p role="alert" className={`mt-1.5 text-xs font-semibold ${tone === "dark" ? "text-rose-300" : "text-red-600"}`}>
                     {errors.origin}
                   </p>
                 )}
@@ -315,18 +328,22 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                     setErrors((prev) => ({ ...prev, destination: "" }));
                   }}
                   placeholder={dict.form.destinationPlaceholder}
+                  className={inputClass}
                   ariaLabel={dict.form.destination}
                   required
                 />
                 {errors.destination && (
-                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                  <p role="alert" className={`mt-1.5 text-xs font-semibold ${tone === "dark" ? "text-rose-300" : "text-red-600"}`}>
                     {errors.destination}
                   </p>
                 )}
               </div>
             )}
 
-            <div data-field="departDate" className={showReturnDate ? "sm:col-span-2" : undefined}>
+            <div
+              data-field="departDate"
+              className={showReturnDate && tone !== "dark" ? "sm:col-span-2" : undefined}
+            >
               <label className={labelClass}>
                 {tripRoute === "multicity"
                   ? dict.multicity.departDate
@@ -342,6 +359,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                 returnDate={returnDate}
                 withReturn={showReturnDate}
                 required
+                tone={tone}
                 error={errors.departDate || errors.returnDate}
                 onChange={({ departDate: d, returnDate: r }) => {
                   setDepartDate(d);
@@ -353,15 +371,15 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
             <div>
               <label className={labelClass}>{dict.travelers.label}</label>
-              <TravelersPicker locale={locale} value={travelers} onChange={setTravelers} />
+              <TravelersPicker locale={locale} value={travelers} onChange={setTravelers} tone={tone} />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className={tone === "dark" ? "contents" : "grid grid-cols-2 gap-3"}>
               <div data-field="budget">
                 {/* The label names exactly what the number has to cover, so
                     nobody enters a flight-only figure against a trip that
                     also has to pay for the hotel. */}
-                <label className={labelClass}>{budgetLabel}</label>
+                <label className={labelClass}>{tone === "dark" ? dict.form.budgetShort : budgetLabel}</label>
                 <input
                   type="number"
                   min={0}
@@ -376,7 +394,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                   required
                 />
                 {errors.budget && (
-                  <p role="alert" className="mt-1.5 text-xs font-semibold text-red-600">
+                  <p role="alert" className={`mt-1.5 text-xs font-semibold ${tone === "dark" ? "text-rose-300" : "text-red-600"}`}>
                     {errors.budget}
                   </p>
                 )}
@@ -396,14 +414,22 @@ export default function SearchForm({ locale }: { locale: Locale }) {
             </div>
 
             {(showFlightFields || showHotelFields) && (
-              <div className="sm:col-span-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-700 mb-3">{dict.form.additionalOptions}</p>
+              <details className={`sm:col-span-2 lg:col-span-4 ${st.panel}`}>
+                <summary
+                  className={`cursor-pointer list-none ${labelClass} mb-0 flex items-center justify-between`}
+                >
+                  {dict.form.additionalOptions}
+                  <span aria-hidden="true" className="text-[0.7em] opacity-60">
+                    ▼
+                  </span>
+                </summary>
+                <div className="mt-3">
 
                 {/* Star rating and stay type are preferences, not questions
                     the trip depends on, so they sit here with the rest of the
                     optional detail rather than beside the dates. */}
                 {showHotelFields && (
-                  <div className="mb-4 border-b border-gray-200 pb-4">
+                  <div className={`mb-4 border-b pb-4 ${st.divider}`}>
                     <HotelPreferences
                       locale={locale}
                       travelers={travelers}
@@ -411,6 +437,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                       onMinStarsChange={setMinStars}
                       stayType={effectiveStayType}
                       onStayTypeChange={setStayType}
+                      tone={tone}
                     />
                   </div>
                 )}
@@ -450,18 +477,19 @@ export default function SearchForm({ locale }: { locale: Locale }) {
                     </label>
                   )}
                 </div>
-              </div>
+                </div>
+              </details>
             )}
           </div>
 
           {tripRoute === "multicity" && (
-            <div className="mt-5 border-t border-gray-100 pt-5">
+            <div className={`mt-5 border-t pt-5 ${st.divider}`}>
               <div className="flex items-center justify-between mb-3">
                 <p className={labelClass + " mb-0"}>{dict.multicity.title}</p>
                 <button
                   type="button"
                   onClick={addLeg}
-                  className="rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-900 hover:bg-brand-100 transition"
+                  className={st.ghostButton}
                 >
                   + {dict.multicity.addLeg}
                 </button>
@@ -469,7 +497,7 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
               <div className="space-y-3">
                 {legs.map((leg, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-xl border border-gray-200 p-3">
+                  <div key={i} className={`flex items-center gap-2 rounded-xl border p-3 ${st.divider}`}>
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
                       {i + 1}
                     </span>
@@ -510,7 +538,11 @@ export default function SearchForm({ locale }: { locale: Locale }) {
 
           <button
             type="submit"
-            className="mt-6 w-full rounded-xl bg-gradient-to-r from-accent-600 to-accent-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-accent-600/25 transition hover:brightness-105 hover:shadow-xl hover:shadow-accent-600/30 hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2"
+            className={
+              tone === "dark"
+                ? "mt-5 w-full rounded-xl bg-sun-400 px-6 py-3.5 text-base font-bold text-navy-950 shadow-[var(--shadow-sun)] transition hover:-translate-y-0.5 hover:bg-sun-300 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-990"
+                : "mt-6 w-full rounded-xl bg-gradient-to-r from-accent-600 to-accent-700 px-6 py-4 text-base font-bold text-white shadow-lg shadow-accent-600/25 transition hover:brightness-105 hover:shadow-xl hover:shadow-accent-600/30 hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 focus-visible:ring-offset-2"
+            }
           >
             {tripRoute === "multicity" ? dict.multicity.submit : dict.form.submit} 🔍
           </button>

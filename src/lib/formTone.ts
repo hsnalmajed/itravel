@@ -46,7 +46,7 @@ const LIGHT: FormStyles = {
   checkboxRow: "flex items-center gap-2 text-sm text-gray-700",
   checkbox: "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600",
   segment: (active) =>
-    `rounded-xl px-4 py-3 text-sm font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${
+    `rounded-xl px-2 py-3 text-xs font-bold transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 sm:px-4 sm:text-sm ${
       active
         ? "bg-gradient-to-br from-brand-700 to-brand-900 text-white border-brand-800 shadow-md shadow-brand-900/25"
         : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-white hover:border-brand-200 hover:text-brand-800"
@@ -69,7 +69,7 @@ const DARK: FormStyles = {
   // checked box that isn't stock blue without rebuilding the control.
   checkbox: "h-4 w-4 rounded border-white/30 bg-white/10 accent-[var(--sun-400)]",
   segment: (active) =>
-    `rounded-xl px-4 py-2.5 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400 ${
+    `rounded-xl px-2 py-2.5 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400 sm:px-4 sm:text-sm ${
       active
         ? "bg-sun-400 text-navy-950 shadow-[var(--shadow-sun)]"
         : "bg-white/10 text-white/70 ring-1 ring-white/20 hover:bg-white/20 hover:text-white"

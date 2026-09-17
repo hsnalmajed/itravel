@@ -33,6 +33,37 @@ export const MONTHS: Month[] = [
   { number: 12, nameAr: "ديسمبر", nameEn: "December", season: "winter" },
 ];
 
+/**
+ * Countries where the seasons are the other way round.
+ *
+ * The month table above labels March "spring", which is true in Istanbul and
+ * false in Sydney — March in Australia is autumn, and a page that tells a
+ * traveller otherwise is wrong about the one thing it exists to answer. The
+ * colour coding and the season word both read through this.
+ *
+ * Only the covered countries that actually sit south of the equator are
+ * listed. Countries straddling it (Kenya, Indonesia, Brazil's north) have no
+ * meaningful four-season cycle at all; Brazil and South Africa are listed
+ * because their tourist regions are decisively southern, Kenya and Indonesia
+ * are not, because "autumn in Nairobi" would be a fiction either way.
+ */
+const SOUTHERN_HEMISPHERE = new Set(["AU", "BR", "ZA"]);
+
+const FLIPPED: Record<Month["season"], Month["season"]> = {
+  winter: "summer",
+  summer: "winter",
+  spring: "autumn",
+  autumn: "spring",
+};
+
+/** The season a month falls in, as experienced in that country. */
+export function seasonForCountry(month: Month, countryCode?: string): Month["season"] {
+  if (countryCode && SOUTHERN_HEMISPHERE.has(countryCode.toUpperCase())) {
+    return FLIPPED[month.season];
+  }
+  return month.season;
+}
+
 export function monthName(number: number, locale: "ar" | "en"): string {
   const month = MONTHS.find((m) => m.number === number);
   if (!month) return String(number);

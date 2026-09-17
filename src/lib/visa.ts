@@ -40,6 +40,15 @@ export interface VisaData {
   sourceUrl: string;
   /** How many destinations the source listed, for the page's own summary. */
   total: number;
+  /**
+   * When this table was read, as an ISO date.
+   *
+   * Visa rules change without notice, so "these figures are from Wikipedia"
+   * is only half the disclosure — a traveller also needs to know whether
+   * that reading was this morning or last spring. The page prints it beside
+   * the warning.
+   */
+  checkedAt: string;
 }
 
 const SOURCE_PAGE = "Visa_requirements_for_Saudi_citizens";
@@ -203,7 +212,12 @@ export async function fetchVisaRequirements(): Promise<VisaData | null> {
 
     if (byCountry.size < MINIMUM_PLAUSIBLE_ROWS) return null;
 
-    return { byCountry, sourceUrl: VISA_SOURCE_URL, total: byCountry.size };
+    return {
+      byCountry,
+      sourceUrl: VISA_SOURCE_URL,
+      total: byCountry.size,
+      checkedAt: new Date().toISOString().slice(0, 10),
+    };
   } catch {
     return null;
   }

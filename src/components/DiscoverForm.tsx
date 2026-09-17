@@ -202,7 +202,7 @@ export default function DiscoverForm({
         <div className="h-1.5 bg-gradient-to-r from-brand-700 via-accent-500 to-brand-700" />
       )}
       <div className={tone === "light" ? "p-5 sm:p-8" : ""}>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {(["both", "flight", "hotel"] as TripType[]).map((t) => (
           <button
             type="button"
@@ -221,7 +221,7 @@ export default function DiscoverForm({
       {/* Same round-trip / one-way / multi-city control as the main search
           form, in the same spot right under the trip-type buttons. */}
       {tripType && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 mb-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-2 sm:mt-3 mb-4">
           {(["roundtrip", "oneway", "multicity"] as FlightRoute[]).map((r) => (
             <button
               type="button"

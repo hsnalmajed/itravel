@@ -5,6 +5,7 @@ import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
 import { formStyles, type FormTone } from "@/lib/formTone";
+import { keepPopoverOnScreen } from "@/lib/popover";
 
 /**
  * Departure and return, chosen in one calendar.
@@ -282,7 +283,8 @@ export default function DateRangeInput({
       {open && (
         <div
           id={panelId}
-          className="absolute z-30 mt-2 w-[19rem] rounded-2xl border border-mist-200 bg-white p-4 shadow-[var(--shadow-lift)] sm:w-[34rem]"
+          ref={keepPopoverOnScreen}
+          className="absolute z-30 mt-2 w-[19rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-mist-200 bg-white p-4 shadow-[var(--shadow-lift)] sm:w-[34rem]"
         >
           <div className="mb-3 flex items-center justify-between">
             <button

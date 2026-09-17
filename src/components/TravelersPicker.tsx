@@ -5,6 +5,7 @@ import type { Locale, TravelerCounts } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
 import { formStyles, type FormTone } from "@/lib/formTone";
+import { keepPopoverOnScreen } from "@/lib/popover";
 
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 6;
@@ -139,7 +140,10 @@ export default function TravelersPicker({
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-2 w-full sm:w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl divide-y divide-gray-100">
+        <div
+          ref={keepPopoverOnScreen}
+          className="absolute z-20 mt-2 w-full max-w-[calc(100vw-1.5rem)] sm:w-80 rounded-xl border border-gray-200 bg-white p-4 shadow-xl divide-y divide-gray-100"
+        >
           <Counter
             label={dict.travelers.adults}
             hint={dict.travelers.adultsHint}

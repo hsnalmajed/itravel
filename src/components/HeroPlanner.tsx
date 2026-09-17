@@ -48,12 +48,17 @@ export default function HeroPlanner({ locale }: { locale: Locale }) {
   return (
     <div
       id="plan"
-      className="mt-7 w-full max-w-4xl scroll-mt-24 overflow-hidden rounded-2xl bg-navy-990/55 ring-1 ring-white/15 backdrop-blur-xl"
+      // No overflow-hidden: it clipped the calendar and the travellers
+      // counter, which are meant to hang outside the panel. The tab row
+      // rounds its own two corners instead. text-start because the hero
+      // centres its headline, and a form whose labels drift to the middle
+      // of their fields is unreadable.
+      className="mt-7 w-full max-w-4xl scroll-mt-24 rounded-2xl bg-navy-990/55 text-start ring-1 ring-white/15 backdrop-blur-xl"
     >
       {/* ── The one question that comes first ─────────────────────────
           Everything below changes depending on this answer, so it sits
           above everything and is never scrolled past. */}
-      <div className="flex gap-1.5 border-b border-white/10 bg-white/[0.04] p-1.5">
+      <div className="flex gap-1.5 rounded-t-2xl border-b border-white/10 bg-white/[0.04] p-1.5">
         <button
           type="button"
           onClick={() => setMode("known")}

@@ -763,7 +763,13 @@ export const dictionaries = {
       factBestMonths: "أفضل وقت للزيارة",
       factCurrency: "العملة",
       factFlightTime: "مدة الطيران من الرياض",
-      factFlightValue: "حوالي {hours} ساعة",
+      // Hours count like every other Arabic noun: ساعة / ساعتان / ساعات /
+      // ساعة. "حوالي 3 ساعة" was exactly the mistake this whole pass has
+      // been fixing elsewhere.
+      factFlightOne: "حوالي ساعة",
+      factFlightTwo: "حوالي ساعتين",
+      factFlightFew: "حوالي {count} ساعات",
+      factFlightMany: "حوالي {count} ساعة",
       factCities: "المدن المتاحة",
       aboutCountry: "نبذة عن {country}",
       bestMonths: "أفضل وقت للزيارة",
@@ -1566,7 +1572,10 @@ export const dictionaries = {
       factBestMonths: "Best time to visit",
       factCurrency: "Currency",
       factFlightTime: "Flight time from Riyadh",
-      factFlightValue: "about {hours} hours",
+      factFlightOne: "about 1 hour",
+      factFlightTwo: "about 2 hours",
+      factFlightFew: "about {count} hours",
+      factFlightMany: "about {count} hours",
       factCities: "Cities covered",
       aboutCountry: "About {country}",
       bestMonths: "Best time to visit",

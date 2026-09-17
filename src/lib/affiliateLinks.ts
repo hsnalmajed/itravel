@@ -1,5 +1,6 @@
 import type { FlightOffer, HotelOffer, SearchParams } from "./types";
 import { resolveIata } from "./flights";
+import { aviasalesSearchUrl, travelpayoutsMarker } from "./providers/travelpayouts";
 
 /**
  * Where a traveller actually goes to pay.
@@ -65,6 +66,36 @@ export function flightBookingHandoff(
 ): BookingHandoff | null {
   if (params.tripType === "hotel") return null;
   if (!params.origin || !params.destination || !params.departDate) return null;
+
+  /**
+   * Aviasales first, once the affiliate marker exists.
+   *
+   * This used to send the traveller to the carrier's own website when we knew
+   * the carrier, on the reasoning that one fewer step is a better handover.
+   * That reasoning held while the site had no revenue model; it does not now.
+   * A referral to saudia.com earns nothing, and a site with no income is one
+   * that stops being maintained — which serves the traveller worst of all.
+   *
+   * The trade is small and honest: Aviasales opens the same search across
+   * every carrier, including the one we just showed, and the price the
+   * traveller pays is unchanged. The commission comes out of the partner's
+   * margin, never out of the fare.
+   */
+  const marker = travelpayoutsMarker();
+  if (marker) {
+    return {
+      partner: "Aviasales",
+      url: aviasalesSearchUrl({
+        origin: params.origin,
+        destination: params.destination,
+        departDate: params.departDate,
+        returnDate: params.returnDate,
+        adults: params.adults || 1,
+        children: params.childrenAges?.length ?? 0,
+        infants: params.infants ?? 0,
+      }),
+    };
+  }
 
   const direct = flight?.airlineCode ? AIRLINE_SITES[flight.airlineCode] : undefined;
   if (direct) return { partner: direct.name, url: direct.url };

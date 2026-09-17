@@ -497,6 +497,8 @@ export const dictionaries = {
       remainingBudget: "المتبقي من الميزانية",
       overBudget: "يتجاوز الميزانية",
       withinBudget: "ضمن الميزانية",
+      priceOnlyNote: "سعر مرصود — المصدر لا يذكر وقت الوصول أو التوقفات",
+      priceObserved: "سعر مرصود خلال الأيام الماضية",
       shortfallTitle: "ميزانيتك لا تكفي هذه الرحلة",
       shortfallBody:
         "أرخص رحلة وجدناها بهذه المواصفات تكلّف {cheapest} — أي أعلى بـ {gap} من ميزانيتك البالغة {budget}. أمامك خياران:",
@@ -1327,6 +1329,8 @@ export const dictionaries = {
       remainingBudget: "Remaining budget",
       overBudget: "Over budget",
       withinBudget: "Within budget",
+      priceOnlyNote: "Observed fare — the source gives no arrival time or stop count",
+      priceObserved: "Fare seen in the last few days",
       shortfallTitle: "Your budget doesn't reach this trip",
       shortfallBody:
         "The cheapest trip we found matching this search costs {cheapest} — {gap} more than your budget of {budget}. You have two options:",

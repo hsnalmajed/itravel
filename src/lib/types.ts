@@ -57,6 +57,20 @@ export interface FlightOffer {
   layoverCity: string | null;
   layoverDurationMinutes: number | null;
   baggageIncluded: boolean;
+  /**
+   * The source gave us a price and a carrier and little else.
+   *
+   * Travelpayouts' free tier returns the cheapest fares *observed* on a
+   * route — no arrival time, no duration, no stop count, no baggage rule.
+   * Rather than compute a plausible-looking timeline from a great-circle
+   * distance and present it as fact, offers from such a source say so, and
+   * the card drops the fields it cannot honestly fill.
+   */
+  priceOnly?: boolean;
+  /** True when `stops` is something the source actually told us. */
+  stopsKnown?: boolean;
+  /** When the price was seen, for sources that quote rather than book. */
+  observedAt?: string;
 }
 
 export interface HotelOffer {

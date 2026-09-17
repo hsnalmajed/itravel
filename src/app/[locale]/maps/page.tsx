@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchDestinationList } from "@/lib/destinationList";
@@ -8,6 +10,18 @@ import { sectionHero } from "@/lib/sectionHero";
 
 // Photos are fetched live from Wikipedia, same as the rest of the site.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/maps">): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  return pageMetadata({
+    locale: loc,
+    path: "/maps",
+    title: dict.maps.title,
+    description: dict.maps.subtitle,
+  });
+}
 
 export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) {
   const { locale } = await params;
@@ -51,6 +65,8 @@ export default async function MapsPage({ params }: PageProps<"/[locale]/maps">) 
         noResults: dict.filters.noResults,
         statCountries: dict.home.statCountries,
         statCities: dict.home.statCities,
+        mapAttribution: dict.maps.mapAttribution,
+        worldHint: dict.maps.worldHint,
       }}
     />
   );

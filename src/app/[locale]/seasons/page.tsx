@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getDictionary } from "@/lib/dictionaries";
+import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import { fetchDestinationList } from "@/lib/destinationList";
 import SeasonsExplorer from "@/components/SeasonsExplorer";
@@ -8,6 +10,18 @@ import { monthName } from "@/lib/seasons";
 
 // Photos come live from Wikipedia, same as the rest of the site.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/seasons">): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = (locale === "en" ? "en" : "ar") as Locale;
+  const dict = getDictionary(loc);
+  return pageMetadata({
+    locale: loc,
+    path: "/seasons",
+    title: dict.seasons.title,
+    description: dict.seasons.subtitle,
+  });
+}
 
 export default async function SeasonsPage({ params }: PageProps<"/[locale]/seasons">) {
   const { locale } = await params;

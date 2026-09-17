@@ -108,6 +108,7 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
               checkIata: dict.visa.checkIata,
               checkMofa: dict.visa.checkMofa,
               viewSource: dict.visa.viewSource,
+              checkedAt: dict.visa.checkedAt,
             }}
             sourceUrl={VISA_SOURCE_URL}
           />

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
@@ -10,6 +11,7 @@ import { heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import SearchModeSwitcher from "@/components/SearchModeSwitcher";
 import HomeShowcase from "@/components/HomeShowcase";
+import HeroSearch from "@/components/HeroSearch";
 import Photo from "@/components/Photo";
 
 export const dynamic = "force-dynamic";
@@ -92,6 +94,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   ];
 
 
+  const faqs = [
+    { q: dict.home.faqQ1, a: dict.home.faqA1 },
+    { q: dict.home.faqQ2, a: dict.home.faqA2 },
+    { q: dict.home.faqQ3, a: dict.home.faqA3 },
+    { q: dict.home.faqQ4, a: dict.home.faqA4 },
+  ];
+
   const steps = [
     { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
     { n: "2", title: dict.home.step2Title, body: dict.home.step2Body },
@@ -106,7 +115,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           screen saying nothing a visitor could act on, and the page behind it
           was already too long. It keeps the picture, the promise and the
           numbers, and hands over at about two thirds of the fold. */}
-      <section className="relative isolate flex min-h-[58svh] items-end overflow-hidden bg-navy-990 sm:min-h-[62svh]">
+      <section className="relative isolate flex min-h-[74svh] items-end overflow-hidden bg-navy-990 sm:min-h-[78svh]">
         <Photo
           src={heroPhoto}
           priority
@@ -121,7 +130,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         />
         <div className="scrim-soft absolute inset-0 -z-10" />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-28 sm:px-6 sm:pb-28">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-28 sm:px-6 sm:pb-24">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-2xs font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
@@ -136,25 +145,20 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             {dict.hero.subtitle}
           </p>
 
-          {/* The search form now sits below the showcase, so the hero carries
-              the way to it. One tap, from the first screen, either way. */}
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <a
-              href="#plan"
-              className="inline-flex items-center gap-2 rounded-xl bg-sun-400 px-6 py-3.5 text-sm font-bold text-navy-950 shadow-lg shadow-sun-900/20 transition hover:-translate-y-0.5 hover:bg-sun-300 sm:text-base"
-            >
-              {dict.home.heroPlanCta}
-              <span aria-hidden="true">↓</span>
-            </a>
+          {/* The search itself, not a button that leads to it. Reaching the
+              first input used to take three clicks, each asking something a
+              first-time visitor could not answer yet. See HeroSearch. */}
+          <Suspense fallback={null}>
+            <HeroSearch locale={loc} />
+          </Suspense>
 
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 ps-1">
-              {stats.map((s) => (
-                <p key={s.label} className="text-sm font-semibold text-white/70">
-                  <span className="font-display text-xl font-black text-sun-400">{s.value}</span>{" "}
-                  {s.label}
-                </p>
-              ))}
-            </div>
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+            {stats.map((s) => (
+              <p key={s.label} className="text-sm font-semibold text-white/70">
+                <span className="font-display text-xl font-black text-sun-400">{s.value}</span>{" "}
+                {s.label}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -235,6 +239,72 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             </Suspense>
           </div>
         </div>
+      </section>
+
+      {/* ── What people ask before they trust a price ────────────────────
+          A comparison site is asking a stranger to believe a number. The
+          four questions below are the ones that decide whether they do —
+          who takes the money, whether the price is real, what it costs
+          them, and whether the visa line can be relied on. Answering them
+          on the front page is cheaper than losing the visitor to the doubt.
+
+          Marked up as FAQPage so the answers can appear in search results,
+          where the same doubts get typed. */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-16">
+          <div className="mb-7 text-center">
+            <p className="eyebrow">{dict.home.faqEyebrow}</p>
+            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-h2 font-extrabold text-navy-900">
+              {dict.home.faqTitle}
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((f) => (
+              <details
+                key={f.q}
+                className="group rounded-2xl bg-mist-50 px-5 py-4 ring-1 ring-mist-200 transition hover:ring-navy-200"
+              >
+                <summary className="cursor-pointer list-none text-sm font-bold text-navy-900 marker:hidden">
+                  <span className="flex items-center justify-between gap-3">
+                    {f.q}
+                    <span
+                      className="shrink-0 text-navy-400 transition group-open:rotate-45"
+                      aria-hidden="true"
+                    >
+                      ＋
+                    </span>
+                  </span>
+                </summary>
+                <p className="mt-2.5 text-sm leading-relaxed text-navy-600">{f.a}</p>
+              </details>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              href={`/${loc}/about`}
+              className="text-sm font-bold text-navy-700 underline decoration-sun-400 decoration-2 underline-offset-4 transition hover:text-sun-700"
+            >
+              {dict.home.faqMore}
+            </Link>
+          </div>
+        </div>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
+            }),
+          }}
+        />
       </section>
     </div>
   );

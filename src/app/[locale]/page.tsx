@@ -132,7 +132,13 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         />
         <div className="scrim-soft absolute inset-0 -z-10" />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16">
+        {/* Centred, because the panel is the point.
+            Left-aligned, the headline ran along one edge and the search
+            panel — narrower than the page — sat under it off to one side,
+            so the first thing the eye met was a column of empty photograph.
+            A hero whose whole reason for existing is one panel puts that
+            panel in the middle of the window. */}
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-14 pt-28 text-center sm:px-6 sm:pb-16">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-2xs font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
@@ -154,7 +160,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <HeroPlanner locale={loc} />
           </Suspense>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {stats.map((s) => (
               <p key={s.label} className="text-sm font-semibold text-white/70">
                 <span className="font-display text-xl font-black text-sun-400">{s.value}</span>{" "}

@@ -8,7 +8,7 @@ import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { fetchArabicTitlesByTitle, fetchWikiSummaries, fetchWikiSummary } from "@/lib/wikipedia";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { fetchCityOverviews } from "@/lib/mapPins";
-import { cityCountLabel, placeCountLabel } from "@/lib/format";
+import { cityCountLabel, countLabel, placeCountLabel } from "@/lib/format";
 import CityGallery, { type CityCard } from "@/components/CityGallery";
 import VisaBadge from "@/components/VisaBadge";
 import VisaWarning from "@/components/VisaWarning";
@@ -204,7 +204,15 @@ export default async function CountryAttractionsPage({
         quickFacts.push({
           icon: "✈️",
           label: dict.attractions.factFlightTime,
-          value: dict.attractions.factFlightValue.replace("{hours}", String(hours)),
+          // Half-hours round to the nearest whole for the label, since
+          // "about 3.5 hours" implies a precision a great-circle estimate
+          // does not have.
+          value: countLabel(Math.round(hours), {
+            one: dict.attractions.factFlightOne,
+            two: dict.attractions.factFlightTwo,
+            few: dict.attractions.factFlightFew,
+            many: dict.attractions.factFlightMany,
+          }),
         });
       }
     }

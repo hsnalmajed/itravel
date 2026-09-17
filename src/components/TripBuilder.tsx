@@ -141,6 +141,26 @@ function DeltaChip({ diff, currency, sameLabel }: { diff: number; currency: stri
 
 /** Departure and arrival joined by a line, with the duration written on it. */
 function FlightTimeline({ flight, locale, dict }: { flight: FlightOffer; locale: Locale; dict: Dict }) {
+  /**
+   * A price-only source gives a fare, a carrier and a departure — no arrival,
+   * no duration, no stop count. Drawing the timeline anyway would mean
+   * inventing three numbers out of a great-circle distance and presenting
+   * them as the airline's schedule. So the timeline is simply absent, and the
+   * card says where the price came from instead.
+   */
+  if (flight.priceOnly) {
+    return (
+      <div className="mt-1.5 max-w-[17rem]">
+        <p className="text-sm font-semibold text-gray-700">
+          {shortDate(flight.departTime, locale)}
+        </p>
+        <p className="mt-0.5 text-[11px] font-semibold text-gray-500">
+          {flight.origin} → {flight.destination} · {dict.results.priceOnlyNote}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-1.5 max-w-[17rem]">
       <div className="flex items-center gap-2.5">
@@ -178,16 +198,32 @@ function FlightTimeline({ flight, locale, dict }: { flight: FlightOffer; locale:
 }
 
 function FlightChips({ flight, dict }: { flight: FlightOffer; dict: Dict }) {
+  // A chip is a statement of fact. "No checked bag" is a different claim from
+  // "we were not told about the bag", and only the first one belongs here —
+  // so a price-only offer shows the chips it can stand behind and no others.
+  const canStateStops = !flight.priceOnly || flight.stopsKnown;
+  const canStateBaggage = !flight.priceOnly;
+
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      <Chip tone={flight.stops === 0 ? "good" : "warn"}>
-        <span aria-hidden="true">{flight.stops === 0 ? "➜" : "⇄"}</span>
-        {stopsLabel(flight.stops, dict)}
-      </Chip>
-      <Chip tone={flight.baggageIncluded ? "info" : "mute"}>
-        <span aria-hidden="true">🧳</span>
-        {flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
-      </Chip>
+      {canStateStops && (
+        <Chip tone={flight.stops === 0 ? "good" : "warn"}>
+          <span aria-hidden="true">{flight.stops === 0 ? "➜" : "⇄"}</span>
+          {stopsLabel(flight.stops, dict)}
+        </Chip>
+      )}
+      {canStateBaggage && (
+        <Chip tone={flight.baggageIncluded ? "info" : "mute"}>
+          <span aria-hidden="true">🧳</span>
+          {flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
+        </Chip>
+      )}
+      {flight.priceOnly && (
+        <Chip tone="mute">
+          <span aria-hidden="true">📅</span>
+          {dict.results.priceObserved}
+        </Chip>
+      )}
     </div>
   );
 }

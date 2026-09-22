@@ -4,7 +4,7 @@
    Typography — a real pairing, not one family doing every job.
 
    Tajawal carries the display voice: geometric, wide, confident at 800/900,
-   and it sits close to the geometry of the Sfratna wordmark. IBM Plex Sans
+   and it sits close to the geometry of the Sfrtna wordmark. IBM Plex Sans
    Arabic carries running text, where Tajawal gets tiring — Plex is humanist,
    opens up at small sizes, and its Latin and Arabic were drawn together, so
    a mixed line like "الرياض → Istanbul" doesn't visibly break.
@@ -32,7 +32,7 @@
 @import "@fontsource/ibm-plex-sans-arabic/latin-700.css";
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Sfratna — the palette is the logo.
+   Sfrtna — the palette is the logo.
 
    Every value below is either one of the six brand colours exactly, or a
    tint/shade generated from one of them. Nothing is invented: the mark's
@@ -243,7 +243,7 @@
    * brand-* and accent-* are kept as aliases onto the new scales.
    *
    * Four hundred-odd usages across thirty files already speak in these
-   * names. Re-pointing them is what carries the Sfratna identity into every
+   * names. Re-pointing them is what carries the Sfrtna identity into every
    * page at once — including the ones restyled by hand afterwards — instead
    * of the site spending a release half-old and half-new.
    */
@@ -622,7 +622,7 @@ select optgroup {
     break-inside: avoid;
     page-break-inside: avoid;
     /* The site's own navy, at a tenth strength — a printed card that belongs
-       to Sfratna rather than a generic grey box. */
+       to Sfrtna rather than a generic grey box. */
     border: 1px solid color-mix(in srgb, var(--navy-900) 22%, #fff) !important;
     box-shadow: none !important;
   }
@@ -632,7 +632,7 @@ select optgroup {
      mean position:fixed, which Chrome honours and other engines do not —
      and a header that silently overlaps the text on one browser is worse
      than one that appears only on page one. The closing "a plan from
-     Sfratna" line carries the name to the end instead. */
+     Sfrtna" line carries the name to the end instead. */
   .print-header {
     display: block !important;
     margin-bottom: 14pt;
@@ -651,15 +651,8 @@ select optgroup {
   }
 
   .print-logo {
-    height: 30pt;
+    height: 42pt;
     width: auto;
-  }
-
-  .print-tagline {
-    font-size: 8pt;
-    font-weight: 700;
-    color: var(--navy-600);
-    text-align: end;
   }
 
   .print-title {

@@ -10,7 +10,7 @@ import { resolveIata } from "@/lib/flights";
  * Duffel, Amadeus, Hotelbeds and the rest are *booking* APIs. They earn when
  * a reservation completes through them, and they price accordingly — Duffel
  * charges per order and adds a per-search fee once the search-to-book ratio
- * passes 1500:1. Sfratna never takes a booking, so that ratio is infinite by
+ * passes 1500:1. Sfrtna never takes a booking, so that ratio is infinite by
  * construction: every search is a cost and no booking is ever ours. A pure
  * comparison site on a booking API pays to exist and earns nothing.
  *
@@ -40,10 +40,10 @@ import { resolveIata } from "@/lib/flights";
  * invented numbers in front of travellers.
  *
  * Credentials:
- *   TRAVELPAYOUTS_TOKEN                  — server-side API token
- *   NEXT_PUBLIC_TRAVELPAYOUTS_MARKER     — the affiliate id that earns the
- *                                          commission; public by design,
- *                                          it travels in the outgoing URL
+ *   TRAVELPAYOUTS_TOKEN   — the API token. Secret. A Cloudflare secret,
+ *                           read on the server at run time.
+ *   TRAVELPAYOUTS_MARKER  — the affiliate id. Public. A constant below, for
+ *                           the reason given there.
  *
  * Docs: https://travelpayouts-data-api.readthedocs.io/
  */
@@ -103,8 +103,23 @@ function token(): string {
   return process.env.TRAVELPAYOUTS_TOKEN || "";
 }
 
+/**
+ * The affiliate marker — the number that makes an outgoing link pay.
+ *
+ * It lives in the code, not in a Cloudflare secret, and that is deliberate.
+ * The flight handoff is built in the browser, and a Next.js NEXT_PUBLIC_*
+ * value is baked into the browser bundle at *build* time; a secret added
+ * with `wrangler secret put` only exists at run time on the server, so the
+ * browser would never see it and every link would go out unpaid, silently.
+ *
+ * Nothing is lost by committing it: the marker is not a secret. It is printed
+ * in the query string of every link the site sends a visitor to. The API
+ * token is the secret, and that one stays in Cloudflare.
+ */
+const TRAVELPAYOUTS_MARKER = "";
+
 export function travelpayoutsMarker(): string {
-  return process.env.NEXT_PUBLIC_TRAVELPAYOUTS_MARKER || "";
+  return process.env.NEXT_PUBLIC_TRAVELPAYOUTS_MARKER || TRAVELPAYOUTS_MARKER;
 }
 
 /**

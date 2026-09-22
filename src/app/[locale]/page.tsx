@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import type { Locale } from "@/lib/types";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
@@ -93,13 +92,6 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     { href: `/${loc}/currency`, icon: "💱", title: dict.home.toolCurrency, body: dict.home.toolCurrencyBody },
   ];
 
-
-  const faqs = [
-    { q: dict.home.faqQ1, a: dict.home.faqA1 },
-    { q: dict.home.faqQ2, a: dict.home.faqA2 },
-    { q: dict.home.faqQ3, a: dict.home.faqA3 },
-    { q: dict.home.faqQ4, a: dict.home.faqA4 },
-  ];
 
   const steps = [
     { n: "1", title: dict.home.step1Title, body: dict.home.step1Body },
@@ -221,73 +213,6 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             cityCountTwo: dict.home.cityCountTwo,
             cityCountFew: dict.home.cityCountFew,
             cityCountMany: dict.home.cityCountMany,
-          }}
-        />
-      </section>
-
-
-      {/* ── What people ask before they trust a price ────────────────────
-          A comparison site is asking a stranger to believe a number. The
-          four questions below are the ones that decide whether they do —
-          who takes the money, whether the price is real, what it costs
-          them, and whether the visa line can be relied on. Answering them
-          on the front page is cheaper than losing the visitor to the doubt.
-
-          Marked up as FAQPage so the answers can appear in search results,
-          where the same doubts get typed. */}
-      <section className="bg-white">
-        <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-16">
-          <div className="mb-7 text-center">
-            <p className="eyebrow">{dict.home.faqEyebrow}</p>
-            <h2 className="rule-sun rule-sun-center mt-1.5 font-display text-h2 font-extrabold text-navy-900">
-              {dict.home.faqTitle}
-            </h2>
-          </div>
-
-          <div className="space-y-3">
-            {faqs.map((f) => (
-              <details
-                key={f.q}
-                className="group rounded-2xl bg-mist-50 px-5 py-4 ring-1 ring-mist-200 transition hover:ring-navy-200"
-              >
-                <summary className="cursor-pointer list-none text-sm font-bold text-navy-900 marker:hidden">
-                  <span className="flex items-center justify-between gap-3">
-                    {f.q}
-                    <span
-                      className="shrink-0 text-navy-400 transition group-open:rotate-45"
-                      aria-hidden="true"
-                    >
-                      ＋
-                    </span>
-                  </span>
-                </summary>
-                <p className="mt-2.5 text-sm leading-relaxed text-navy-600">{f.a}</p>
-              </details>
-            ))}
-          </div>
-
-          <div className="mt-6 text-center">
-            <Link
-              href={`/${loc}/about`}
-              className="text-sm font-bold text-navy-700 underline decoration-sun-400 decoration-2 underline-offset-4 transition hover:text-sun-700"
-            >
-              {dict.home.faqMore}
-            </Link>
-          </div>
-        </div>
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "FAQPage",
-              mainEntity: faqs.map((f) => ({
-                "@type": "Question",
-                name: f.q,
-                acceptedAnswer: { "@type": "Answer", text: f.a },
-              })),
-            }),
           }}
         />
       </section>

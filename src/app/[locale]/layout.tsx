@@ -14,9 +14,18 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { locale } = await params;
   const dict = getDictionary(locale as Locale);
+  // Both spellings of the name, in the reader's language first. Someone who
+  // heard of the site will type سفرتنا or Sfrtna depending on the keyboard in
+  // front of them, and the homepage title is the strongest signal there is
+  // that either one means this site.
+  const bothNames =
+    locale === "ar"
+      ? `${dict.siteNameAr} ${dict.siteNameEn}`
+      : `${dict.siteNameEn} ${dict.siteNameAr}`;
   return {
-    title: `${dict.siteName} — ${dict.slogan}`,
+    title: `${bothNames} — ${dict.slogan}`,
     description: dict.tagline,
+    applicationName: dict.siteNameEn,
     icons: {
       icon: [
         { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },

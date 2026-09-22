@@ -12,6 +12,7 @@ import { countriesByMonth, monthName } from "@/lib/seasons";
 import HomeShowcase from "@/components/HomeShowcase";
 import HeroPlanner from "@/components/HeroPlanner";
 import Photo from "@/components/Photo";
+import { brandJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,12 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
   return (
     <div className="bg-mist-50">
+      {/* The site's name and every spelling of it, for search engines. Only
+          on the homepage, which is where Google reads it from — see seo.ts. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(brandJsonLd(loc)) }}
+      />
       {/* ── Hero ─────────────────────────────────────────────────────────
           The photograph and the planner, together.
 

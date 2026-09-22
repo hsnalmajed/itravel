@@ -10,7 +10,7 @@ import { findCountry, flagEmoji } from "@/lib/countries";
 import { searchMatches } from "@/lib/search";
 
 /**
- * A wrong link should still be a Sfratna page.
+ * A wrong link should still be a Sfrtna page.
  *
  * `/ar/attractions/XX` used to land on Next's own black screen with "404 This
  * page could not be found" in English — no header, no way back, and in the

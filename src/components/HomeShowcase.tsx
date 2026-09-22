@@ -86,13 +86,13 @@ export default function HomeShowcase({
   steps: ShowcaseStep[];
   dict: ShowcaseDict;
 }) {
-  const [active, setActive] = useState<TabKey>("featured");
+  const [active, setActive] = useState<TabKey>(inSeason.length > 0 ? "season" : "featured");
   const isAr = locale === "ar";
   const arrow = isAr ? "←" : "→";
 
   const tabs: { key: TabKey; label: string; hidden?: boolean }[] = [
-    { key: "featured", label: dict.tabFeatured },
     { key: "season", label: dict.tabSeason, hidden: inSeason.length === 0 },
+    { key: "featured", label: dict.tabFeatured },
     { key: "tools", label: dict.tabTools },
     { key: "how", label: dict.tabHow },
   ];

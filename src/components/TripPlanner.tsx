@@ -460,8 +460,8 @@ export default function TripPlanner({
       </div>
 
       {/* ── 2. What the trip is made of ─────────────────────────────── */}
-      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className={sectionTitle}>{dict.form.whatNeeded}</p>
+      <div className="mb-2.5 flex flex-col items-center gap-2.5">
+        <p className={`${sectionTitle} self-start`}>{dict.form.whatNeeded}</p>
 
         {/* Round trip, one way, several cities. A secondary choice, so a
             compact switch beside the question rather than a second row of
@@ -763,14 +763,14 @@ export default function TripPlanner({
       )}
 
       {/* ── 4. Optional, and saying so ─────────────────────────────────
-          On a wide screen this is one line and always open. On a phone it
-          folds behind its heading so the button stays near the thumb. */}
+          Folded behind its heading on every screen: the search button stays
+          close to the fields that matter, and whoever wants more opens it. */}
       <div className={`mt-5 border-t pt-4 ${divider}`}>
         <button
           type="button"
           onClick={() => setExtrasOpen((v) => !v)}
           aria-expanded={extrasOpen}
-          className="flex w-full items-center justify-between gap-3 text-start lg:pointer-events-none"
+          className="flex w-full items-center justify-between gap-3 text-start"
         >
           <span className={sectionTitle}>
             {dict.form.extrasTitle}{" "}
@@ -780,11 +780,11 @@ export default function TripPlanner({
           </span>
           <Icon
             name="chevron"
-            className={`h-4 w-4 transition lg:hidden ${extrasOpen ? "rotate-180" : ""} ${dark ? "text-white/60" : "text-navy-500"}`}
+            className={`h-4 w-4 transition ${extrasOpen ? "rotate-180" : ""} ${dark ? "text-white/60" : "text-navy-500"}`}
           />
         </button>
 
-        <div className={`${extrasOpen ? "flex" : "hidden"} mt-3 flex-col gap-4 lg:flex`}>
+        <div className={`${extrasOpen ? "flex" : "hidden"} mt-3 flex-col gap-4`}>
           {/* The one question only the suggest tab asks. */}
           {mode === "discover" && (
             <div>

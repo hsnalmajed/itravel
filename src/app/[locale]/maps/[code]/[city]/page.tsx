@@ -119,7 +119,7 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
           <MapDownloads
             pins={pins}
             title={pageTitle}
-            fileBase={`Sfratna-${cityEntry.nameEn}-map`}
+            fileBase={`Sfrtna-${cityEntry.nameEn}-map`}
             dict={dict.maps}
           />
           <p className="mt-4 rounded-xl bg-mist-100 px-3.5 py-3 text-xs leading-relaxed text-navy-500 ring-1 ring-mist-200">

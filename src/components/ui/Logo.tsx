@@ -1,33 +1,34 @@
 import Image from "next/image";
 
 /**
- * The Sfratna logo, unaltered.
+ * The Sfrtna logo — the owner's artwork, used exactly as supplied.
  *
- * Three cuts of the same artwork, because one size never serves every slot:
+ * The master file lives in /brand/sfrtna-logo-master.png. Nothing here is
+ * redrawn, recoloured or re-set. Two files are derived from it, and both
+ * derivations are mechanical:
  *
- *   "lockup"  mark + wordmark — the primary lockup, for the header, where the
- *             descriptor would be an illegible smear at 32px tall.
- *   "full"    the complete signature including «لكل سفرة حكاية», for the
- *             footer, where there is room to read it.
- *   "mark"    the pin alone, for favicons and square slots.
+ *   "full"  the whole signature — pin, wordmark and «لكل سفره حكاية» — with
+ *           only the empty white margin trimmed off and the file scaled to
+ *           roughly three times its largest display size.
+ *   "mark"  the pin with its sun, trail and plane, lifted out of the same
+ *           artwork for the square slots a wordmark cannot fill: the browser
+ *           tab, the home-screen icon, link previews. The plane and the
+ *           wordmark are separated by a clean 24px gap in the master, so the
+ *           icon comes out whole without any of its own pixels being touched.
  *
- * The wordmark is Primary Navy, which would vanish against the navy header,
- * so on dark surfaces it sits on a white card rather than being recoloured.
- * Reversing it by repainting the navy white would also repaint the navy
- * *inside* the pin, and the mark would stop being the mark.
+ * The artwork is on white and the wordmark is navy, so on dark surfaces it
+ * sits on a white card rather than being recoloured. Reversing it would also
+ * repaint the navy inside the pin, and the mark would stop being the mark.
  */
 // Intrinsic sizes match the files on disk. Images are served unoptimized on
-// Workers (see next.config.ts), so the browser performs every downscale
-// itself — each asset is stored at roughly 3x the largest size it is ever
-// displayed at rather than at master resolution.
+// Workers (see next.config.ts), so the browser performs every downscale.
 const SOURCES = {
-  lockup: { src: "/sfratna-lockup.png", width: 360, height: 123 },
-  full: { src: "/sfratna-logo.png", width: 560, height: 189 },
-  mark: { src: "/sfratna-mark.png", width: 256, height: 276 },
+  full: { src: "/sfrtna-logo.png", width: 720, height: 289 },
+  mark: { src: "/sfrtna-mark.png", width: 256, height: 256 },
 } as const;
 
 export default function Logo({
-  variant = "lockup",
+  variant = "full",
   className = "",
   priority = false,
   alt,

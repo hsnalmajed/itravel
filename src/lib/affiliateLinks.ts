@@ -5,7 +5,7 @@ import { aviasalesSearchUrl, travelpayoutsMarker } from "./providers/travelpayou
 /**
  * Where a traveller actually goes to pay.
  *
- * Sfratna never takes a booking or a payment — it compares, and then hands
+ * Sfrtna never takes a booking or a payment — it compares, and then hands
  * over. That handover is the entire business model, and for a while it did
  * not exist: the button said "view details & book", the details page had no
  * booking control on it, and this module sat in the tree with nothing

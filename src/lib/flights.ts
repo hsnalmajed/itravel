@@ -9,7 +9,7 @@ import { searchFlightsFromProviders, searchHotelsFromProviders } from "./provide
 //
 // This module used to call Duffel directly. Duffel is a *booking* API: it
 // charges per order and adds a per-search fee once the search-to-book ratio
-// passes 1500:1. Sfratna never takes a booking, so that ratio is infinite by
+// passes 1500:1. Sfrtna never takes a booking, so that ratio is infinite by
 // construction — every search a cost, every booking someone else's. A pure
 // comparison site on a booking API pays to exist and earns nothing.
 //

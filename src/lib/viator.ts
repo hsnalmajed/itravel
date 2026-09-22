@@ -2,7 +2,7 @@
 // activities, their live prices, photos, ratings and booking links.
 //
 // We use the *affiliate* tier: the traveller always completes the booking on
-// viator.com through the product's own `productUrl`, and Sfratna never
+// viator.com through the product's own `productUrl`, and Sfrtna never
 // touches payment. That matches how the rest of this site works (we compare
 // and hand off, we don't sell).
 //

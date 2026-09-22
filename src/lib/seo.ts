@@ -6,7 +6,7 @@ import { getDictionary } from "@/lib/dictionaries";
  * One page, one title.
  *
  * Every page on the site carried the same title and the same description —
- * "Sfratna — لكل سفرة حكاية" — which means a search engine has nothing to
+ * "Sfrtna — لكل سفرة حكاية" — which means a search engine has nothing to
  * tell one from another, and a link shared on WhatsApp says nothing about
  * what is behind it. For a site whose whole growth path is someone sending
  * a friend a destination, that is the difference between a link that gets
@@ -123,4 +123,51 @@ export function touristDestinationJsonLd({
     data.containedInPlace = { "@type": "Country", name: country };
   }
   return JSON.stringify(data);
+}
+
+
+/**
+ * Who the site is, for search engines — the homepage's WebSite and
+ * Organization records.
+ *
+ * Google shows one name per site and takes it, above all else, from WebSite
+ * structured data on the homepage: https://developers.google.com/search/docs/appearance/site-names
+ * Without it Google guesses from the title, and a guess is how a brand ends
+ * up listed under a slogan.
+ *
+ * The name is declared in the page's own language, because Google asks that
+ * it match how the homepage refers to itself — and the domain root redirects
+ * to the Arabic homepage, so سفرتنا is the name it will display. Every other
+ * spelling a person might type goes in `alternateName`: the Latin name on
+ * the logo, the old spelling the site launched under (links to it are
+ * already out there), and the vowelled transliteration people reach for
+ * when they spell it out by ear.
+ */
+export function brandJsonLd(locale: Locale): object[] {
+  const dict = getDictionary(locale);
+  const primary = locale === "ar" ? dict.siteNameAr : dict.siteNameEn;
+  const others = [
+    locale === "ar" ? dict.siteNameEn : dict.siteNameAr,
+    "Sfratna",
+    "Safratna",
+  ];
+  const home = `${SITE_URL}/`;
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: primary,
+      alternateName: others,
+      url: home,
+      inLanguage: ["ar", "en"],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: primary,
+      alternateName: others,
+      url: home,
+      logo: absoluteUrl("/sfrtna-mark.png"),
+    },
+  ];
 }

@@ -96,7 +96,7 @@ export async function fetchCommonsImage(
   try {
     const res = await fetch(`https://commons.wikimedia.org/w/api.php?${params.toString()}`, {
       headers: {
-        "User-Agent": "Sfratna/1.0 (https://sfratna.almajedhsn.workers.dev; travel metasearch site)",
+        "User-Agent": "Sfrtna/1.0 (https://sfratna.almajedhsn.workers.dev; travel metasearch site)",
         Accept: "application/json",
       },
       // The file doesn't change; only its metadata could, and slowly.

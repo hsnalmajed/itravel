@@ -50,7 +50,7 @@ export function toGPX(places: ExportPlace[], title: string): string {
 
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<gpx version="1.1" creator="Sfratna" xmlns="http://www.topografix.com/GPX/1/1">\n` +
+    `<gpx version="1.1" creator="Sfrtna" xmlns="http://www.topografix.com/GPX/1/1">\n` +
     `  <metadata>\n    <name>${xmlEscape(title)}</name>\n  </metadata>\n` +
     `${waypoints}\n` +
     `</gpx>\n`
@@ -87,7 +87,7 @@ export function safeFileName(base: string, extension: string): string {
     .replace(/\s+/g, "-")
     .slice(0, 60)
     .replace(/^-+|-+$/g, "");
-  return `${cleaned || "sfratna-map"}.${extension}`;
+  return `${cleaned || "sfrtna-map"}.${extension}`;
 }
 
 export function downloadText(content: string, fileName: string, mimeType: string): void {

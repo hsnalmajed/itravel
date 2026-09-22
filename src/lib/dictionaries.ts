@@ -3,8 +3,9 @@ import type { Locale } from "./types";
 export const dictionaries = {
   ar: {
     dir: "rtl",
-    siteName: "Sfratna",
+    siteName: "سفرتنا",
     siteNameAr: "سفرتنا",
+    siteNameEn: "Sfrtna",
     slogan: "لكل سفرة حكاية",
     tagline: "خطّط رحلتك بالكامل حسب ميزانيتك — طيران، فنادق، وبرنامج سياحي في مكان واحد",
     nav: {
@@ -85,7 +86,7 @@ export const dictionaries = {
       openDetails: "عرض المتطلبات والتقديم",
       noApplyRoute:
         "لا نملك رابط تقديم موثّقاً لهذه الدولة بعد. استخدم روابط المصادر الرسمية أعلاه للوصول إلى سفارتها أو موقعها الرسمي.",
-      applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج Sfratna.",
+      applyExternalNote: "التقديم والدفع يتمّان على الموقع المقصود مباشرة، خارج سفرتنا.",
     },
     filters: {
       searchPlaceholder: "اكتب اسم دولة أو مدينة...",
@@ -152,7 +153,7 @@ export const dictionaries = {
         "تعذّر جلب أسعار الصرف الآن. لا نعرض رقماً قديماً بدلاً منها — استخدم زر قوقل أدناه للحصول على السعر الحالي.",
       pairUnavailable: "لا يتوفر سعر صرف لهذا الزوج من العملات في المصدر حالياً.",
       disclaimer:
-        "هذا سعر السوق المرجعي (mid-market). البنوك ومكاتب الصرافة تضيف هامشاً، فالمبلغ الذي تستلمه فعلياً سيكون أقل. Sfratna لا يبيع عملات ولا يقدّم استشارات مالية.",
+        "هذا سعر السوق المرجعي (mid-market). البنوك ومكاتب الصرافة تضيف هامشاً، فالمبلغ الذي تستلمه فعلياً سيكون أقل. سفرتنا لا يبيع عملات ولا يقدّم استشارات مالية.",
       sourceNote: "المصدر: {source}",
       popular: "الأكثر استخداماً",
       allCurrencies: "كل العملات",
@@ -285,7 +286,7 @@ export const dictionaries = {
       chooseModeFirst: "اختر أحد الخيارين أعلاه للمتابعة",
     },
     home: {
-      stepsEyebrow: "كيف يعمل Sfratna",
+      stepsEyebrow: "كيف يعمل سفرتنا",
       stepsTitle: "من الميزانية إلى خطة سفر كاملة، بثلاث خطوات",
       step1Title: "حدد ميزانيتك وتفضيلاتك",
       step1Body: "أدخل ميزانيتك الإجمالية وتواريخ رحلتك — وجهة محددة تعرفها، أو اقتراح ضمن ميزانيتك إن لم تحدد بعد.",
@@ -293,7 +294,7 @@ export const dictionaries = {
       step2Body: "نقارن الطيران والفنادق عبر مصادر موثوقة محلياً وعالمياً، ونرتبها حسب ما يناسب ميزانيتك فعلياً.",
       step3Title: "احصل على خطة سياحية جاهزة",
       step3Body: "بعد اختيار رحلتك، نبني لك خطة يومية لأبرز المعالم والأنشطة والمأكولات المحلية في وجهتك.",
-      featuresEyebrow: "لماذا Sfratna",
+      featuresEyebrow: "لماذا سفرتنا",
       featuresTitle: "كل ما تحتاجه لتخطيط رحلة ضمن ميزانيتك",
 
       statCountries: "دولة",
@@ -485,7 +486,7 @@ export const dictionaries = {
       mapsHowTo:
         "لا يستطيع أي موقع إضافة أماكن إلى حسابك في قوقل مباشرة. الطريقة الرسمية: نزّل الملف من هنا ثم افتح My Maps واختر «إنشاء خريطة جديدة ← استيراد» وارفع الملف — تظهر بعدها في تطبيق خرائط قوقل ضمن «خرائطك».",
       openMyMaps: "افتح Google My Maps",
-      printedFrom: "خطة من Sfratna",
+      printedFrom: "خطة من سفرتنا",
     },
     results: {
       title: "نتائج البحث",
@@ -812,7 +813,7 @@ export const dictionaries = {
       tagCuisine: "طبق محلي",
       backToList: "رجوع للقائمة",
       bookNow: "احجز الآن",
-      bookingExternalNote: "الحجز والدفع يتمّان مباشرة عبر الموقع، خارج Sfratna.",
+      bookingExternalNote: "الحجز والدفع يتمّان مباشرة عبر الموقع، خارج سفرتنا.",
       citiesHeading: "اختر مدينة",
       citiesSubtitle: "لكل مدينة جولاتها وأنشطتها القابلة للحجز",
       citySearchPlaceholder: "ابحث عن مدينة...",
@@ -834,7 +835,7 @@ export const dictionaries = {
     },
     footer: {
       disclaimer:
-        "Sfratna أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
+        "سفرتنا أداة مقارنة ومساعدة في التخطيط. الأسعار النهائية والحجز يتمّان عبر شركاء الحجز الموثوقين. الأسعار تقديرية وقد تختلف عند إتمام الحجز.",
       rights: "جميع الحقوق محفوظة",
       linksHeading: "روابط سريعة",
       exploreHeading: "اكتشف",
@@ -845,8 +846,9 @@ export const dictionaries = {
   },
   en: {
     dir: "ltr",
-    siteName: "Sfratna",
+    siteName: "Sfrtna",
     siteNameAr: "سفرتنا",
+    siteNameEn: "Sfrtna",
     slogan: "Every trip has a story",
     tagline: "Plan your whole trip around your budget — flights, hotels, and an itinerary in one place",
     nav: {
@@ -924,7 +926,7 @@ export const dictionaries = {
       openDetails: "See requirements and apply",
       noApplyRoute:
         "We don't have a verified application link for this country yet. Use the official source links above to reach its embassy or official portal.",
-      applyExternalNote: "Applying and paying happen on the destination site directly, outside Sfratna.",
+      applyExternalNote: "Applying and paying happen on the destination site directly, outside Sfrtna.",
     },
     filters: {
       searchPlaceholder: "Type a country or city...",
@@ -991,7 +993,7 @@ export const dictionaries = {
         "We couldn't fetch exchange rates right now. Rather than show you a stale number, use the Google button below for the current rate.",
       pairUnavailable: "The source doesn't currently quote a rate for this pair.",
       disclaimer:
-        "This is the mid-market reference rate. Banks and exchange offices add a margin, so what you actually receive will be less. Sfratna does not sell currency or give financial advice.",
+        "This is the mid-market reference rate. Banks and exchange offices add a margin, so what you actually receive will be less. Sfrtna does not sell currency or give financial advice.",
       sourceNote: "Source: {source}",
       popular: "Most used",
       allCurrencies: "All currencies",
@@ -1119,7 +1121,7 @@ export const dictionaries = {
       chooseModeFirst: "Choose one of the options above to continue",
     },
     home: {
-      stepsEyebrow: "How Sfratna works",
+      stepsEyebrow: "How Sfrtna works",
       stepsTitle: "From your budget to a complete trip plan, in three steps",
       step1Title: "Set your budget and preferences",
       step1Body:
@@ -1130,7 +1132,7 @@ export const dictionaries = {
       step3Title: "Get a ready-made itinerary",
       step3Body:
         "Once you've picked your trip, we build a day-by-day plan for the top attractions, activities, and local food in your destination.",
-      featuresEyebrow: "Why Sfratna",
+      featuresEyebrow: "Why Sfrtna",
       featuresTitle: "Everything you need to plan a trip within your budget",
 
       statCountries: "Countries",
@@ -1139,7 +1141,7 @@ export const dictionaries = {
 
       faqEyebrow: "Common questions",
       faqTitle: "Before you start",
-      faqQ1: "Does Sfratna book for me?",
+      faqQ1: "Does Sfrtna book for me?",
       faqA1: "No. We compare prices and sort them against your budget, then hand you over to a partner's site to book. We never take payments and never ask for your card details.",
       faqQ2: "Are the prices final?",
       faqA2: "Prices are indicative and change by the minute with availability. The final price is set by the partner when you book.",
@@ -1317,7 +1319,7 @@ export const dictionaries = {
       mapsHowTo:
         "No website can add places straight into your Google account. The supported route: download the file here, open My Maps, choose Create a new map → Import, and upload it — the places then appear in the Google Maps app under Your places.",
       openMyMaps: "Open Google My Maps",
-      printedFrom: "A plan from Sfratna",
+      printedFrom: "A plan from Sfrtna",
     },
     results: {
       title: "Search results",
@@ -1499,7 +1501,7 @@ export const dictionaries = {
     legal: {
       aboutTitle: "About us",
       aboutLead:
-        "Sfratna is a comparison and planning tool — we don't take bookings, we don't handle payments, and we never ask for your card details.",
+        "Sfrtna is a comparison and planning tool — we don't take bookings, we don't handle payments, and we never ask for your card details.",
       aboutWhatTitle: "What we actually do",
       aboutWhatBody:
         "We gather flight and hotel prices from trusted sources and sort them against your budget, alongside visa requirements for a Saudi passport, maps of what's worth seeing in each city, a currency converter, and a day-by-day plan you build yourself from the places you pick.",
@@ -1536,10 +1538,10 @@ export const dictionaries = {
         "Because we hold no personal data, there is no account to delete. If you have a privacy question, write to us and we'll answer it.",
 
       termsTitle: "Terms and conditions",
-      termsLead: "By using Sfratna you agree to the following.",
+      termsLead: "By using Sfrtna you agree to the following.",
       termsServiceTitle: "What the service is",
       termsServiceBody:
-        "Sfratna is a comparison engine and a planning tool. We do not sell tickets, book rooms, or become a party to any contract between you and an airline, hotel or booking site. That contract is between you and whichever partner you book with.",
+        "Sfrtna is a comparison engine and a planning tool. We do not sell tickets, book rooms, or become a party to any contract between you and an airline, hotel or booking site. That contract is between you and whichever partner you book with.",
       termsAccuracyTitle: "Accuracy",
       termsAccuracyBody:
         "We work to show correct, current information, but prices, availability and visa rules change without notice. Always check the official source, or the partner, before making a decision or paying anything.",
@@ -1548,7 +1550,7 @@ export const dictionaries = {
         "We are not liable for losses arising from reliance on information shown here, nor for services provided by a third party. The decision to travel and to book is yours.",
       termsContentTitle: "Content and rights",
       termsContentBody:
-        "Place descriptions and photographs come from Wikipedia and Wikimedia under their licences, and every photograph names its photographer and licence. Map data comes from OpenStreetMap and its contributors. The Sfratna name and logo belong to their owners.",
+        "Place descriptions and photographs come from Wikipedia and Wikimedia under their licences, and every photograph names its photographer and licence. Map data comes from OpenStreetMap and its contributors. The Sfrtna name and logo belong to their owners.",
       termsChangesTitle: "Changes to these terms",
       termsChangesBody: "We may update this page; the date it last changed is shown at the bottom.",
 
@@ -1633,7 +1635,7 @@ export const dictionaries = {
       tagCuisine: "Local dish",
       backToList: "Back to list",
       bookNow: "Book now",
-      bookingExternalNote: "Booking and payment happen directly on that site, outside Sfratna.",
+      bookingExternalNote: "Booking and payment happen directly on that site, outside Sfrtna.",
       citiesHeading: "Choose a city",
       citiesSubtitle: "Each city has its own bookable tours and activities",
       citySearchPlaceholder: "Search for a city...",
@@ -1655,7 +1657,7 @@ export const dictionaries = {
     },
     footer: {
       disclaimer:
-        "Sfratna is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
+        "Sfrtna is a comparison and planning assistant. Final pricing and booking happen through trusted booking partners. Prices are estimates and may vary at checkout.",
       rights: "All rights reserved",
       linksHeading: "Quick links",
       exploreHeading: "Explore",

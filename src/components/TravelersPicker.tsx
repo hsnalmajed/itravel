@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
 import { formStyles, type FormTone } from "@/lib/formTone";
 import { keepPopoverOnScreen } from "@/lib/popover";
+import Icon from "@/components/ui/Icon";
 
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 6;
@@ -136,7 +137,10 @@ export default function TravelersPicker({
         className={`${inputClass} flex items-center justify-between text-start`}
       >
         <span>{summarize(value, dict)}</span>
-        <span aria-hidden="true">🧑‍🤝‍🧑</span>
+        <Icon
+          name="chevron"
+          className={`h-4 w-4 transition ${open ? "rotate-180" : ""} ${tone === "dark" ? "text-white/55" : "text-navy-400"}`}
+        />
       </button>
 
       {open && (

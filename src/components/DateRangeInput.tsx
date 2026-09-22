@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/dictionaries";
 import { countLabel } from "@/lib/format";
 import { formStyles, type FormTone } from "@/lib/formTone";
 import { keepPopoverOnScreen } from "@/lib/popover";
+import Icon from "@/components/ui/Icon";
 
 /**
  * Departure and return, chosen in one calendar.
@@ -261,9 +262,7 @@ export default function DateRangeInput({
         >
           {summary || dict.form.pickDates}
         </span>
-        <span aria-hidden="true" className={`shrink-0 ${tone === "dark" ? "text-white/50" : "text-navy-400"}`}>
-          📅
-        </span>
+        <Icon name="calendar" className={`h-4 w-4 ${tone === "dark" ? "text-white/55" : "text-navy-400"}`} />
       </button>
 
       {/* A hidden required field, so the browser's own form validation still

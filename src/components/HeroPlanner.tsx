@@ -6,23 +6,22 @@ import TripPlanner from "@/components/TripPlanner";
 /**
  * The planner's frame, on the first screen.
  *
- * This used to hold two tabs over two separate forms. The tabs are gone:
- * the two forms were the same form apart from one answer, and that answer
- * now lives inside the planner, at the destination question where it
- * belongs (see TripPlanner). What is left here is the panel itself — the
- * translucent slab the form sits on, and the #plan anchor that "edit
- * search" links land on.
+ * The translucent slab the form sits on, and the #plan anchor that "edit
+ * search" links land on. Wide enough for the search to be one row — origin,
+ * destination, dates, travellers, budget — because a row is read in one
+ * glance and a grid of two is read twice.
  *
- * No overflow-hidden: the calendar and the travellers counter are meant to
- * hang outside the panel, and clipping them was how the calendar lost half
- * its second month. text-start, because the hero centres its headline and a
- * form whose labels drift to the middle of their fields is unreadable.
+ * The top margin is room for the two tabs, which sit half outside the panel
+ * on its top edge (see TripPlanner). No overflow-hidden: the calendar and the
+ * travellers counter are meant to hang outside the panel. text-start because
+ * the hero centres its headline, and labels drifting to the middle of their
+ * fields are unreadable.
  */
 export default function HeroPlanner({ locale }: { locale: Locale }) {
   return (
     <div
       id="plan"
-      className="mt-7 w-full max-w-4xl scroll-mt-24 rounded-2xl bg-navy-990/55 p-4 text-start ring-1 ring-white/15 backdrop-blur-xl sm:p-5"
+      className="mt-12 w-full max-w-6xl scroll-mt-28 rounded-2xl bg-navy-990/60 px-4 pb-5 text-start ring-1 ring-white/15 backdrop-blur-xl sm:px-6 sm:pb-6"
     >
       <TripPlanner locale={locale} tone="dark" />
     </div>

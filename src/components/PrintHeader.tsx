@@ -33,10 +33,10 @@ export default function PrintHeader({
   return (
     <header className="print-header hidden print:block">
       <div className="print-header-bar">
+        {/* The logo already carries the slogan, so it is not printed twice. */}
         {/* eslint-disable-next-line @next/next/no-img-element -- local asset,
             and the app runs with the Next image optimizer disabled. */}
-        <img src="/sfratna-lockup.png" alt={dict.siteName} className="print-logo" />
-        <span className="print-tagline">{dict.slogan}</span>
+        <img src="/sfrtna-logo.png" alt={dict.siteName} className="print-logo" />
       </div>
 
       <h1 className="print-title">{title}</h1>

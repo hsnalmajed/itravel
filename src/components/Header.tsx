@@ -90,13 +90,13 @@ export default function Header({ locale }: { locale: Locale }) {
             solid ? "py-2" : "py-3.5"
           }`}
         >
-          {/* The lockup on a white card — see the note in Logo.tsx for why it
-              is not recoloured for the dark bar. */}
+          {/* The full logo on a white card — see the note in Logo.tsx for why
+              it is not recoloured for the dark bar. */}
           <Link
             href={`/${locale}`}
-            className="flex shrink-0 items-center rounded-xl bg-white px-3 py-2 shadow-[0_2px_10px_-4px_rgba(4,24,47,0.5)] ring-1 ring-white/70 transition hover:shadow-[0_4px_16px_-4px_rgba(4,24,47,0.6)]"
+            className="flex shrink-0 items-center rounded-xl bg-white px-2.5 py-1 shadow-[0_2px_10px_-4px_rgba(4,24,47,0.5)] ring-1 ring-white/70 transition hover:shadow-[0_4px_16px_-4px_rgba(4,24,47,0.6)]"
           >
-            <Logo variant="lockup" alt={dict.siteName} priority className="h-6 w-auto sm:h-7" />
+            <Logo variant="full" alt={`${dict.siteNameAr} ${dict.siteNameEn}`} priority className="h-10 w-auto sm:h-12" />
           </Link>
 
           <nav className="hidden items-center gap-0.5 text-sm font-semibold lg:flex">

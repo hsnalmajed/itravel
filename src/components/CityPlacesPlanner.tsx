@@ -313,7 +313,7 @@ export default function CityPlacesPlanner({
             countryCode={countryCode}
             countryName={countryName}
             planLines={planLines}
-            fileBase={`sfratna-${countryCode}-${cityName}`}
+            fileBase={`sfrtna-${countryCode}-${cityName}`}
             title={planTitle}
           />
 

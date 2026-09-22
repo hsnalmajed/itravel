@@ -49,7 +49,7 @@ export default function Footer({ locale }: { locale: Locale }) {
         <div className="grid grid-cols-2 gap-x-8 gap-y-10 border-b border-white/10 pb-10 sm:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr_1fr]">
           <div className="col-span-2 max-w-sm space-y-4 sm:col-span-1">
             <span className="inline-flex rounded-xl bg-white px-3 py-2 shadow-sm">
-              <Logo variant="full" alt={dict.siteName} className="h-11 w-auto" />
+              <Logo variant="full" alt={`${dict.siteNameAr} ${dict.siteNameEn}`} className="h-16 w-auto" />
             </span>
             <p className="leading-relaxed text-white/45">{dict.footer.disclaimer}</p>
           </div>

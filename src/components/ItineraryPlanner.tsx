@@ -311,7 +311,7 @@ function ItineraryContent({ hero }: { hero?: SectionHero }) {
             countryCode={resolved.country?.code}
             countryName={countryName}
             planLines={planLines}
-            fileBase={`sfratna-plan-${resolved.country?.code ?? "trip"}`}
+            fileBase={`sfrtna-plan-${resolved.country?.code ?? "trip"}`}
             title={dict.itinerary.planTitleForCity.replace("{city}", city)}
           />
 

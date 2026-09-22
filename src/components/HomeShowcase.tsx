@@ -51,7 +51,7 @@ type TabKey = "featured" | "season" | "tools" | "how";
  * Everything the site is, on one screen.
  *
  * The homepage used to run four full-height sections deep — favourites, then
- * this month, then the tools, then how it works — so seeing what Sfratna
+ * this month, then the tools, then how it works — so seeing what Sfrtna
  * actually offers meant scrolling past three screens of it. A visitor who
  * doesn't scroll never learns the site has visa rules, city maps and currency
  * in it at all, which is most of its value and all of its difference.

@@ -756,7 +756,7 @@ export default function TripBuilder({
         </div>
 
         {/* ---- The way out ----------------------------------------------
-            Sfratna compares and hands over; it never takes a booking. For a
+            Sfrtna compares and hands over; it never takes a booking. For a
             while this row did not exist at all, so the site's only job had
             no button. Each partner is named *before* the traveller leaves,
             and the price disclaimer is not fine print: our number came from

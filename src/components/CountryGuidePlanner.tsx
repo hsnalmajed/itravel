@@ -148,7 +148,7 @@ export default function CountryGuidePlanner({
             countryCode={countryCode}
             countryName={countryName}
             planLines={planLines}
-            fileBase={`sfratna-picks-${countryCode}`}
+            fileBase={`sfrtna-picks-${countryCode}`}
             title={d.picker.planTitle.replace("{country}", countryName)}
           />
 

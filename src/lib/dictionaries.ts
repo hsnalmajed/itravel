@@ -269,11 +269,11 @@ export const dictionaries = {
     hero: {
       badge: "تخطيط سفر ذكي · بدون عمولات حجز",
       photoCredit: "{place} · تصوير {artist} — ويكيميديا كومنز {license}",
-      titleLine1: "أفضل سعر لوجهتك،",
-      titleLine2: "أو وجهة تناسب ميزانيتك",
-      title: "أفضل سعر لوجهتك، أو وجهة تناسب ميزانيتك",
+      titleLine1: "قل لنا ميزانيتك،",
+      titleLine2: "ونرتّب لك رحلة كاملة بأفضل سعر",
+      title: "قل لنا ميزانيتك، ونرتّب لك رحلة كاملة بأفضل سعر",
       subtitle:
-        "حدّد وجهتك فنبحث لك عن أرخص طيران وفندق ضمن ميزانيتك، أو اترك الوجهة لنا فنقترح عليك ما تصل إليه — ومع كل رحلة خطة يومية وخرائط معالم ومتطلبات تأشيرة.",
+        "طيران وفندق وخطة يومية في بحث واحد. نقارن لك الأسعار من مواقع الحجز الموثوقة، وإن لم تحدّد وجهتك نقترح عليك أين تأخذك ميزانيتك — بدون أي رسوم عليك.",
       trust1: "بدون عمولات حجز خفية",
       trust2: "مقارنة من مصادر موثوقة",
       trust3: "خطة سياحية جاهزة لكل رحلة",
@@ -1120,11 +1120,11 @@ export const dictionaries = {
     hero: {
       badge: "Smart trip planning · No booking fees",
       photoCredit: "{place} · photo by {artist} — Wikimedia Commons {license}",
-      titleLine1: "The best price for your destination,",
-      titleLine2: "or a destination that fits your budget",
-      title: "The best price for your destination, or a destination that fits your budget",
+      titleLine1: "Tell us your budget,",
+      titleLine2: "we'll shape the whole trip at the best price",
+      title: "Tell us your budget, we'll shape the whole trip at the best price",
       subtitle:
-        "Name your destination and we'll find the cheapest flight and hotel your budget allows — or leave the destination to us and we'll suggest the ones it reaches. Every trip comes with a day-by-day plan, attraction maps and visa requirements.",
+        "Flight, hotel and a day-by-day plan in one search. We compare prices from trusted booking sites, and if you haven't picked a destination we'll show you where your budget can take you — at no cost to you.",
       trust1: "No hidden booking fees",
       trust2: "Compared across trusted sources",
       trust3: "A ready itinerary for every trip",

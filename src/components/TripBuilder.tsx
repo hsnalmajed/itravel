@@ -699,6 +699,17 @@ export default function TripBuilder({
                     {flight.price.toLocaleString()} {flight.currency}
                   </span>
                   <span className="text-[11px] font-semibold text-gray-500">{travelersText}</span>
+                  {/* Where the total came from. A partner's page shows one
+                      seat's fare, and a traveller comparing the two numbers
+                      deserves to see the arithmetic rather than suspect us. */}
+                  {flight.pricePerPerson !== undefined &&
+                    flight.pricePerPerson !== flight.price && (
+                      <span dir="ltr" className="text-[11px] text-gray-400">
+                        {dict.results.perPersonFare
+                          .replace("{price}", `${flight.pricePerPerson.toLocaleString()} ${flight.currency}`)
+                          .replace("{count}", String(Math.round(flight.price / flight.pricePerPerson)))}
+                      </span>
+                    )}
                   <ChangeButton
                     label={dict.results.changeFlight}
                     open={picker === "flight"}

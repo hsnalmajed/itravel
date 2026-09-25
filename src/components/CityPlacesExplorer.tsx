@@ -17,19 +17,17 @@ export interface PlaceListItem {
    * Carried purely so the day planner can put places that are near each
    * other on the same day — a plan that sends someone across the city and
    * back is a worse plan than one that doesn't, and the coordinates were
-   * already fetched. Optional because the hand-curated landmarks are matched
-   * to a city by name rather than discovered by position.
+   * already fetched. Also what the "open in Google Maps" link points at.
    */
   lat?: number;
   lon?: number;
-  wikiUrl: string;
-  /** Name and description are English because no article exists in Arabic. */
+  /** The reader wanted Arabic and no Arabic name is recorded for this place. */
   englishOnly: boolean;
   /**
    * How you get in — free, official site, tour operator, on arrival.
    *
-   * Only on the landmarks the guide covers by hand. Wikipedia knows what a
-   * place is; it does not know whether you need to book it, and that is the
+   * Only on the landmarks the guide covers by hand. A map knows what a place
+   * is; it does not know whether you need to book it, and that is the
    * line a traveller planning a day actually needs. Present on a handful of
    * places per city, absent on the rest, and never invented.
    */
@@ -44,7 +42,7 @@ interface ExplorerDict {
   placesCount: string;
   emptyCategory: string;
   englishOnly: string;
-  readMoreWiki: string;
+  directions: string;
   loadMore: string;
   searchPlaceholder: string;
 }
@@ -63,13 +61,13 @@ function score(p: PlaceListItem): number {
   if (p.bookingLabel) n += 4; // we know how you get in
   if (p.photo) n += 3;
   if (p.description) n += 2;
-  if (!p.englishOnly) n += 1; // has an article in the reader's language
+  if (!p.englishOnly) n += 1; // named in the reader's language
   return n;
 }
 
 // The three sections the site has always had — sights, things to do, places
-// to eat — plus the honest fourth: documented places that Wikipedia's own
-// description didn't put in any of them. They'd otherwise be dropped, and
+// to eat — plus the honest fourth: mapped places whose tags didn't put them
+// in any of them. They'd otherwise be dropped, and
 // they're often the most interesting finds in a city.
 export default function CityPlacesExplorer({
   places,
@@ -120,14 +118,10 @@ export default function CityPlacesExplorer({
       .filter((p) => searchMatches([p.name, p.description], q))
       // Best-documented first.
       //
-      // The source order is whatever Wikipedia's geosearch returned, which is
-      // by distance from the city centre — so an unremarkable side street can
-      // open the list while the thing everyone comes to see is forty cards
-      // down. We have no popularity data and will not invent a ranking, but
-      // how well documented a place is turns out to be a decent proxy for how
-      // known it is: a photograph and a written description mean somebody
-      // cared enough to add them. Curated landmarks, which we wrote
-      // ourselves, come first of all.
+      // We have no popularity data and will not invent a ranking. Curated
+      // landmarks, which we checked ourselves, come first; then places we
+      // know more about — how to get in, a photograph, a name in the
+      // reader's language.
       .sort((a, b) => score(b) - score(a));
   }, [places, active, query]);
 
@@ -235,14 +229,16 @@ export default function CityPlacesExplorer({
                     <p className="mt-2 text-[11px] leading-snug text-amber-700">{dict.englishOnly}</p>
                   )}
 
-                  <a
-                    href={p.wikiUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-block text-xs font-semibold text-brand-700 hover:underline"
-                  >
-                    {dict.readMoreWiki}
-                  </a>
+                  {p.lat !== undefined && p.lon !== undefined && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-block text-xs font-semibold text-brand-700 hover:underline"
+                    >
+                      {dict.directions} ↗
+                    </a>
+                  )}
 
                   {/* Pushed to the bottom edge so the button lines up across a
                       row of cards whose descriptions are all different

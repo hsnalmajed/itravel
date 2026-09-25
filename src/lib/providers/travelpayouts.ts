@@ -203,6 +203,13 @@ function toOffers(
   const bucket = body.data[destination] ?? Object.values(body.data)[0];
   if (!bucket || typeof bucket !== "object") return [];
 
+  // The endpoint quotes one seat. The site's prices are for the whole party —
+  // that is what a budget means to a family of four — so the fare is
+  // multiplied by the paying passengers here, and the card says the
+  // multiplication happened. Infants are left out: they are not sold a seat,
+  // and the fee for one is the airline's to state, not ours to guess.
+  const paying = Math.max(1, (params.adults || 1) + (params.childrenAges?.length ?? 0));
+
   const offers: FlightOffer[] = [];
   for (const [key, row] of Object.entries(bucket)) {
     const price = Number(row?.price);
@@ -222,7 +229,8 @@ function toOffers(
       arriveTime: row.departure_at || params.departDate,
       durationMinutes: 0,
       stops: opts.direct ? 0 : 0,
-      price: Math.round(price),
+      price: Math.round(price * paying),
+      pricePerPerson: Math.round(price),
       currency: opts.currency.toUpperCase(),
       isMock: false,
       bookingHint: "Aviasales",

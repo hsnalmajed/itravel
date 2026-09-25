@@ -8,7 +8,7 @@ import { cityCountLabel } from "@/lib/format";
 import AttractionsExplorer from "@/components/AttractionsExplorer";
 import { sectionHero } from "@/lib/sectionHero";
 
-// Live Wikipedia lookups — fetched fresh per request rather than frozen into
+// Live photo lookups — fetched fresh per request rather than frozen into
 // the build, so a renamed article or a newly-added country guide shows up
 // without a redeploy.
 export const dynamic = "force-dynamic";

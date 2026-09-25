@@ -268,7 +268,7 @@ export const dictionaries = {
     },
     hero: {
       badge: "تخطيط سفر ذكي · بدون عمولات حجز",
-      photoCredit: "{place} · تصوير {artist} — ويكيميديا كومنز {license}",
+      photoCredit: "{place} · تصوير {artist} على Pexels",
       titleLine1: "قل لنا ميزانيتك،",
       titleLine2: "ونرتّب لك رحلة كاملة بأفضل سعر",
       title: "قل لنا ميزانيتك، ونرتّب لك رحلة كاملة بأفضل سعر",
@@ -1123,7 +1123,7 @@ export const dictionaries = {
     },
     hero: {
       badge: "Smart trip planning · No booking fees",
-      photoCredit: "{place} · photo by {artist} — Wikimedia Commons {license}",
+      photoCredit: "{place} · photo by {artist} on Pexels",
       titleLine1: "Tell us your budget,",
       titleLine2: "we'll shape the whole trip at the best price",
       title: "Tell us your budget, we'll shape the whole trip at the best price",

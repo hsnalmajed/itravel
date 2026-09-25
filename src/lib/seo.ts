@@ -20,14 +20,19 @@ import { getDictionary } from "@/lib/dictionaries";
 /**
  * Where the site actually lives.
  *
- * Set NEXT_PUBLIC_SITE_URL once a real domain exists; until then the
- * workers.dev address is the honest answer, and a canonical pointing at the
- * address people can actually reach is better than one pointing at a domain
- * that does not resolve yet.
+ * sfrtna.com is the real home, and every canonical, sitemap entry and piece
+ * of structured data points at it. The Worker keeps its old internal name
+ * (sfratna) because renaming it would break the deploy; that address still
+ * answers, and Cloudflare serves the same Worker on the domain.
+ *
+ * NEXT_PUBLIC_SITE_URL can still override it — useful on a preview build —
+ * but it is read at build time, not at run time, so the default here is what
+ * production actually uses.
  */
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://sfratna.almajedhsn.workers.dev"
-).replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://sfrtna.com").replace(
+  /\/$/,
+  ""
+);
 
 export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;

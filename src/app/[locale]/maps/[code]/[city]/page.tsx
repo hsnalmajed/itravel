@@ -23,16 +23,10 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
   const cityEntry = findCity(country.code, city);
   if (!cityEntry) notFound();
 
-  // The city's own Wikipedia article gives us its real centre point; every
-  // pin is then a documented article within 10 km of it, named in the
-  // reader's own language wherever Wikipedia has an article in it.
-  // 180 rather than the default 300. Three hundred pins is past the point
-  // where a map tells you anything a list would not, and every one of them
-  // costs a slice of the Worker's subrequest budget in the metadata lookups
-  // that follow — which is what made a click through from the country page
-  // sit for over a minute while opening the same URL directly was fine.
+  // Every pin is a named place from OpenStreetMap around the city centre —
+  // see mapPins.ts for how it is collected and why it is stored.
   const places = await fetchPlacesAroundCities([cityEntry], { locale: loc, perCity: 180 });
-  const pins = places.map((p) => placeToPin(p, loc));
+  const pins = places.map(placeToPin);
 
   // Only show a legend entry for a kind of place this city actually has.
   const legend = buildLegend(pins, {
@@ -50,7 +44,7 @@ export default async function CityMapPage({ params }: PageProps<"/[locale]/maps/
     nearbyHeading: dict.maps.nearbyHeading,
     foodHeading: dict.maps.foodHeading,
     historicHeading: dict.maps.historicHeading,
-    readMore: dict.maps.readMore,
+    directions: dict.maps.directions,
     englishOnly: dict.maps.englishOnly,
     viewTours: dict.maps.viewTours,
     mapAttribution: dict.maps.mapAttribution,

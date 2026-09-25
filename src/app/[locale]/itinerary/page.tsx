@@ -2,7 +2,7 @@ import type { Locale } from "@/lib/types";
 import { sectionHero } from "@/lib/sectionHero";
 import ItineraryPlanner from "@/components/ItineraryPlanner";
 
-// The hero is a live Commons lookup behind a daily cache, so the route is
+// The hero is a fixed Pexels photograph, so the route is
 // rendered per request rather than frozen into the build.
 export const dynamic = "force-dynamic";
 

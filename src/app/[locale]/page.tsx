@@ -5,8 +5,7 @@ import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { findCountry } from "@/lib/countries";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
-import { fetchCommonsImage } from "@/lib/commonsImage";
-import { heroPhotoForToday } from "@/lib/heroPhotos";
+import { heroImage as heroImageOf, heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import HomeShowcase from "@/components/HomeShowcase";
 import HeroPlanner from "@/components/HeroPlanner";
@@ -31,12 +30,6 @@ export const dynamic = "force-dynamic";
  */
 const FEATURED = ["TR", "GE", "MV", "MY", "JP", "ES", "AZ", "TH", "IT"];
 
-/**
- * Where the hero falls back to if Commons can't be reached — the same
- * discovered country photos the destination cards use.
- */
-const HERO_CANDIDATES = ["TR", "MV", "GE", "IT", "JP"];
-
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   const loc = (locale === "en" ? "en" : "ar") as Locale;
@@ -55,13 +48,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   // A different corner of the world each day — see heroPhotos.ts for the
   // brief these are chosen against.
   const heroPick = heroPhotoForToday();
-  const photoCodes = Array.from(new Set([...HERO_CANDIDATES, ...FEATURED, ...inSeasonCodes]));
-  const [photos, heroImage] = await Promise.all([
-    fetchCountryPhotos(photoCodes),
-    fetchCommonsImage(heroPick.file),
-  ]);
-
-  const heroPhoto = heroImage?.url ?? HERO_CANDIDATES.map((c) => photos.get(c)).find(Boolean);
+  const photoCodes = Array.from(new Set([...FEATURED, ...inSeasonCodes]));
+  const photos = await fetchCountryPhotos(photoCodes);
+  const heroImage = heroImageOf(heroPick);
+  const heroPhoto = heroImage.url;
   const nameOf = (code: string) => {
     const c = findCountry(code);
     return c ? (isAr ? c.nameAr : c.nameEn) : code;
@@ -101,7 +91,10 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   ];
 
   return (
-    <div className="bg-mist-50">
+    // Dark to the footer. The light band that used to sit under the showcase
+    // was the FAQ's background; with the FAQ gone it was only empty white
+    // between two navy blocks. -mb-20 covers the footer's own top margin.
+    <div className="-mb-20 bg-navy-990 pb-20">
       {/* The site's name and every spelling of it, for search engines. Only
           on the homepage, which is where Google reads it from — see seo.ts. */}
       <script
@@ -111,26 +104,46 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       {/* ── Hero ─────────────────────────────────────────────────────────
           The photograph and the planner, together.
 
-          It is no longer measured in svh. A fixed slab worked when the hero
-          held a headline and a button; now that the whole form lives in it —
-          and that form changes height as options open and as the mode
-          switches — a fixed height would either clip it or leave a gap under
-          the short version. It takes the height its contents need, with a
-          floor so it still reads as a hero on a short window. */}
-      <section className="relative isolate flex min-h-[46rem] items-center overflow-hidden bg-navy-990 lg:min-h-[44rem]">
-        <Photo
-          src={heroPhoto}
-          priority
-          srcSet={
-            heroImage?.url4k ? `${heroImage.url} 1920w, ${heroImage.url4k} 3840w` : undefined
-          }
-          sizes="100vw"
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
-          fallback={
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
-          }
-        />
-        <div className="scrim-soft absolute inset-0 -z-10" />
+          The photograph is its own fixed slab, pinned to the top of the
+          section, and the content flows over it. It used to be stretched to
+          whatever height the section happened to be — and the section's
+          height is the planner's height, which changes every time someone
+          switches to "hotels only" or opens the extra options. So the picture
+          silently re-cropped on every click: it looked like the background
+          was zooming in and out under the form. A fixed slab cannot do that.
+
+          The content is no longer vertically centred either. Centring inside
+          a box whose height is set by that same content means a tall form
+          pushes the headline up underneath the fixed header. It starts below
+          the header and grows downwards, where there is room. */}
+      <section className="relative isolate overflow-hidden bg-navy-990 pb-12 sm:pb-16">
+        <div className="absolute inset-x-0 top-0 -z-10 h-[46rem] overflow-hidden">
+          <Photo
+            src={heroPhoto}
+            priority
+            srcSet={heroImage.srcSet}
+            sizes="100vw"
+            className="h-full w-full object-cover"
+            fallback={
+              <div className="h-full w-full bg-[radial-gradient(130%_100%_at_60%_0%,var(--navy-700),var(--navy-990))]" />
+            }
+          />
+          <div className="scrim-soft absolute inset-0" />
+          {/* The picture ends; the page keeps going. Without this the slab
+              would cut off in a hard line across the middle of the form. */}
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-navy-990" />
+          {/* Pexels asks that the photographer be named where it fits — on
+              the picture itself, which is where it stays put now that the
+              section is taller than the photograph. Plain text, not a link:
+              this sits in the photograph's own layer, behind the form, so a
+              link here would look clickable without being reachable. The
+              footer carries the link to Pexels. */}
+          <p className="absolute bottom-2 end-3 text-2xs text-white/45">
+            {dict.hero.photoCredit
+              .replace("{place}", isAr ? heroPick.placeAr : heroPick.placeEn)
+              .replace("{artist}", heroPick.photographer)}
+          </p>
+        </div>
 
         {/* Centred, because the panel is the point.
             Left-aligned, the headline ran along one edge and the search
@@ -138,7 +151,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             so the first thing the eye met was a column of empty photograph.
             A hero whose whole reason for existing is one panel puts that
             panel in the middle of the window. */}
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-14 pt-28 text-center sm:px-6 sm:pb-16">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pt-28 text-center sm:px-6">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-2xs font-bold tracking-wide text-sun-200 ring-1 ring-white/15 backdrop-blur-md">
             ✈️ {dict.hero.badge}
           </p>
@@ -170,27 +183,12 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           </div>
         </div>
 
-        {/* These photographs are licensed on the condition that the
-            photographer is named. */}
-        {heroImage && (
-          <a
-            href={heroImage.descriptionUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute bottom-2 end-3 z-10 text-2xs text-white/45 transition hover:text-white/75"
-          >
-            {dict.hero.photoCredit
-              .replace("{place}", isAr ? heroPick.placeAr : heroPick.placeEn)
-              .replace("{artist}", heroImage.artist ?? "Wikimedia Commons")
-              .replace("{license}", heroImage.license ?? "")}
-          </a>
-        )}
       </section>
 
       {/* ── What the site is ────────────────────────────────────────────
           Four sections of the old page, now four tabs in one panel that
           straddles the seam below the photograph. See HomeShowcase. */}
-      <section className="relative z-10 -mt-20 pb-14 sm:-mt-24 sm:pb-16">
+      <section className="relative z-10 -mt-20 bg-[radial-gradient(60rem_24rem_at_50%_0%,rgb(255_255_255/0.04),transparent)] pb-6 sm:-mt-24 sm:pb-8">
         <HomeShowcase
           locale={loc}
           featured={featured}

@@ -1,6 +1,7 @@
 import type { FlightOffer, SearchParams } from "@/lib/types";
 import type { PriceProvider } from "./types";
 import { resolveIata } from "@/lib/flights";
+import { searchHotellook } from "./hotellook";
 
 /**
  * Travelpayouts — the first real price source.
@@ -116,7 +117,7 @@ function token(): string {
  * in the query string of every link the site sends a visitor to. The API
  * token is the secret, and that one stays in Cloudflare.
  */
-const TRAVELPAYOUTS_MARKER = "";
+const TRAVELPAYOUTS_MARKER = "778874";
 
 export function travelpayoutsMarker(): string {
   return process.env.NEXT_PUBLIC_TRAVELPAYOUTS_MARKER || TRAVELPAYOUTS_MARKER;
@@ -263,5 +264,9 @@ export const travelpayouts: PriceProvider = {
     const path = params.directFlightsOnly ? "/v1/prices/direct" : "/v1/prices/cheap";
     const body = await get(path, query);
     return toOffers(body, params, { direct: Boolean(params.directFlightsOnly), currency });
+  },
+
+  async searchHotels(params, nights) {
+    return searchHotellook(params, nights);
   },
 };

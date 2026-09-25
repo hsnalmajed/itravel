@@ -1,3 +1,14 @@
+/* The layer order, stated outright.
+ *
+ * Tailwind's preflight zeroes margin and padding on every element from the
+ * `base` layer, and the utilities that put them back live in `utilities`.
+ * Which of the two wins is decided by layer order — and in the compiled
+ * bundle this site ships, `utilities` was not ending up last, so every
+ * padding, margin and gap on the site computed to zero: the header sat on
+ * top of the headline, the cards touched, the forms had no breathing room.
+ * Naming the order here pins it, whatever order the pieces arrive in. */
+@layer properties, theme, base, components, utilities;
+
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────

@@ -20,6 +20,14 @@ import type { Locale } from "@/lib/types";
  *
  * The script is loaded once, on the pages that actually show flights — it is
  * a third-party module and has no business on a page about visas.
+ *
+ * Why this block is on the homepage as well as the results page: when someone
+ * searches in the widget, the widget itself decides where the answer goes,
+ * and what it does is open the site's own root. There is no setting for that
+ * address — the White Label has no "results page" field — so the only way the
+ * tickets land somewhere of ours rather than nowhere is for the root to carry
+ * the same two containers. Hence `tone`: the results page is white, the
+ * homepage is navy, and the widget's own cards are white either way.
  */
 
 const WIDGET_SRC = "https://tpwgt.com/wl_web/main.js?wl_id=22604";
@@ -28,10 +36,13 @@ export default function FlightMetasearch({
   locale,
   heading,
   note,
+  tone = "light",
 }: {
   locale: Locale;
   heading: string;
   note: string;
+  /** "dark" puts the block on a navy background and boxes it in white. */
+  tone?: "light" | "dark";
 }) {
   useEffect(() => {
     if (document.getElementById("tpwl-main")) return;
@@ -43,14 +54,21 @@ export default function FlightMetasearch({
     document.head.appendChild(script);
   }, []);
 
+  const dark = tone === "dark";
   return (
-    <section className="mt-8" dir={locale === "ar" ? "rtl" : "ltr"}>
-      <h2 className="mb-1 font-display text-h3 font-extrabold text-navy-900">{heading}</h2>
-      <p className="mb-4 text-sm text-navy-500">{note}</p>
+    <section className={dark ? "" : "mt-8"} dir={locale === "ar" ? "rtl" : "ltr"}>
+      <h2
+        className={`mb-1 font-display text-h3 font-extrabold ${dark ? "text-white" : "text-navy-900"}`}
+      >
+        {heading}
+      </h2>
+      <p className={`mb-4 text-sm ${dark ? "text-white/70" : "text-navy-500"}`}>{note}</p>
       {/* The widget fills these two. Keep the ids exactly as they are: the
           script looks them up by name and silently does nothing otherwise. */}
-      <div id="tpwl-search" />
-      <div id="tpwl-tickets" className="mt-4" />
+      <div className={dark ? "rounded-3xl bg-white p-3 shadow-sun sm:p-4" : ""}>
+        <div id="tpwl-search" />
+        <div id="tpwl-tickets" className="mt-4 empty:mt-0" />
+      </div>
     </section>
   );
 }

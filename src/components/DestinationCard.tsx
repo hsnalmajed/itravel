@@ -121,6 +121,20 @@ export default function DestinationCard({
             )}
           </>
         )}
+        {!suggestion.hotel && tripType !== "flight" && (
+          // No hotel price, and no pretending there is one. What a budget
+          // traveller actually needs at this moment is the subtraction: the
+          // flight costs this much, so this much is left for the room. The
+          // real room prices are one click away, on the results page.
+          <p>
+            🏨{" "}
+            {suggestion.remainingBudget > 0
+              ? dict.results.hotelBudgetLeft
+                  .replace("{amount}", suggestion.remainingBudget.toLocaleString())
+                  .replace("{currency}", suggestion.currency)
+              : dict.results.hotelBudgetGone}
+          </p>
+        )}
         {suggestion.hotel && (
           <>
             <p>

@@ -1,6 +1,7 @@
 import type { FlightOffer, HotelOffer, SearchParams } from "./types";
 import { resolveIata } from "./flights";
 import { aviasalesSearchUrl, travelpayoutsMarker } from "./providers/travelpayouts";
+import { hotellookSearchUrl } from "./providers/hotellook";
 
 /**
  * Where a traveller actually goes to pay.
@@ -111,10 +112,12 @@ export function flightBookingHandoff(
 }
 
 /**
- * Hotels: Booking.com's search for the same city, dates and party.
+ * Hotels: Hotellook first when the marker is set, because that is the
+ * handover that pays and it compares Booking, Agoda and the rest in one
+ * screen. Booking.com's own search otherwise.
  *
- * `destinationName` is the city as a person would type it — Booking's free
- * text search does far better with "Istanbul" than with "IST".
+ * `destinationName` is the city as a person would type it — free text search
+ * does far better with "Istanbul" than with "IST".
  */
 export function hotelBookingHandoff(
   params: SearchParams,
@@ -123,6 +126,20 @@ export function hotelBookingHandoff(
 ): BookingHandoff | null {
   if (params.tripType === "flight") return null;
   if (!params.departDate) return null;
+
+  const marker = travelpayoutsMarker();
+  if (marker) {
+    return {
+      partner: "Hotellook",
+      url: hotellookSearchUrl({
+        destination: destinationName || params.destination,
+        checkIn: params.departDate,
+        checkOut: params.returnDate || params.departDate,
+        adults: params.adults || 1,
+        marker,
+      }),
+    };
+  }
 
   const checkin = params.departDate;
   const checkout = params.returnDate || params.departDate;

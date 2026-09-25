@@ -515,6 +515,7 @@ export const dictionaries = {
       overBudget: "يتجاوز الميزانية",
       withinBudget: "ضمن الميزانية",
       priceOnlyNote: "سعر مرصود — المصدر لا يذكر وقت الوصول أو التوقفات",
+      hotelPriceOnlyNote: "أرخص ليلة مرصودة — الغرفة والإفطار تُحدَّد عند الشريك",
       priceObserved: "سعر مرصود خلال الأيام الماضية",
       shortfallTitle: "ميزانيتك لا تكفي هذه الرحلة",
       shortfallBody:
@@ -1364,6 +1365,7 @@ export const dictionaries = {
       overBudget: "Over budget",
       withinBudget: "Within budget",
       priceOnlyNote: "Observed fare — the source gives no arrival time or stop count",
+      hotelPriceOnlyNote: "Cheapest night seen — room and board are chosen at the partner",
       priceObserved: "Fare seen in the last few days",
       shortfallTitle: "Your budget doesn't reach this trip",
       shortfallBody:

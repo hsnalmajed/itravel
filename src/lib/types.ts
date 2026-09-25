@@ -106,6 +106,16 @@ export interface HotelOffer {
    * that hotel.
    */
   photoUrl?: string;
+  /**
+   * The source gave a price and a name and little else.
+   *
+   * Hotellook's cached prices carry no distance from the centre, no board
+   * basis and no room type. Rather than print a guess beside a real number,
+   * an offer marked this way tells the card to drop those lines.
+   */
+  priceOnly?: boolean;
+  /** When the price was seen, for sources that quote rather than book. */
+  observedAt?: string;
 }
 
 export interface PackageCombo {

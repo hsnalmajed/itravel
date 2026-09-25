@@ -4,11 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
-import type { RoomType, FlightOffer, HotelOffer, Locale, SearchParams, TripType } from "@/lib/types";
-import TripBuilder from "@/components/TripBuilder";
+import type { RoomType, Locale, SearchParams, TripType } from "@/lib/types";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
-import PricesUnavailable from "@/components/PricesUnavailable";
 import FlightMetasearch from "@/components/FlightMetasearch";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
@@ -32,12 +30,6 @@ function nightsBetween(a: string, b: string) {
  * night. The planner asks how long the stay is in that case, and this is
  * where the answer is used.
  */
-function addDays(date: string, days: number) {
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  d.setDate(d.getDate() + Math.max(1, days));
-  return d.toISOString().slice(0, 10);
-}
 
 export default function ResultsPage() {
   return (
@@ -90,80 +82,7 @@ function ResultsContent() {
     [q]
   );
 
-  // Only consulted when there is no return date to measure the stay against.
-  const statedNights = Number(q.get("nights") || 0);
 
-  const [flights, setFlights] = useState<FlightOffer[]>([]);
-  const [hotels, setHotels] = useState<HotelOffer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!search.destination || !search.departDate) return;
-    // Kicking off a data fetch and flagging it as loading is the standard
-    // pattern here; the fetch itself (and its completion) is fully async below.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    setError(null);
-
-    const tasks: Promise<void>[] = [];
-
-    if (search.tripType !== "hotel") {
-      const q = new URLSearchParams({
-        origin: search.origin,
-        destination: search.destination,
-        departDate: search.departDate,
-        adults: String(search.adults),
-        currency: search.currency,
-        directOnly: String(search.directFlightsOnly),
-        baggageIncluded: String(Boolean(search.baggageIncluded)),
-        childrenAges: serializeChildrenAges(search.childrenAges || []),
-        infants: String(search.infants || 0),
-      });
-      if (search.returnDate) q.set("returnDate", search.returnDate);
-      tasks.push(
-        fetch(`/api/flights?${q.toString()}`)
-          .then((r) => r.json())
-          .then((d) => setFlights(d.flights || []))
-      );
-    }
-
-    if (search.tripType !== "flight") {
-      const q = new URLSearchParams({
-        destination: search.destination,
-        departDate: search.departDate,
-        returnDate: search.returnDate || addDays(search.departDate, statedNights || 1),
-        adults: String(search.adults),
-        // The hotel search needs the whole party, not just the adults —
-        // otherwise a family of four gets offered a double bed.
-        childrenAges: serializeChildrenAges(search.childrenAges || []),
-        infants: String(search.infants || 0),
-        currency: search.currency,
-        minStars: String(search.minHotelStars),
-        breakfastIncluded: String(Boolean(search.breakfastIncluded)),
-        roomType: search.roomType || "",
-      });
-      tasks.push(
-        fetch(`/api/hotels?${q.toString()}`)
-          .then((r) => r.json())
-          .then((d) => setHotels(d.hotels || []))
-      );
-    }
-
-    Promise.all(tasks)
-      .catch(() => setError("error"))
-      .finally(() => setLoading(false));
-  }, [search, statedNights]);
-
-  // Whether there is anything to build a trip out of at all. A flight-only
-  // search needs flights; a hotel-only search needs hotels; "both" needs one
-  // of each, since half a package has no price we could honestly show.
-  const hasResults =
-    search.tripType === "flight"
-      ? flights.length > 0
-      : search.tripType === "hotel"
-        ? hotels.length > 0
-        : flights.length > 0 && hotels.length > 0;
 
   // Everyone the fare has to cover. Flight prices are already priced for the
   // whole party (adults at full fare, children and infants at their usual
@@ -172,23 +91,6 @@ function ResultsContent() {
   const travelers = search.adults + (search.childrenAges?.length ?? 0) + (search.infants ?? 0);
 
   const nights = search.returnDate ? nightsBetween(search.departDate, search.returnDate) : 0;
-
-  /**
-   * Whether these numbers came from a real provider.
-   *
-   * When they did not, the page does not show them. A metasearch site whose
-   * whole promise is "we compare real prices" cannot put an invented fare in
-   * front of a visitor with a small amber caption underneath — someone will
-   * budget a holiday around it. So in production, generated data means the
-   * prices section is replaced by an honest "not yet" with somewhere useful
-   * to go instead.
-   *
-   * In development the generated data still renders, because otherwise the
-   * whole results surface would be untestable without live API keys.
-   */
-  const isGeneratedData = flights.some((f) => f.isMock) || hotels.some((h) => h.isMock);
-  const showGenerated = process.env.NODE_ENV === "development";
-  const pricesUnavailable = isGeneratedData && !showGenerated;
 
   // Bridges the destination airport to its country so we can link into the
   // "Tourist Attractions" guide. Airports in a non-UN territory (e.g. Hong
@@ -381,65 +283,24 @@ function ResultsContent() {
         <TripCurrencyStrip from={homeCurrency} to={tripCurrency} locale={locale} />
       )}
 
-      {showGenerated && isGeneratedData && !loading && (
-        // Development only — this branch is compiled out of production.
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Generated data (no provider key configured). Hidden in production.
-        </div>
-      )}
+      {/* The flights, live.
 
-      {loading && <div className="h-72 animate-pulse rounded-2xl bg-white ring-1 ring-black/5" />}
+          This page used to lead with fares from Travelpayouts' price cache —
+          a price somebody was once quoted, for one seat, with no duration, no
+          stops and no baggage. It read like an offer and behaved like a
+          rumour: a trip priced at 1,500 riyals here opened at the agency for
+          three times that. The widget below is the actual search, for these
+          exact dates and this exact party, and the fare on the card is the
+          fare on the agency's payment page. So it is not a second opinion
+          under our own numbers any more; it is the numbers. */}
+      <FlightMetasearch
+        locale={locale}
+        heading={dict.results.liveSearchTitle}
+        note={dict.results.liveSearchNote}
+        prefill={flightSearchCode(search)}
+      />
 
-      {!loading && error && (
-        <p className="text-red-600 py-4 text-center text-sm">
-          {locale === "ar" ? "حدث خطأ أثناء البحث، حاول مرة أخرى." : "Something went wrong while searching. Please try again."}
-        </p>
-      )}
-
-      {!loading && !error && pricesUnavailable && (
-        <PricesUnavailable
-          locale={locale}
-          dict={dict}
-          exploreHref={exploreHref ?? `/${locale}/attractions`}
-          planHref={itineraryHref}
-        />
-      )}
-
-      {!loading && !error && !pricesUnavailable && !hasResults && (
-        <p className="text-gray-500 py-10 text-center">{dict.results.noResults}</p>
-      )}
-
-      {!loading && !error && !pricesUnavailable && hasResults && (
-        <TripBuilder
-          flights={flights}
-          hotels={hotels}
-          tripType={search.tripType}
-          budgetTotal={search.budgetTotal}
-          currency={search.currency}
-          locale={locale}
-          travelers={travelers}
-          departDate={search.departDate}
-          returnDate={search.returnDate}
-          search={search}
-          destinationName={destinationCityName ?? search.destination}
-        />
-      )}
-
-      {/* The live flight search, under our own summary. The cards above are
-          what this site is for — a budget, a destination, a plan — and this
-          is where the traveller books the actual seat, at today's price, on
-          our page. */}
-      {search.tripType !== "hotel" && (
-        <FlightMetasearch
-          locale={locale}
-          heading={dict.results.liveSearchTitle}
-          note={dict.results.liveSearchNote}
-          prefill={flightSearchCode(search)}
-        />
-      )}
-
-      {!loading && (
-        <div className="mt-10 space-y-4">
+      <div className="mt-10 space-y-4">
           {/* Itinerary prompt — surfaced first, as requested, so the itinerary
               option always sits above the destination-exploration card. */}
           <div className="rounded-2xl bg-gradient-to-br from-brand-800 to-brand-950 p-5 sm:p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
@@ -488,8 +349,7 @@ function ResultsContent() {
               </span>
             </Link>
           )}
-        </div>
-      )}
+      </div>
 
       </div>
     </div>

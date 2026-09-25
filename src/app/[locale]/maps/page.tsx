@@ -8,7 +8,7 @@ import { cityCountLabel } from "@/lib/format";
 import MapsCountryList from "@/components/MapsCountryList";
 import { sectionHero } from "@/lib/sectionHero";
 
-// Photos are fetched live from Wikipedia, same as the rest of the site.
+// Photos come from Pexels, same as the rest of the site.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/maps">): Promise<Metadata> {

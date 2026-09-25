@@ -34,9 +34,27 @@ export async function GET() {
     probe = { ok: false, offers: 0, error: String(err).slice(0, 200) };
   }
 
+  // The hotel side, asked the same way the provider asks it, so a blank
+  // hotel list can be told apart from a refused request.
+  let hotels: { status: number | string; sample: string } = { status: "skipped", sample: "" };
+  try {
+    const u = new URL("https://engine.hotellook.com/api/v2/cache.json");
+    u.searchParams.set("location", "Istanbul");
+    u.searchParams.set("checkIn", new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10));
+    u.searchParams.set("checkOut", new Date(Date.now() + 35 * 86_400_000).toISOString().slice(0, 10));
+    u.searchParams.set("currency", "sar");
+    u.searchParams.set("limit", "3");
+    u.searchParams.set("token", process.env.TRAVELPAYOUTS_TOKEN || "");
+    const res = await fetch(u.toString(), { cache: "no-store" });
+    hotels = { status: res.status, sample: (await res.text()).slice(0, 160) };
+  } catch (err) {
+    hotels = { status: "error", sample: String(err).slice(0, 160) };
+  }
+
   return NextResponse.json(
     {
       configuredProviders: configured,
+      hotelProbe: hotels,
       keys: {
         travelpayoutsToken: Boolean(process.env.TRAVELPAYOUTS_TOKEN),
         pexels: Boolean(process.env.PEXELS_API_KEY),

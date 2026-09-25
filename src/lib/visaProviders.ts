@@ -18,6 +18,19 @@
 // wrong "official" site pays a scammer. Countries whose portal we could not
 // verify simply have no official link here, and fall back to the IATA and
 // ministry links the interface always shows.
+//
+// This file is the whole of the site's visa data. We deliberately publish no
+// status table ("visa-free", "on arrival", allowed stay): those rules change
+// without notice and only the airline and the embassy decide them, so every
+// country page sends the traveller to the two places that do know — IATA's
+// Timatic database and the Saudi foreign ministry — plus the portal below
+// where we have a verified one.
+
+/** IATA Travel Centre — the Timatic database airlines check at boarding. */
+export const IATA_TRAVEL_CENTRE_URL = "https://www.iatatravelcentre.com/";
+
+/** The Saudi Ministry of Foreign Affairs. */
+export const SAUDI_MOFA_URL = "https://www.mofa.gov.sa/";
 
 /**
  * Official government visa portals, verified reachable.
@@ -59,8 +72,8 @@ const DIRECT_BASE = "https://visa.directksa.com";
  * The slugs come from their published sitemap rather than being guessed, so
  * every one of these is a page that exists. Their catalogue is the set of
  * visas they sell — around forty countries — not every country on earth,
- * which is exactly why it supplements the full status table rather than
- * replacing it.
+ * which is why it sits beside the IATA and ministry links rather than
+ * replacing them.
  */
 export const DIRECT_VISA_SLUGS: Record<string, string> = {
   US: "US-Visa-Requirements",

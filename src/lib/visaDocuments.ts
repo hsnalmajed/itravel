@@ -5,11 +5,20 @@
 // a copy of theirs: their checklists are their own commercial work, and
 // republishing them here would be taking someone else's content.
 //
-// So these are written from the published, stable rules instead. The Schengen
-// set comes from the EU Visa Code, which fixes it across all 29 member states
-// — the same passport validity, the same €30,000 insurance minimum, the same
-// photo spec, whichever consulate you go to. The other four sets are the
-// ordinary shape of their category.
+// So these are written from published, stable rules instead, and there are
+// only two of them — the two cases where we know which checklist applies
+// without claiming anything about a country's visa status:
+//
+//   - Schengen states. The EU Visa Code fixes the document set across every
+//     member — the same passport validity, the same €30,000 insurance
+//     minimum, the same photo spec, whichever consulate you go to.
+//   - Countries whose official online portal we link to (visaProviders.ts).
+//     Whatever that portal issues, filling it in takes the same handful of
+//     things, and that is all this list says.
+//
+// Everywhere else we show no checklist at all: picking one would mean
+// guessing whether the country wants an embassy visa, an e-visa or nothing,
+// which is exactly the status claim this site does not make.
 //
 // And they are framed as *typical*, never as the list. Consulates add their
 // own requirements, change them, and ask for more from some applicants than
@@ -18,7 +27,7 @@
 // definitive when it isn't would send someone to an appointment missing a
 // document — which costs them the appointment and often the trip.
 
-import type { VisaCategory } from "@/lib/visa";
+import { officialVisaUrl } from "@/lib/visaProviders";
 
 export interface DocumentItem {
   titleAr: string;
@@ -92,39 +101,6 @@ const SCHENGEN_DOCUMENTS: DocumentItem[] = [
   },
 ];
 
-const EMBASSY_DOCUMENTS: DocumentItem[] = [
-  {
-    titleAr: "جواز السفر الأصلي",
-    titleEn: "Original passport",
-    detailAr: "ساري 6 أشهر على الأقل من تاريخ السفر، وفيه صفحات فارغة للختم.",
-    detailEn: "Valid at least 6 months from your travel date, with blank pages for stamps.",
-  },
-  {
-    titleAr: "صور شخصية حديثة",
-    titleEn: "Recent passport photos",
-    detailAr: "المقاس والخلفية يختلفان من دولة لأخرى — راجع مواصفات السفارة قبل التصوير.",
-    detailEn: "Size and background vary by country — check the embassy's spec before having them taken.",
-  },
-  {
-    titleAr: "نموذج طلب التأشيرة",
-    titleEn: "Visa application form",
-    detailAr: "يُعبّأ من موقع السفارة أو مركز التأشيرات المعتمد.",
-    detailEn: "Completed on the embassy's site or at its authorised visa centre.",
-  },
-  {
-    titleAr: "إثبات السكن وتذاكر الطيران",
-    titleEn: "Accommodation and flights",
-    detailAr: "حجز فندقي وحجز طيران ذهاباً وعودة يغطيان مدة الزيارة.",
-    detailEn: "Hotel and return flight reservations covering the visit.",
-  },
-  {
-    titleAr: "إثبات القدرة المالية",
-    titleEn: "Proof of funds",
-    detailAr: "كشف حساب بنكي مختوم، وتعريف بالراتب من جهة العمل.",
-    detailEn: "A stamped bank statement and a salary letter from your employer.",
-  },
-];
-
 const EVISA_DOCUMENTS: DocumentItem[] = [
   {
     titleAr: "جواز سفر ساري",
@@ -158,84 +134,22 @@ const EVISA_DOCUMENTS: DocumentItem[] = [
   },
 ];
 
-const ON_ARRIVAL_DOCUMENTS: DocumentItem[] = [
-  {
-    titleAr: "جواز سفر ساري",
-    titleEn: "Valid passport",
-    detailAr: "6 أشهر على الأقل من تاريخ الوصول عادةً.",
-    detailEn: "Usually at least 6 months from your arrival date.",
-  },
-  {
-    titleAr: "رسوم التأشيرة نقداً",
-    titleEn: "The visa fee in cash",
-    detailAr: "كثير من المنافذ لا تقبل البطاقات — احمل المبلغ بعملة مقبولة (الدولار أو اليورو غالباً).",
-    detailEn: "Many border posts don't take cards — carry the amount in an accepted currency, usually dollars or euros.",
-  },
-  {
-    titleAr: "تذكرة العودة وعنوان السكن",
-    titleEn: "Return ticket and accommodation address",
-    detailAr: "يُطلبان كثيراً عند المنفذ، وأحياناً قبل الصعود للطائرة.",
-    detailEn: "Often asked for at the border, and sometimes before boarding.",
-  },
-  {
-    titleAr: "صور شخصية احتياطية",
-    titleEn: "Spare passport photos",
-    detailAr: "بعض المنافذ تطلب صورة مع النموذج — صورتان في المحفظة تختصران وقتاً.",
-    detailEn: "Some posts want a photo with the form — two in your wallet saves time.",
-  },
-];
-
-const VISA_FREE_DOCUMENTS: DocumentItem[] = [
-  {
-    titleAr: "جواز سفر ساري",
-    titleEn: "Valid passport",
-    detailAr: "6 أشهر على الأقل من تاريخ الدخول — وهو الشرط الذي يُرفض بسببه أكثر المسافرين رغم عدم حاجتهم لتأشيرة.",
-    detailEn: "At least 6 months from entry — the requirement that turns away more visa-free travellers than any other.",
-  },
-  {
-    titleAr: "تذكرة عودة أو مغادرة",
-    titleEn: "Onward or return ticket",
-    detailAr: "شركة الطيران قد تطلبها قبل الصعود، وضابط الجوازات قد يطلبها عند الوصول.",
-    detailEn: "The airline may ask before boarding, and the border officer may ask on arrival.",
-  },
-  {
-    titleAr: "عنوان الإقامة",
-    titleEn: "Accommodation address",
-    detailAr: "احتفظ بحجز الفندق على جوالك — يُسأل عنه في بطاقة الوصول عادةً.",
-    detailEn: "Keep the hotel booking on your phone — the arrival card usually asks for it.",
-  },
-  {
-    titleAr: "إثبات مالي بسيط",
-    titleEn: "Some proof of funds",
-    detailAr: "بطاقة بنكية أو مبلغ نقدي يكفي مدة الزيارة. الإعفاء من التأشيرة لا يمنع ضابط الجوازات من السؤال.",
-    detailEn: "A bank card or enough cash for the visit. Visa-free entry doesn't stop an officer asking.",
-  },
-];
+export type ChecklistKind = "schengen" | "online";
 
 /**
- * The checklist that fits this destination.
+ * The checklist we can honestly show for this destination, or null.
  *
- * Schengen is checked before the category, because a Schengen application is
- * a specific legal procedure — the insurance minimum and the passport rule
- * are set in law — and lumping it under "visa required" would lose exactly
- * the details that get applications rejected.
+ * Schengen is checked first: a Schengen application is a specific legal
+ * procedure whose documents are set in law, so it is the more specific
+ * answer. Otherwise a country gets the online-application list only when we
+ * link to its official portal ourselves.
  */
-export function documentsFor(countryCode: string, category: VisaCategory): DocumentItem[] {
-  if (SCHENGEN_COUNTRIES.has(countryCode) && (category === "required" || category === "eta")) {
-    return SCHENGEN_DOCUMENTS;
-  }
-  switch (category) {
-    case "required":
-      return EMBASSY_DOCUMENTS;
-    case "eta":
-      return EVISA_DOCUMENTS;
-    case "arrival":
-      return ON_ARRIVAL_DOCUMENTS;
-    case "free":
-      return VISA_FREE_DOCUMENTS;
-    default:
-      return VISA_FREE_DOCUMENTS;
-  }
+export function checklistFor(
+  countryCode: string
+): { kind: ChecklistKind; items: DocumentItem[] } | null {
+  if (SCHENGEN_COUNTRIES.has(countryCode)) return { kind: "schengen", items: SCHENGEN_DOCUMENTS };
+  if (officialVisaUrl(countryCode)) return { kind: "online", items: EVISA_DOCUMENTS };
+  return null;
 }
 
 export function isSchengen(countryCode: string): boolean {

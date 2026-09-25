@@ -17,7 +17,7 @@ import { countLabel } from "@/lib/format";
  * The planner, lifted out of the route so the route can be a server component.
  *
  * It has to stay a client component — the whole page is a form with state —
- * but its hero photograph is a Wikimedia lookup, and that belongs on the
+ * but its hero photograph is resolved on the server, and that belongs on the
  * server. So the route resolves the picture and hands it down as a prop, and
  * the heading stays here where the city name lives: a visitor who arrived from
  * a Riyadh → Istanbul search should read "Istanbul" at the top, and that word

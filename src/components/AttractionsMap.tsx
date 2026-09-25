@@ -33,7 +33,7 @@ export default function AttractionsMap(props: {
     nearbyHeading: string;
     foodHeading: string;
     historicHeading: string;
-    readMore: string;
+    directions: string;
     englishOnly: string;
     viewTours: string;
     mapAttribution: string;

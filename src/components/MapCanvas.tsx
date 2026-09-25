@@ -22,7 +22,7 @@ interface MapDict {
   nearbyHeading: string;
   foodHeading: string;
   historicHeading: string;
-  readMore: string;
+  directions: string;
   englishOnly: string;
   viewTours: string;
   mapAttribution: string;
@@ -95,62 +95,6 @@ function boundsOf(pins: MapPin[]): [[number, number], [number, number]] | null {
 
 const CATEGORY_ORDER: PinCategory[] = ["historic", "activity", "food", "place"];
 
-/** Titles already looked up, so reopening a popup costs nothing. */
-const summaryCache = new Map<string, { photo?: string; extract?: string } | null>();
-
-/**
- * Fills a popup with the place's photograph and first paragraph.
- *
- * This used to be a React component inside react-leaflet's popup portal, and
- * it cannot be any more: markercluster owns its markers' DOM, so the popup is
- * a plain HTML string. The behaviour it had is worth keeping though — a name
- * and a dot on a map do not tell a traveller whether a place is worth the
- * detour, and a photograph does.
- *
- * The article is fetched in the reader's own language when Wikipedia has one;
- * a failed lookup simply leaves the name, which was never wrong.
- */
-async function enrichPopup(marker: L.Marker, pin: MapPin) {
-  if (!pin.wikiTitle) return;
-  const el = marker.getPopup()?.getElement()?.querySelector<HTMLElement>("[data-summary]");
-  if (!el || el.dataset.filled === "1") return;
-
-  const lang = pin.wikiLang ?? "en";
-  const key = `${lang}:${pin.wikiTitle}`;
-
-  let data = summaryCache.get(key);
-  if (data === undefined) {
-    data = await fetch(
-      `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-        pin.wikiTitle.replace(/ /g, "_")
-      )}`
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) =>
-        d ? { photo: d.thumbnail?.source as string | undefined, extract: d.extract as string | undefined } : null
-      )
-      .catch(() => null);
-    summaryCache.set(key, data ?? null);
-  }
-  if (!data) return;
-
-  el.dataset.filled = "1";
-  const parts: string[] = [];
-  if (data.photo) {
-    parts.push(
-      `<img src="${data.photo}" alt="" style="width:100%;height:96px;object-fit:cover;border-radius:8px;margin-bottom:6px" />`
-    );
-  }
-  if (data.extract) {
-    const text = data.extract.length > 180 ? `${data.extract.slice(0, 180)}…` : data.extract;
-    parts.push(
-      `<p style="margin:0 0 8px;font-size:11px;line-height:1.55;color:#4f5d73">${text.replace(/[<>&]/g, "")}</p>`
-    );
-  }
-  el.innerHTML = parts.join("");
-  marker.getPopup()?.update();
-}
-
 /**
  * The markers, in a cluster group.
  *
@@ -211,11 +155,8 @@ function ClusteredMarkers({
         title: pin.name,
       });
       marker.bindPopup(renderPopup(pin), { minWidth: 210 });
-      // The photo and blurb are fetched when the popup opens, not before.
-      // A city can carry three hundred pins and prefetching all of them would
-      // be three hundred Wikipedia requests for the one or two a traveller
-      // actually opens.
-      marker.on("popupopen", () => enrichPopup(marker, pin));
+      // The popup is built when it opens, not before: a city can carry three
+      // hundred pins and almost none of them are ever tapped.
       marker.on("click", () => onSelect(pin.key));
       markers.set(pin.key, marker);
       group.addLayer(marker);
@@ -279,9 +220,8 @@ export default function MapCanvas({
   /**
    * "Other places" starts switched off.
    *
-   * It is the honest catch-all for anything Wikipedia's own description did
-   * not put in a category, and on a big city it is most of the map — 88 of
-   * Riyadh's 130. Leaving it on means the first thing a traveller sees is
+   * It is the honest catch-all for anything OpenStreetMap's own tags did not
+   * put in a category, and on a big city it is most of the map. Leaving it on means the first thing a traveller sees is
    * mostly noise burying the landmarks they came for. It is one tap away,
    * with its count on the button, so nothing is hidden, only deferred.
    */
@@ -319,12 +259,12 @@ export default function MapCanvas({
         t.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
       return `<div dir="${isAr ? "rtl" : "ltr"}" style="min-width:190px">
         <p style="margin:0 0 4px;font-weight:800;font-size:13px">${esc(pin.name)}</p>
-        <p style="margin:0 0 8px;font-size:11px;color:#6a7890">${esc(categoryLabels[pin.category])}</p>
-        <div data-summary></div>
+        <p style="margin:0 0 8px;font-size:11px;color:#6a7890">${esc(pin.extract ?? categoryLabels[pin.category])}</p>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=${pin.lat},${pin.lon}" target="_blank" rel="noopener noreferrer" style="display:block;margin-bottom:6px;border-radius:8px;border:1px solid #c9d3e3;color:#0b2d5b;padding:5px 10px;text-align:center;font-size:11px;font-weight:700;text-decoration:none">${esc(dict.directions)} ↗</a>
         <a href="${href}" style="display:block;border-radius:8px;background:#0b2d5b;color:#fff;padding:6px 10px;text-align:center;font-size:11px;font-weight:700;text-decoration:none">${esc(dict.viewTours)}</a>
       </div>`;
     },
-    [citySlug, locale, countryCode, categoryLabels, dict.viewTours, isAr]
+    [citySlug, locale, countryCode, categoryLabels, dict.viewTours, dict.directions, isAr]
   );
 
   const locate = useCallback(() => {

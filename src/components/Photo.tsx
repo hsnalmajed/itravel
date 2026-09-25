@@ -5,7 +5,7 @@ import { useState } from "react";
 /**
  * A photo that quietly gives up.
  *
- * Every image on this site comes from Wikipedia at request time, and any of
+ * Every image on this site comes from Pexels at request time, and any of
  * them can fail: an article's photo gets deleted, a file is renamed, a
  * thumbnail 400s. The browser's answer to that is a broken-image icon, which
  * on a grid of destination cards looks like the site itself is broken.

@@ -69,6 +69,12 @@ export interface FlightOffer {
   priceOnly?: boolean;
   /** True when `stops` is something the source actually told us. */
   stopsKnown?: boolean;
+  /**
+   * The price was observed somewhere in that month, not on the exact days
+   * asked for. Shown as such — a real number for nearly the right dates is
+   * useful; the same number presented as today's answer is not.
+   */
+  datesApproximate?: boolean;
   /** When the price was seen, for sources that quote rather than book. */
   observedAt?: string;
 }

@@ -2,7 +2,7 @@ import type { FlightOffer, HotelOffer, RoomType, SearchParams } from "./types";
 import { DESTINATIONS } from "./destinations";
 import { AIRPORTS } from "./airports";
 import { occupancy, roomCapacity } from "./stayType";
-import { searchFlightsFromProviders, searchHotelsFromProviders } from "./providers";
+import { hasLivePrices, searchFlightsFromProviders, searchHotelsFromProviders } from "./providers";
 
 // ---------------------------------------------------------------------------
 // Prices come from the provider registry in ./providers, not from this file.
@@ -420,7 +420,11 @@ export function generateMockHotels(params: SearchParams, nights: number): HotelO
 
 export async function searchFlights(params: SearchParams): Promise<FlightOffer[]> {
   const { offers } = await searchFlightsFromProviders(params);
-  if (offers.length === 0) return generateMockFlights(params);
+  // With a real source configured, "nothing found" is the answer. Filling the
+  // gap with sample fares would put invented numbers in front of a traveller
+  // who has no way to tell them from the real ones. The demo data is only for
+  // a site with no price source at all.
+  if (offers.length === 0) return hasLivePrices() ? [] : generateMockFlights(params);
 
   return offers
     .filter((o) => !params.directFlightsOnly || o.stops === 0)
@@ -434,7 +438,7 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
 
 export async function searchHotels(params: SearchParams, nights: number): Promise<HotelOffer[]> {
   const { offers } = await searchHotelsFromProviders(params, nights);
-  if (offers.length === 0) return generateMockHotels(params, nights);
+  if (offers.length === 0) return hasLivePrices() ? [] : generateMockHotels(params, nights);
 
   return offers
     .filter((h) => h.stars === 0 || h.stars >= (params.minHotelStars || 0))

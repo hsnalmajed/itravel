@@ -1,175 +1,283 @@
-// Turning real Wikipedia articles into the places this site shows.
+// The places this site shows around a city: map pins on the tourist maps, and
+// the same places as a browsable list in the attractions guide.
 //
-// Two sections are built on this: the tourist maps (places as pins) and the
-// attractions guide (the same places as a browsable list). They ask for the
-// same thing — every documented place around a set of city centres, sorted
-// into what it is and named in the reader's own language — so the work lives
-// here rather than being written twice.
+// Source: OpenStreetMap — the map data under Apple Maps, Meta and most
+// navigation apps — read live from an Overpass mirror, one city at a time,
+// and cached at the edge for a week. A city's museums do not move, so a
+// week-old answer is as good as a fresh one, and the traveller waits for the
+// query once rather than on every visit. The data is © OpenStreetMap
+// contributors under the ODbL, and every page that shows it says so.
 //
-// Nothing in this module touches the browser, so server components can use it
-// freely. (MapCanvas loads Leaflet at module scope, and Leaflet reaches for
-// `window` on import, so the pin *type* has to live outside it.)
+// Nothing here touches the browser, so server components can use it freely.
+// (MapCanvas loads Leaflet at module scope, and Leaflet reaches for `window`
+// on import, so the pin *type* has to live outside it.)
 
-import {
-  fetchArabicTitles,
-  fetchDescriptions,
-  fetchDescriptionsByTitle,
-  fetchNearbyPlaces,
-  fetchThumbnails,
-  fetchWikiSummaries,
-} from "@/lib/wikipedia";
-import { categorisePlace } from "@/lib/placeCategory";
+import { CITY_COORDS } from "@/data/cityCoords";
+import { findCountry } from "@/lib/countries";
+import { searchPexelsPhotos, type PexelsQuery } from "@/lib/pexels";
 import type { PinCategory } from "@/lib/pinStyles";
 import type { Locale } from "@/lib/types";
 
 export interface Place {
-  pageId: number;
-  /** Name to show the reader, in their own language where Wikipedia has one. */
+  /** OpenStreetMap id, e.g. "way/123". */
+  id: string;
+  /** In the reader's language when OpenStreetMap has it, else the local name. */
   name: string;
-  /** English article title — always present; it's what we discovered by. */
-  enTitle: string;
-  /** Arabic article title, when Wikipedia links one to the English article. */
-  arTitle?: string;
-  /** One-line description, in the reader's language where one exists. */
+  nameEn: string;
+  nameAr?: string;
+  /** What it is — "museum", "castle" — as a short label in the reader's language. */
   description?: string;
   lat: number;
   lon: number;
   category: PinCategory;
   photo?: string;
-  /**
-   * True when this place has no article in the reader's language, so its name
-   * and description above are English. The interface marks these rather than
-   * quietly mixing languages — and rather than inventing a translation.
-   */
+  /** The reader wanted Arabic and OpenStreetMap has no Arabic name for it. */
   englishOnly: boolean;
 }
 
+/** Anything with a city slug — CityEntry fits. */
 export interface PinCentre {
-  /** Exact English Wikipedia article title of the city. */
-  wikiTitle: string;
+  slug: string;
+  nameEn: string;
+}
+
+const KIND_LABELS: Record<string, { ar: string; en: string }> = {
+  attraction: { ar: "معلم سياحي", en: "Attraction" },
+  museum: { ar: "متحف", en: "Museum" },
+  gallery: { ar: "معرض فني", en: "Gallery" },
+  viewpoint: { ar: "إطلالة", en: "Viewpoint" },
+  zoo: { ar: "حديقة حيوان", en: "Zoo" },
+  aquarium: { ar: "أحواض مائية", en: "Aquarium" },
+  theme_park: { ar: "مدينة ملاهٍ", en: "Theme park" },
+  water_park: { ar: "حديقة مائية", en: "Water park" },
+  monument: { ar: "نُصب", en: "Monument" },
+  memorial: { ar: "نُصب تذكاري", en: "Memorial" },
+  castle: { ar: "قلعة", en: "Castle" },
+  fort: { ar: "حصن", en: "Fort" },
+  citadel: { ar: "قلعة", en: "Citadel" },
+  palace: { ar: "قصر", en: "Palace" },
+  archaeological_site: { ar: "موقع أثري", en: "Archaeological site" },
+  ruins: { ar: "أطلال", en: "Ruins" },
+  city_gate: { ar: "بوابة تاريخية", en: "City gate" },
+  tomb: { ar: "ضريح", en: "Tomb" },
+  place_of_worship: { ar: "دار عبادة", en: "Place of worship" },
+  mosque: { ar: "مسجد", en: "Mosque" },
+  church: { ar: "كنيسة", en: "Church" },
+  beach: { ar: "شاطئ", en: "Beach" },
+  mall: { ar: "مركز تسوق", en: "Shopping mall" },
+  marketplace: { ar: "سوق", en: "Market" },
+  park: { ar: "حديقة", en: "Park" },
+  garden: { ar: "حديقة", en: "Garden" },
+};
+
+export function kindLabel(kind: string, locale: Locale): string | undefined {
+  return KIND_LABELS[kind]?.[locale];
 }
 
 /**
- * Every documented place within `radius` of each city centre, categorised and
- * named in `locale`.
+ * The Overpass mirrors, in the order they are asked.
  *
- * Each city's coordinates come from its own Wikipedia article, so a city we
- * can't resolve simply contributes nothing rather than putting places in the
- * wrong spot. Duplicates are dropped by page id, which matters when two cities
- * in the list sit close enough for their search circles to overlap.
+ * The main server is shared by every OpenStreetMap tool in the world and is
+ * regularly too busy to answer; the others are the same data. A city page
+ * that shows no pins because somebody else was running a big query is worse
+ * than one that waited an extra second on a mirror.
+ */
+const OVERPASS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+];
+
+/** What counts as a place worth a pin, and which bucket it falls in. */
+const WANTED: { tag: string; values: string[]; category: PinCategory }[] = [
+  {
+    tag: "tourism",
+    values: ["attraction", "museum", "gallery", "viewpoint", "zoo", "aquarium", "theme_park"],
+    category: "historic",
+  },
+  {
+    tag: "historic",
+    values: [
+      "monument",
+      "memorial",
+      "castle",
+      "fort",
+      "citadel",
+      "palace",
+      "archaeological_site",
+      "ruins",
+      "city_gate",
+      "tomb",
+    ],
+    category: "historic",
+  },
+  { tag: "leisure", values: ["park", "garden", "water_park"], category: "activity" },
+  { tag: "natural", values: ["beach"], category: "activity" },
+  { tag: "shop", values: ["mall"], category: "activity" },
+  { tag: "amenity", values: ["marketplace"], category: "activity" },
+];
+
+interface OverpassElement {
+  type: string;
+  id: number;
+  lat?: number;
+  lon?: number;
+  center?: { lat: number; lon: number };
+  tags?: Record<string, string>;
+}
+
+function query(lat: number, lon: number, radius: number): string {
+  const clauses = WANTED.map(
+    (w) => `nwr(around:${radius},${lat},${lon})["${w.tag}"~"^(${w.values.join("|")})$"]["name"];`
+  ).join("\n");
+  return `[out:json][timeout:20];(\n${clauses}\n);out center 400;`;
+}
+
+function categoryOf(tags: Record<string, string>): { category: PinCategory; kind: string } {
+  for (const w of WANTED) {
+    const v = tags[w.tag];
+    if (v && w.values.includes(v)) {
+      // A mosque or a church is tagged place_of_worship with a religion; the
+      // kind label is what the traveller reads, so keep the specific one.
+      if (v === "attraction" && tags.religion) return { category: "historic", kind: "place_of_worship" };
+      return { category: w.category, kind: v };
+    }
+  }
+  return { category: "place", kind: "attraction" };
+}
+
+/**
+ * Every mapped place around one point, from OpenStreetMap.
  *
- * `withPhotos` costs one extra batched request per 50 places, so the maps skip
- * it (a pin has no room for a photo, and its popup loads one on demand) while
- * the attractions list asks for it.
+ * Returns an empty list rather than throwing when no mirror answers: a map
+ * with no pins is a disappointment, a page that fails to render is a bug.
+ */
+async function fetchAround(lat: number, lon: number, radius: number): Promise<OverpassElement[]> {
+  const body = `data=${encodeURIComponent(query(lat, lon, radius))}`;
+  for (const url of OVERPASS) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        // A week. The query is the same for every visitor to this city, and
+        // the answer changes about as often as the city does.
+        next: { revalidate: 604800 },
+      });
+      if (!res.ok) continue;
+      const json = (await res.json()) as { elements?: OverpassElement[] };
+      const elements = json.elements ?? [];
+      if (elements.length) return elements;
+    } catch {
+      // Try the next mirror.
+    }
+  }
+  return [];
+}
+
+function toPlace(el: OverpassElement, locale: Locale): Place | null {
+  const tags = el.tags ?? {};
+  const lat = el.lat ?? el.center?.lat;
+  const lon = el.lon ?? el.center?.lon;
+  const name = tags.name;
+  if (lat === undefined || lon === undefined || !name) return null;
+
+  const nameAr = tags["name:ar"];
+  const nameEn = tags["name:en"];
+  const wantAr = locale === "ar";
+  const shown = wantAr ? (nameAr ?? name) : (nameEn ?? name);
+  const hasArabic = Boolean(nameAr) || /[\u0600-\u06FF]/.test(name);
+  const { category, kind } = categoryOf(tags);
+
+  return {
+    id: `${el.type}/${el.id}`,
+    name: shown,
+    nameEn: nameEn ?? name,
+    nameAr,
+    description: kindLabel(kind, locale),
+    lat,
+    lon,
+    category,
+    englishOnly: wantAr && !hasArabic,
+  };
+}
+
+/**
+ * Every mapped place around the given cities, de-duplicated. `withPhotos`
+ * is accepted for older callers and ignored: OpenStreetMap carries no
+ * photographs, and a Pexels search per pin would spend the month's allowance
+ * on one page.
  */
 export async function fetchPlacesAroundCities(
   centres: PinCentre[],
   {
     locale,
     perCity = 300,
-    radius = 10000,
-    withPhotos = false,
+    radius = 15000,
   }: { locale: Locale; perCity?: number; radius?: number; withPhotos?: boolean }
 ): Promise<Place[]> {
-  if (centres.length === 0) return [];
-
-  const summaries = await fetchWikiSummaries(centres.map((c) => c.wikiTitle));
-
-  const found = await Promise.all(
-    centres.map(async (c) => {
-      const s = summaries.get(c.wikiTitle);
-      if (typeof s?.lat !== "number" || typeof s?.lon !== "number") return [];
-      return fetchNearbyPlaces(s.lat, s.lon, { radius, limit: perCity });
+  // Each city is one query to a shared, volunteer-run service. Asking for a
+  // whole country at once is how a page ends up waiting a minute, so the few
+  // callers that want several cities get the first handful of them.
+  const wanted = centres.slice(0, 8);
+  const results = await Promise.all(
+    wanted.map(async (c) => {
+      const point = CITY_COORDS[c.slug];
+      if (!point) return [] as Place[];
+      const elements = await fetchAround(point.lat, point.lon, radius);
+      const places: Place[] = [];
+      for (const el of elements) {
+        const place = toPlace(el, locale);
+        if (place) places.push(place);
+        if (places.length >= perCity) break;
+      }
+      return places;
     })
   );
 
-  const byPageId = new Map<number, { pageId: number; title: string; lat: number; lon: number }>();
-  for (const place of found.flat()) {
-    if (!byPageId.has(place.pageId)) byPageId.set(place.pageId, place);
+  const seen = new Set<string>();
+  const out: Place[] = [];
+  for (const list of results) {
+    for (const place of list) {
+      if (seen.has(place.id)) continue;
+      seen.add(place.id);
+      out.push(place);
+    }
   }
-  const places = [...byPageId.values()];
-  if (places.length === 0) return [];
-
-  const pageIds = places.map((p) => p.pageId);
-
-  // English descriptions decide the category no matter which language the
-  // reader is in — the keyword lists that sort a place are English, and a
-  // place's category shouldn't change with the interface language.
-  const [enDescriptions, arTitles, photos] = await Promise.all([
-    fetchDescriptions(pageIds),
-    locale === "ar" ? fetchArabicTitles(pageIds) : Promise.resolve(new Map<number, string>()),
-    withPhotos ? fetchThumbnails(pageIds) : Promise.resolve(new Map<number, string>()),
-  ]);
-
-  const arDescriptions =
-    arTitles.size > 0
-      ? await fetchDescriptionsByTitle("ar", [...arTitles.values()])
-      : new Map<string, string>();
-
-  return places.map((p): Place => {
-    const arTitle = arTitles.get(p.pageId);
-    const enDescription = enDescriptions.get(p.pageId);
-    const arDescription = arTitle ? arDescriptions.get(arTitle) : undefined;
-    const useArabic = locale === "ar" && Boolean(arTitle);
-
-    return {
-      pageId: p.pageId,
-      name: useArabic ? (arTitle as string) : p.title,
-      enTitle: p.title,
-      arTitle,
-      description: useArabic ? (arDescription ?? enDescription) : enDescription,
-      lat: p.lat,
-      lon: p.lon,
-      category: categorisePlace(enDescription) as PinCategory,
-      photo: photos.get(p.pageId),
-      englishOnly: locale === "ar" && !arTitle,
-    };
-  });
+  return out;
 }
 
 // ---------------------------------------------------------------------------
 // Map pins
 // ---------------------------------------------------------------------------
 
+/** What a pin on the map carries — built on the server, rendered by MapCanvas. */
 export interface MapPin {
   key: string;
-  /** Already resolved to the reader's language by whoever built the pin. */
   name: string;
   lat: number;
   lon: number;
   photo?: string;
+  /** Short label for what the place is. */
   extract?: string;
   category: PinCategory;
-  /**
-   * Article title the popup should look up, and the language edition to look
-   * it up on. Absent on curated pins, whose text we already have.
-   */
-  wikiTitle?: string;
-  wikiLang?: Locale;
-  /** Name and description are English because no Arabic article exists. */
   englishOnly?: boolean;
 }
 
-export function placeToPin(place: Place, locale: Locale): MapPin {
-  const useArabic = locale === "ar" && Boolean(place.arTitle);
+export function placeToPin(place: Place): MapPin {
   return {
-    key: String(place.pageId),
+    key: place.id,
     name: place.name,
     lat: place.lat,
     lon: place.lon,
     photo: place.photo,
+    extract: place.description,
     category: place.category,
-    wikiTitle: useArabic ? place.arTitle : place.enTitle,
-    wikiLang: useArabic ? "ar" : "en",
     englishOnly: place.englishOnly,
   };
 }
 
-/**
- * The legend for a set of pins — only the categories this map actually has,
- * each with how many pins carry it. An empty entry would tell the reader a
- * colour is meaningful when nothing on the map wears it.
- */
+/** The legend: only the categories this set of pins actually has, in a fixed order. */
 export function buildLegend(
   pins: { category: PinCategory }[],
   labels: { historic: string; food: string; activity: string; place: string }
@@ -185,48 +293,31 @@ export function buildLegend(
 }
 
 /**
- * A photo and a place count for each city, for the card grids that let a
- * visitor choose one.
- *
- * The count is how many documented places we can actually show for that city,
- * not an estimate of how many exist — a card that promises 900 and opens on
- * 300 is a card that lied.
+ * A photo and a place count per city, for the city cards on a country page,
+ * keyed by slug. Photos are Pexels results whose caption names the city.
  */
 export async function fetchCityOverviews(
-  centres: PinCentre[],
-  { perCity = 300, radius = 10000 }: { perCity?: number; radius?: number } = {}
-): Promise<Map<string, { photo?: string; count: number }>> {
-  const result = new Map<string, { photo?: string; count: number }>();
-  if (centres.length === 0) return result;
-
-  const summaries = await fetchWikiSummaries(centres.map((c) => c.wikiTitle));
-
-  await Promise.all(
-    centres.map(async (c) => {
-      const s = summaries.get(c.wikiTitle);
-      if (typeof s?.lat !== "number" || typeof s?.lon !== "number") {
-        result.set(c.wikiTitle, { photo: s?.thumbnail, count: 0 });
-        return;
-      }
-      const places = await fetchNearbyPlaces(s.lat, s.lon, { radius, limit: perCity });
-
-      // Not every city's article carries a lead photo — smaller ones often
-      // don't. Rather than leave the card as a bare tile, borrow a photo from
-      // one of the city's own notable places: it's still a real, sourced
-      // picture of somewhere in that city, which is what the card is
-      // promising. Only the nearest few are checked, since they're the ones
-      // closest to the centre and most likely to be the landmark a visitor
-      // pictures when they think of the place.
-      let photo = s.thumbnail;
-      if (!photo && places.length > 0) {
-        const nearest = [...places].sort((a, b) => a.distance - b.distance).slice(0, 20);
-        const thumbs = await fetchThumbnails(nearest.map((p) => p.pageId));
-        photo = nearest.map((p) => thumbs.get(p.pageId)).find(Boolean);
-      }
-
-      result.set(c.wikiTitle, { photo, count: places.length });
-    })
-  );
-
+  centres: PinCentre[]
+): Promise<Map<string, { photo?: string; photoLarge?: string; count: number }>> {
+  const result = new Map<string, { photo?: string; photoLarge?: string; count: number }>();
+  const wanted = new Map<string, PexelsQuery[]>();
+  for (const c of centres) {
+    const code = CITY_COORDS[c.slug]?.code;
+    const country = code ? findCountry(code)?.nameEn : undefined;
+    wanted.set(c.slug, [
+      { query: country ? `${c.nameEn} ${country}` : c.nameEn, mention: [c.nameEn] },
+    ]);
+  }
+  const photos = await searchPexelsPhotos(wanted);
+  for (const c of centres) {
+    // No count: knowing how many places a city has would mean one Overpass
+    // query per card, and a country page has a dozen cards. The card shows
+    // the photograph and the name, and the city page does the counting.
+    result.set(c.slug, {
+      photo: photos.get(c.slug)?.small,
+      photoLarge: photos.get(c.slug)?.url,
+      count: 0,
+    });
+  }
   return result;
 }

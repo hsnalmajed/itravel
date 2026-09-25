@@ -1,45 +1,38 @@
-const IATA_URL = "https://www.iatatravelcentre.com/";
-const MOFA_URL = "https://www.mofa.gov.sa/";
+import { IATA_TRAVEL_CENTRE_URL, SAUDI_MOFA_URL } from "@/lib/visaProviders";
 
 /**
  * The part of this feature that matters most.
  *
- * Everything else on this site can be a little out of date without hurting
- * anyone. Visa rules can't: a traveller who trusts a stale "no visa needed"
- * finds out at the gate. So this sits next to every single visa figure the
- * site shows — the country card and the full table both — and it links to the
- * two places that actually decide: the IATA database airlines check against,
- * and the Saudi foreign ministry.
+ * Visa rules change without notice, and a traveller who trusts a stale "no
+ * visa needed" finds out at the gate. So the site states no visa status at
+ * all, and this notice says why and links to the two places that actually
+ * decide: the IATA database airlines check against, and the Saudi foreign
+ * ministry.
  *
  * It is deliberately not collapsible and not styled to be ignorable.
  *
- * It is also, now, the *only* notice on the page. The visa page used to open
- * with three stacked full-width bars — a blue scope note, this amber warning,
- * and a heading — before a single country appeared, and three warnings in a
- * row is how a page teaches people to skip warnings. The scope note is a
- * clause of the same sentence, so it is a clause of the same block: one
- * notice, read once, taken seriously.
+ * It is also the *only* notice on a page. Three warnings in a row is how a
+ * page teaches people to skip warnings, so the scope note ("Saudi passports
+ * only") is a clause of the same block rather than a bar of its own.
+ *
+ * Where the page already shows the full official-links block
+ * (VisaOfficialLinks), `showLinks={false}` drops the two buttons here so the
+ * same links aren't offered twice in a row.
  */
 export default function VisaWarning({
   dict,
   scope,
-  checkedAt,
-  sourceUrl,
+  showLinks = true,
 }: {
   dict: {
     warningTitle: string;
     warningBody: string;
     checkIata: string;
     checkMofa: string;
-    viewSource: string;
-    checkedAt: string;
   };
-  /** Who these figures apply to — folded in rather than given its own bar. */
+  /** Who this applies to — folded in rather than given its own bar. */
   scope?: string;
-  /** ISO date the source table was read, printed so staleness is visible. */
-  checkedAt?: string;
-  /** Wikipedia article the figures came from; omitted when none loaded. */
-  sourceUrl?: string;
+  showLinks?: boolean;
 }) {
   const linkClass =
     "inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-bold text-amber-900 ring-1 ring-amber-300 transition hover:-translate-y-0.5 hover:shadow-sm";
@@ -59,31 +52,21 @@ export default function VisaWarning({
           {dict.warningBody}
           {scope && <span className="text-amber-700"> {scope}</span>}
         </p>
-        {/* "From Wikipedia" is only half the disclosure; whether that reading
-            was this morning or last spring is the other half. */}
-        {checkedAt && (
-          <p className="mt-1.5 text-2xs font-semibold text-amber-700">
-            {dict.checkedAt.replace("{date}", checkedAt)}
-          </p>
-        )}
       </div>
 
       {/* The sources sit beside the warning rather than under it. On a wide
           screen that turns a four-line block into a two-line one, and the
           links stay where the eye already is. */}
-      <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-        <a href={IATA_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          {dict.checkIata} ↗
-        </a>
-        <a href={MOFA_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          {dict.checkMofa} ↗
-        </a>
-        {sourceUrl && (
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
-            {dict.viewSource} ↗
+      {showLinks && (
+        <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
+          <a href={IATA_TRAVEL_CENTRE_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {dict.checkIata} ↗
           </a>
-        )}
-      </div>
+          <a href={SAUDI_MOFA_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {dict.checkMofa} ↗
+          </a>
+        </div>
+      )}
     </div>
   );
 }

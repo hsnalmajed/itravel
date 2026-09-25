@@ -1,95 +1,104 @@
-// The photographs the homepage opens on.
+import { pexelsSizes } from "@/lib/pexels";
+
+// The photographs the homepage and the section pages open on.
 //
-// A travel site's first screen is its promise, so these are chosen against a
-// short, strict brief rather than picked for being pretty:
+// Chosen by hand from Pexels (see pexels.ts) against a short brief:
 //
-//   · somewhere else. Seven places on five continents, because the site's
-//     whole proposition is "tell us your budget and we'll tell you where" —
-//     opening on one country every day would narrow that to one answer.
+//   · somewhere else — deserts, seas, mountains and cities on several
+//     continents, with AlUla among them, because the site's proposition is
+//     "tell us your budget and we'll tell you where".
 //   · no people in the frame. A hero with a stranger in it is a photograph of
-//     that stranger, and it dates the moment they do.
-//   · alive. Turquoise water, a lit ridge, a sky doing something. A correct
-//     but grey landscape makes a site feel like a brochure nobody opened.
-//   · sharp enough for a 4K display — every one of these is at least 5,500
-//     pixels wide at source, and the page serves the 4K rendering to screens
-//     that can use it.
+//     that stranger.
+//   · dark enough at the centre for white type to read over it.
 //
-// Every one is a Wikimedia Commons *featured picture* or of that standard,
-// which means it has already been reviewed by people who care about focus,
-// exposure and artefacts far more than a stock-photo buyer does. They are
-// also freely licensed, and each one names its photographer on the page —
-// that is the condition these licences carry.
+// They are fixed rather than searched for, so they show even before the
+// Pexels API key is set, and nobody's search result can put the wrong city
+// behind the headline. Each names its photographer, as Pexels asks.
 //
-// The hero rotates by date. That is deliberate over a random pick per view:
-// the page is cached, a random choice would be frozen by the cache anyway,
-// and a hero that changes overnight gives a returning visitor something new
-// without anything flickering while they read.
+// The hero rotates by date: the page is cached, so a random pick per view
+// would be frozen anyway, and one that changes overnight gives a returning
+// visitor something new.
 
 export interface HeroPhoto {
-  /** Exact file name on Wikimedia Commons. */
-  file: string;
-  /** Where it is, for the credit line. */
+  /** Pexels' original image URL, sized by pexelsSizes(). */
+  src: string;
+  photographer: string;
+  photographerUrl: string;
+  /** The photo's page on pexels.com — where the credit links. */
+  pageUrl: string;
+  /** Where it is, for the credit line — from the photo's own Pexels caption. */
   placeAr: string;
   placeEn: string;
 }
 
+const P = (id: string, file: string) => `https://images.pexels.com/photos/${id}/${file}`;
+const U = (slug: string) => `https://www.pexels.com/${slug}`;
+
 export const HERO_PHOTOS: HeroPhoto[] = [
   {
-    file: "Matterhorn reflection in the Riffelsee at sunrise.jpg",
-    placeAr: "جبل الماترهورن، سويسرا",
-    placeEn: "The Matterhorn, Switzerland",
+    src: P("11118464", "pexels-photo-11118464.jpeg"),
+    photographer: "Irfan Rahat",
+    photographerUrl: U("@irfan-rahat-164426592/"),
+    pageUrl: U("photo/elephant-rock-in-saudi-arabia-11118464/"),
+    placeAr: "جبل الفيل، العُلا",
+    placeEn: "Elephant Rock, AlUla",
   },
   {
-    file: "1 lake louise pano 2019.jpg",
-    placeAr: "بحيرة لويز، كندا",
-    placeEn: "Lake Louise, Canada",
+    src: P("9149367", "pexels-photo-9149367.jpeg"),
+    photographer: "Asad Photo Maldives",
+    photographerUrl: U("@asadphoto/"),
+    pageUrl: U("photo/sea-landscape-nature-beach-9149367/"),
+    placeAr: "جزر المالديف",
+    placeEn: "Maldives",
   },
   {
-    file: "Чинки плато Устюрт. Урочище Бозжыра.jpg",
-    placeAr: "وادي بوزجيرا، كازاخستان",
-    placeEn: "Bozzhyra, Kazakhstan",
+    src: P("30370450", "pexels-photo-30370450/free-photo-of-vibrant-hot-air-balloons-over-cappadocia-landscape.jpeg"),
+    photographer: "Sena",
+    photographerUrl: U("@sena-1959966536/"),
+    pageUrl: U("photo/vibrant-hot-air-balloons-over-cappadocia-landscape-30370450/"),
+    placeAr: "كابادوكيا، تركيا",
+    placeEn: "Cappadocia, Türkiye",
   },
   {
-    file: "Cirrus front over Austnesfjorden, Austvågøya, Lofoten, Norway, 2015 April.jpg",
-    placeAr: "جزر لوفوتن، النرويج",
-    placeEn: "Lofoten, Norway",
+    src: P("17804518", "pexels-photo-17804518/free-photo-of-lake-in-mountains-in-switzerland.jpeg"),
+    photographer: "Christopher Politano",
+    photographerUrl: U("@christopher-politano-978995/"),
+    pageUrl: U("photo/lake-in-mountains-in-switzerland-17804518/"),
+    placeAr: "جبال الألب، سويسرا",
+    placeEn: "The Alps, Switzerland",
   },
   {
-    file: "Teide von Nordosten (Zuschnitt 1).jpg",
-    placeAr: "بركان تيدي، جزر الكناري",
-    placeEn: "Mount Teide, Canary Islands",
+    src: P("998635", "pexels-photo-998635.jpeg"),
+    photographer: "Francesco Ungaro",
+    photographerUrl: U("@francesco-ungaro/"),
+    pageUrl: U("photo/closeup-photo-of-desert-sands-998635/"),
+    placeAr: "كثبان الصحراء، المغرب",
+    placeEn: "Sahara dunes, Morocco",
   },
   {
-    file: "Golden Hour at Emerald Bay.jpg",
-    placeAr: "خليج إميرالد، الولايات المتحدة",
-    placeEn: "Emerald Bay, United States",
+    src: P("32634768", "pexels-photo-32634768/free-photo-of-istanbul-city-silhouette-at-sunset.jpeg"),
+    photographer: "Ali Said Güneş",
+    photographerUrl: U("@ali-said-gunes-2152915623/"),
+    pageUrl: U("photo/istanbul-city-silhouette-at-sunset-32634768/"),
+    placeAr: "إسطنبول، تركيا",
+    placeEn: "Istanbul, Türkiye",
   },
   {
-    file: "Amanecer en el lago Titicaca, Puno, Perú, 2015-08-01, DD 01.JPG",
-    placeAr: "بحيرة تيتيكاكا، بيرو",
-    placeEn: "Lake Titicaca, Peru",
+    src: P("11381591", "pexels-photo-11381591.jpeg"),
+    photographer: "Ivan Grachev",
+    photographerUrl: U("@ivan-grachev-189555042/"),
+    pageUrl: U("photo/wing-of-airplane-at-sunset-11381591/"),
+    placeAr: "فوق الغيوم",
+    placeEn: "Above the clouds",
   },
 ];
 
-/**
- * Today's photograph.
- *
- * Keyed on the date in UTC so every visitor sees the same one on the same
- * day, whatever their timezone and whatever edge cached the page.
- */
 export function heroPhotoForToday(date = new Date()): HeroPhoto {
   const daysSinceEpoch = Math.floor(date.getTime() / 86_400_000);
   return HERO_PHOTOS[daysSinceEpoch % HERO_PHOTOS.length];
 }
 
-/**
- * A resolved hero, shaped to spread straight into <PageHero>.
- *
- * Declared here rather than beside the lookup that fills it because client
- * components need the type and must not pull in the lookup: sectionHero.ts
- * reaches out to Wikimedia, and importing it from a component would drag that
- * into the browser bundle.
- */
+/** What a section page needs to draw its hero. */
 export interface SectionHero {
   photo?: string;
   photoSrcSet?: string;
@@ -105,60 +114,59 @@ export type HeroSection =
   | "currency"
   | "itinerary";
 
-/**
- * One photograph per section, and never the same one twice.
- *
- * The inner pages used to borrow whichever country photo happened to be first
- * in their own list. That gave four of them the same picture on the same day,
- * and all of them a 330-pixel thumbnail — a size meant for a card in a grid,
- * stretched across a full-width banner, which is why they looked soft. These
- * are chosen files at full resolution instead.
- *
- * They are held to the same brief as the homepage rotation above — somewhere
- * else, nobody in the frame, alive, and at least 5,500 pixels wide at source —
- * with one more condition on top: each has to argue for the page it opens.
- * A page about *when* to travel opens on a season you can see; a page about
- * routes opens on a road; a page about maps opens on the view from the top of
- * the climb. The picture is the page's first sentence, so it should say the
- * same thing the heading does.
- */
 export const SECTION_HEROES: Record<HeroSection, HeroPhoto> = {
-  // Places worth going to see — water you can read the bottom of.
   attractions: {
-    file: "Kuang Si Falls and its emerald water pools in Luang Prabang province Laos.jpg",
-    placeAr: "شلالات كوانغ سي، لاوس",
-    placeEn: "Kuang Si Falls, Laos",
+    src: P("6173322", "pexels-photo-6173322.jpeg"),
+    photographer: "Julia Volk",
+    photographerUrl: U("@julia-volk/"),
+    pageUrl: U("photo/flying-hot-air-balloons-in-the-sky-6173322/"),
+    placeAr: "مناطيد الهواء الساخن، تركيا",
+    placeEn: "Hot-air balloons, Türkiye",
   },
-  // The view you get for having climbed — which is what a map is for.
   maps: {
-    file: "Moro Rock Trail Sequoia July 2017 panorama.jpg",
-    placeAr: "صخرة مورو، الولايات المتحدة",
-    placeEn: "Moro Rock, United States",
+    src: P("30002090", "pexels-photo-30002090/free-photo-of-winding-roads-of-transfagara-an-highway-romania.jpeg"),
+    photographer: "Maarten van den Heuvel",
+    photographerUrl: U("@mvdheuvel/"),
+    pageUrl: U("photo/winding-roads-of-transfagara-an-highway-romania-30002090/"),
+    placeAr: "طريق ترانسفاغاراشان، رومانيا",
+    placeEn: "Transfăgărășan road, Romania",
   },
-  // A month you can see. Autumn reading as autumn is the whole argument of a
-  // page that answers "when".
   seasons: {
-    file: "TR Yedigöller asv2021-10 img16.jpg",
-    placeAr: "بحيرات يدي غولر، تركيا",
-    placeEn: "Yedigöller, Türkiye",
+    src: P("37736013", "pexels-photo-37736013/free-photo-of-scenic-autumn-lake-view-in-hintersee-germany.jpeg"),
+    photographer: "Leo Shao",
+    photographerUrl: U("@leos/"),
+    pageUrl: U("photo/scenic-autumn-lake-view-in-hintersee-germany-37736013/"),
+    placeAr: "بحيرة هينترزي، ألمانيا",
+    placeEn: "Hintersee, Germany",
   },
-  // A border you can see: the far side of a high pass.
   visa: {
-    file: "Massis del Casamanya (2).jpg",
-    placeAr: "قمة كازامانيا، أندورا",
-    placeEn: "Casamanya, Andorra",
+    src: P("3140204", "pexels-photo-3140204.jpeg"),
+    photographer: "Brett Sayles",
+    photographerUrl: U("@brett-sayles/"),
+    pageUrl: U("photo/photo-of-airplanes-at-airport-3140204/"),
+    placeAr: "في المطار",
+    placeEn: "At the airport",
   },
-  // Somewhere your money is a different number — and quiet enough to think
-  // about it in.
   currency: {
-    file: "Búlandshöfði, Vesturland, Islandia, 2014-08-14, DD 085.JPG",
-    placeAr: "بولاندسهوفدي، آيسلندا",
-    placeEn: "Búlandshöfði, Iceland",
+    src: P("30554306", "pexels-photo-30554306/free-photo-of-vibrant-dubai-marina-skyline-at-night.jpeg"),
+    photographer: "AJ Ahamad",
+    photographerUrl: U("@aj-ahamad-767001191/"),
+    pageUrl: U("photo/vibrant-dubai-marina-skyline-at-night-30554306/"),
+    placeAr: "مرسى دبي، الإمارات",
+    placeEn: "Dubai Marina, UAE",
   },
-  // A road that goes somewhere, bend by bend. A plan drawn in landscape.
   itinerary: {
-    file: "Trollstigen HochPanno.jpg",
-    placeAr: "طريق ترولستيجن، النرويج",
-    placeEn: "Trollstigen, Norway",
+    src: P("11357903", "pexels-photo-11357903.jpeg"),
+    photographer: "Ali Kazal",
+    photographerUrl: U("@lureofadventure/"),
+    pageUrl: U("photo/highway-between-green-mountains-11357903/"),
+    placeAr: "ألبرتا، كندا",
+    placeEn: "Alberta, Canada",
   },
 };
+
+/** The hero's image URLs and srcset, ready for <Photo>. */
+export function heroImage(photo: HeroPhoto): { url: string; srcSet: string } {
+  const s = pexelsSizes(photo.src);
+  return { url: s.url, srcSet: `${s.url} 1920w, ${s.url4k} 3840w` };
+}

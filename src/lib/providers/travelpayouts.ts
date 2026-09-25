@@ -262,8 +262,31 @@ export const travelpayouts: PriceProvider = {
     // "Direct only" is a different endpoint rather than a filter, which is
     // the only way this source can state a stop count at all.
     const path = params.directFlightsOnly ? "/v1/prices/direct" : "/v1/prices/cheap";
-    const body = await get(path, query);
-    return toOffers(body, params, { direct: Boolean(params.directFlightsOnly), currency });
+    const exact = toOffers(await get(path, query), params, {
+      direct: Boolean(params.directFlightsOnly),
+      currency,
+    });
+    if (exact.length > 0) return exact;
+
+    // Nothing was observed on those exact days — common on a quiet route, and
+    // the reason a search used to fall back to sample fares. The same
+    // endpoint answers by month, which is what a traveller deciding whether a
+    // trip is affordable actually wants: "somewhere around 1,400 riyals that
+    // month". It is a different question from the one asked, so the offers
+    // say so and the card prints it.
+    const month = (iso: string) => iso.slice(0, 7);
+    const monthly: Record<string, string> = {
+      origin,
+      destination,
+      depart_date: month(params.departDate),
+      currency,
+    };
+    if (params.returnDate) monthly.return_date = month(params.returnDate);
+    const near = toOffers(await get(path, monthly), params, {
+      direct: Boolean(params.directFlightsOnly),
+      currency,
+    });
+    return near.map((o) => ({ ...o, datesApproximate: true }));
   },
 
   async searchHotels(params, nights) {

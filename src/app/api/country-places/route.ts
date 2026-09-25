@@ -10,10 +10,9 @@ import type { Locale } from "@/lib/types";
  * The country and city map pages resolve this on the server. The itinerary
  * and the attractions basket need the same set in the browser, to turn a plan
  * into a file a map app can open — so it is exposed here rather than
- * duplicating the Wikipedia calls in two more places.
+ * reading the stored OpenStreetMap data in two more places.
  *
- * Only the fields an export needs come back. Photos are skipped: they cost an
- * extra batched request per fifty places and nothing downstream draws one.
+ * Only the fields an export needs come back.
  */
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;

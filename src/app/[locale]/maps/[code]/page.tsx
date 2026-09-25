@@ -41,7 +41,7 @@ export default async function CountryMapPage({ params }: PageProps<"/[locale]/ma
   ]);
 
   const cards: CityCard[] = cities.map((c) => {
-    const overview = overviews.get(c.wikiTitle);
+    const overview = overviews.get(c.slug);
     return {
       slug: c.slug,
       name: loc === "ar" ? c.nameAr : c.nameEn,

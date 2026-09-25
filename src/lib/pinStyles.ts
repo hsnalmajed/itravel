@@ -7,7 +7,7 @@
 // browser dependencies lets both sides share one definition.
 
 // The four kinds of place a traveller cares about telling apart on a map.
-// These are the same four buckets `categorisePlace` sorts a Wikipedia
+// These are the same four buckets the stored OpenStreetMap places are sorted
 // description into, so a place's category never has to be translated between
 // vocabularies on its way to a pin.
 export type PinCategory =

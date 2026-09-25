@@ -19,7 +19,7 @@ export interface ExportPlace {
 }
 
 // GPX and KML are plain XML, so anything that reaches an element body or an
-// attribute has to be escaped — landmark names and Wikipedia extracts really
+// attribute has to be escaped — landmark names really
 // do contain & and quotes.
 function xmlEscape(value: string): string {
   return value

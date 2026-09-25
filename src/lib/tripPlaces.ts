@@ -4,8 +4,8 @@
 //
 // First, we never invent a coordinate. A plan's activities are sentences — a
 // line of an itinerary, or a dish a country is known for — and most of them
-// are not a point on a map at all. Only the ones we can match to a place
-// Wikipedia actually geolocated get exported, and the interface says how many
+// are not a point on a map at all. Only the ones we can match to a mapped
+// place with real coordinates get exported, and the interface says how many
 // that was rather than quietly dropping the rest.
 //
 // Second, "add to Google Maps" is not something a website can do to someone
@@ -52,7 +52,7 @@ export async function fetchCountryPlaces(code: string, locale: string): Promise<
  * whole, under the same Arabic-tolerant folding the search boxes use —
  * because a loose match would pin someone's evening to the wrong museum. It
  * is checked both ways round, since a guide entry ("the Grand Bazaar") and a
- * Wikipedia title ("Grand Bazaar, Istanbul") each routinely contain the
+ * mapped name ("Grand Bazaar, Istanbul") each routinely contain the
  * other. Short names are skipped entirely: a three-letter place name matches
  * half a paragraph by accident.
  */

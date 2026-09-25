@@ -8,7 +8,7 @@
  * open on a map instead of a list.
  *
  * Deliberately a static table. The alternative was resolving each country's
- * position from Wikipedia at request time, which is forty-one extra
+ * position from a live lookup at request time, which is forty-one extra
  * subrequests on a Cloudflare Worker — the exact budget that has silently
  * broken this site twice before.
  *

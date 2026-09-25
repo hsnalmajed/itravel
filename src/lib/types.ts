@@ -70,6 +70,12 @@ export interface FlightOffer {
   /** True when `stops` is something the source actually told us. */
   stopsKnown?: boolean;
   /**
+   * The fare for one adult, when `price` is that fare multiplied by the
+   * party. Cached sources quote a single seat; the card shows both so nobody
+   * compares our total against a per-seat price on the partner's site.
+   */
+  pricePerPerson?: number;
+  /**
    * The price was observed somewhere in that month, not on the exact days
    * asked for. Shown as such — a real number for nearly the right dates is
    * useful; the same number presented as today's answer is not.

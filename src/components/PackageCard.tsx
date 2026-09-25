@@ -93,19 +93,25 @@ export default function PackageCard({ combo, locale }: { combo: PackageCombo; lo
               </p>
             </div>
           </div>
-          <p className="mt-1.5 text-xs text-gray-500">
-            📍 {dict.results.distanceFromCenter.replace("{km}", String(combo.hotel.distanceFromCenterKm))}
-          </p>
-          <span
-            className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-              combo.hotel.breakfastIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
-            }`}
-          >
-            🍳 {combo.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
-          </span>
-          <span className="mt-2 ms-1.5 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-            🛏️ {dict.roomType[combo.hotel.roomType]}
-          </span>
+          {combo.hotel.priceOnly ? (
+            <p className="mt-1.5 text-xs text-gray-500">{dict.results.hotelPriceOnlyNote}</p>
+          ) : (
+            <>
+              <p className="mt-1.5 text-xs text-gray-500">
+                📍 {dict.results.distanceFromCenter.replace("{km}", String(combo.hotel.distanceFromCenterKm))}
+              </p>
+              <span
+                className={`mt-2 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                  combo.hotel.breakfastIncluded ? "bg-accent-50 text-accent-700" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                🍳 {combo.hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+              </span>
+              <span className="mt-2 ms-1.5 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                🛏️ {dict.roomType[combo.hotel.roomType]}
+              </span>
+            </>
+          )}
         </div>
       )}
 

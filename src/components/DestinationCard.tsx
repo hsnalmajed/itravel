@@ -126,9 +126,11 @@ export default function DestinationCard({
             <p>
               🏨 {suggestion.hotel.name} · {"★".repeat(Math.max(1, suggestion.hotel.stars))} · {suggestion.nights} {dict.results.nights}
             </p>
-            <p className="text-xs text-gray-400 ps-5">
-              {dict.results.distanceFromCenter.replace("{km}", String(suggestion.hotel.distanceFromCenterKm))}
-            </p>
+            {!suggestion.hotel.priceOnly && (
+              <p className="text-xs text-gray-400 ps-5">
+                {dict.results.distanceFromCenter.replace("{km}", String(suggestion.hotel.distanceFromCenterKm))}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -143,7 +145,7 @@ export default function DestinationCard({
             🧳 {suggestion.flight.baggageIncluded ? dict.results.baggageYes : dict.results.baggageNo}
           </span>
         )}
-        {suggestion.hotel && (
+        {suggestion.hotel && !suggestion.hotel.priceOnly && (
           <>
             <span
               className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${

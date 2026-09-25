@@ -229,19 +229,26 @@ function FlightChips({ flight, dict }: { flight: FlightOffer; dict: Dict }) {
 }
 
 function HotelChips({ hotel, dict }: { hotel: HotelOffer; dict: Dict }) {
+  // A cached price comes with a name, a star rating and nothing else. The
+  // chips below each state a fact about the room, so they are shown only for
+  // a source that actually told us one.
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
-      <Chip tone={hotel.breakfastIncluded ? "good" : "mute"}>
-        <span aria-hidden="true">🍳</span>
-        {hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
-      </Chip>
-      <Chip tone="info">
-        <span aria-hidden="true">📍</span>
-        {dict.results.distanceFromCenter.replace("{km}", String(hotel.distanceFromCenterKm))}
-      </Chip>
+      {!hotel.priceOnly && (
+        <Chip tone={hotel.breakfastIncluded ? "good" : "mute"}>
+          <span aria-hidden="true">🍳</span>
+          {hotel.breakfastIncluded ? dict.results.breakfastYes : dict.results.breakfastNo}
+        </Chip>
+      )}
+      {!hotel.priceOnly && (
+        <Chip tone="info">
+          <span aria-hidden="true">📍</span>
+          {dict.results.distanceFromCenter.replace("{km}", String(hotel.distanceFromCenterKm))}
+        </Chip>
+      )}
       <Chip tone="mute">
         <span aria-hidden="true">🛏️</span>
-        {dict.roomType[hotel.roomType]}
+        {hotel.priceOnly ? dict.results.hotelPriceOnlyNote : dict.roomType[hotel.roomType]}
         {/* Above one, the party needs more than one unit and the total
             already reflects that — saying so is the difference between a
             price that looks wrong and one that adds up. */}

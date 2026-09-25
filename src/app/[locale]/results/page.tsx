@@ -13,6 +13,7 @@ import FlightMetasearch from "@/components/FlightMetasearch";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
+import { flightSearchCode } from "@/lib/flightSearchCode";
 import { findCityByName } from "@/lib/cities";
 import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
 
@@ -52,29 +53,45 @@ function ResultsContent() {
   const dict = getDictionary(locale);
   const sp = useSearchParams();
 
+  // The address bar is not ours alone on this page. When the flight widget
+  // runs a search it rewrites the address to its own one parameter and drops
+  // everything else, which would otherwise empty this page of the trip the
+  // traveller asked for. So the trip is read from the address once and kept;
+  // a later address that still names a destination is a real change and is
+  // taken, one that does not is the widget talking to itself and is ignored.
+  const spText = sp.toString();
+  const [query, setQuery] = useState(spText);
+  useEffect(() => {
+    const next = new URLSearchParams(spText);
+    if (!next.get("destination") && new URLSearchParams(query).get("destination")) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(spText);
+  }, [spText, query]);
+  const q = useMemo(() => new URLSearchParams(query), [query]);
+
   const search: SearchParams = useMemo(
     () => ({
-      tripType: (sp.get("tripType") as TripType) || "both",
-      origin: sp.get("origin") || "",
-      destination: sp.get("destination") || "",
-      departDate: sp.get("departDate") || "",
-      returnDate: sp.get("returnDate") || undefined,
-      adults: Number(sp.get("adults") || 1),
-      budgetTotal: Number(sp.get("budget") || 0),
-      currency: sp.get("currency") || "SAR",
-      directFlightsOnly: sp.get("directOnly") === "true",
-      minHotelStars: Number(sp.get("minStars") || 0),
-      baggageIncluded: sp.get("baggageIncluded") === "true",
-      breakfastIncluded: sp.get("breakfastIncluded") === "true",
-      childrenAges: parseChildrenAges(sp.get("childrenAges")),
-      infants: Number(sp.get("infants") || 0),
-      roomType: (sp.get("roomType") || undefined) as RoomType | undefined,
+      tripType: (q.get("tripType") as TripType) || "both",
+      origin: q.get("origin") || "",
+      destination: q.get("destination") || "",
+      departDate: q.get("departDate") || "",
+      returnDate: q.get("returnDate") || undefined,
+      adults: Number(q.get("adults") || 1),
+      budgetTotal: Number(q.get("budget") || 0),
+      currency: q.get("currency") || "SAR",
+      directFlightsOnly: q.get("directOnly") === "true",
+      minHotelStars: Number(q.get("minStars") || 0),
+      baggageIncluded: q.get("baggageIncluded") === "true",
+      breakfastIncluded: q.get("breakfastIncluded") === "true",
+      childrenAges: parseChildrenAges(q.get("childrenAges")),
+      infants: Number(q.get("infants") || 0),
+      roomType: (q.get("roomType") || undefined) as RoomType | undefined,
     }),
-    [sp]
+    [q]
   );
 
   // Only consulted when there is no return date to measure the stay against.
-  const statedNights = Number(sp.get("nights") || 0);
+  const statedNights = Number(q.get("nights") || 0);
 
   const [flights, setFlights] = useState<FlightOffer[]>([]);
   const [hotels, setHotels] = useState<HotelOffer[]>([]);
@@ -412,11 +429,12 @@ function ResultsContent() {
           what this site is for — a budget, a destination, a plan — and this
           is where the traveller books the actual seat, at today's price, on
           our page. */}
-      {!loading && search.tripType !== "hotel" && (
+      {search.tripType !== "hotel" && (
         <FlightMetasearch
           locale={locale}
           heading={dict.results.liveSearchTitle}
           note={dict.results.liveSearchNote}
+          prefill={flightSearchCode(search)}
         />
       )}
 

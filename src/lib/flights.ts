@@ -94,6 +94,28 @@ export function resolveIata(input: string): string {
   return cleaned.replace(/[^A-Z]/g, "").slice(0, 3) || "RUH";
 }
 
+/**
+ * The same thing, without the guess.
+ *
+ * resolveIata ends by taking the first three letters of whatever it was
+ * given, which is fine for seeding sample data and wrong for anything a
+ * traveller will act on: "Tbilisi" becomes TBI, an airport in Papua New
+ * Guinea, and the real one is TBS. Anywhere a code is about to be sent to a
+ * booking site, ask this instead and show nothing when the answer is null.
+ */
+export function strictIata(input: string): string | null {
+  const raw = (input || "").trim();
+  if (!raw) return null;
+  const key = raw.toLowerCase();
+  if (CITY_TO_IATA[key]) return CITY_TO_IATA[key];
+  const upper = raw.toUpperCase();
+  if (/^[A-Z]{3}$/.test(upper)) return upper;
+  const airport = AIRPORTS.find(
+    (a) => a.cityAr.toLowerCase() === key || a.cityEn.toLowerCase() === key
+  );
+  return airport?.iata ?? null;
+}
+
 
 
 

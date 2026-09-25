@@ -8,7 +8,7 @@ import PageHero from "@/components/ui/PageHero";
 import { sectionHero } from "@/lib/sectionHero";
 import { monthName } from "@/lib/seasons";
 
-// Photos come live from Wikipedia, same as the rest of the site.
+// Photos come from Pexels, same as the rest of the site.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/seasons">): Promise<Metadata> {

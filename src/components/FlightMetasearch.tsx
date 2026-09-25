@@ -37,14 +37,30 @@ export default function FlightMetasearch({
   heading,
   note,
   tone = "light",
+  prefill,
 }: {
   locale: Locale;
   heading: string;
   note: string;
   /** "dark" puts the block on a navy background and boxes it in white. */
   tone?: "light" | "dark";
+  /** The trip, as flightSearchCode writes it — e.g. "RUH1611IST23112". */
+  prefill?: string | null;
 }) {
   useEffect(() => {
+    // The widget takes its starting trip from this one parameter, and reads
+    // it when its script runs — so it goes on the address before the script
+    // is added, never after. With it there the traveller's own dates are
+    // already searched when the page opens; without it they would be asked
+    // for the trip a second time, which is the thing this site exists not to
+    // do.
+    if (prefill) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("flightSearch") !== prefill) {
+        url.searchParams.set("flightSearch", prefill);
+        window.history.replaceState(null, "", url.toString());
+      }
+    }
     if (document.getElementById("tpwl-main")) return;
     const script = document.createElement("script");
     script.id = "tpwl-main";
@@ -52,7 +68,7 @@ export default function FlightMetasearch({
     script.type = "module";
     script.src = WIDGET_SRC;
     document.head.appendChild(script);
-  }, []);
+  }, [prefill]);
 
   const dark = tone === "dark";
   return (

@@ -224,6 +224,12 @@ function FlightChips({ flight, dict }: { flight: FlightOffer; dict: Dict }) {
           {dict.results.priceObserved}
         </Chip>
       )}
+      {flight.datesApproximate && (
+        <Chip tone="warn">
+          <span aria-hidden="true">⚠️</span>
+          {dict.results.approxDatesNote}
+        </Chip>
+      )}
     </div>
   );
 }

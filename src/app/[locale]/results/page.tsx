@@ -9,6 +9,7 @@ import TripBuilder from "@/components/TripBuilder";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
 import PricesUnavailable from "@/components/PricesUnavailable";
+import FlightMetasearch from "@/components/FlightMetasearch";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
@@ -404,6 +405,18 @@ function ResultsContent() {
           returnDate={search.returnDate}
           search={search}
           destinationName={destinationCityName ?? search.destination}
+        />
+      )}
+
+      {/* The live flight search, under our own summary. The cards above are
+          what this site is for — a budget, a destination, a plan — and this
+          is where the traveller books the actual seat, at today's price, on
+          our page. */}
+      {!loading && search.tripType !== "hotel" && (
+        <FlightMetasearch
+          locale={locale}
+          heading={dict.results.liveSearchTitle}
+          note={dict.results.liveSearchNote}
         />
       )}
 

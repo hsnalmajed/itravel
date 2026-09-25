@@ -6,11 +6,10 @@ import { pageMetadata } from "@/lib/seo";
 import type { Locale } from "@/lib/types";
 import {findCountry} from "@/lib/countries";
 import { findCity } from "@/lib/cities";
-import { fetchPlacesAroundCities } from "@/lib/mapPins";
+import { fetchCityOverviews, fetchPlacesAroundCities } from "@/lib/mapPins";
 import { fetchCityHighlights } from "@/lib/guideHighlights";
 import { placeCountLabel } from "@/lib/format";
 import { BOOKING_SHORT_LABELS } from "@/lib/countryGuides";
-import { fetchWikiSummary } from "@/lib/wikipedia";
 import { fetchCitiesForCountry, fetchToursForCity } from "@/lib/viator";
 import { type PlaceListItem } from "@/components/CityPlacesExplorer";
 import CityPlacesPlanner from "@/components/CityPlacesPlanner";
@@ -18,16 +17,15 @@ import TourCard from "@/components/TourCard";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 
-// Live Wikipedia lookups per request, so a newly-documented place shows up
-// without a redeploy.
+// Viator tours are looked up per request.
 export const dynamic = "force-dynamic";
 
 // The same places the city's map shows, as a list you can read.
 //
 // The map answers "where is it"; this page answers "what is it and is it
-// worth my afternoon" — a photo, a name, and what Wikipedia says it is, in
-// the reader's own language, split into the three sections the site has
-// always used.
+// worth my afternoon" — a name, what it is and how to get in, in the
+// reader's own language, split into the three sections the site has always
+// used.
 /**
  * Only a relative path on this site is allowed back.
  *
@@ -79,9 +77,9 @@ export default async function CityPlacesPage({
   const cityEntry = findCity(country.code, city);
   if (!cityEntry) notFound();
 
-  const [places, citySummary, viatorCities, highlights] = await Promise.all([
-    fetchPlacesAroundCities([cityEntry], { locale: loc, withPhotos: true }),
-    fetchWikiSummary(cityEntry.wikiTitle),
+  const [places, overviews, viatorCities, highlights] = await Promise.all([
+    fetchPlacesAroundCities([cityEntry], { locale: loc }),
+    fetchCityOverviews([cityEntry]),
     // Empty (and instant) with no Viator key configured, so the guide below
     // stands on its own until one is added.
     fetchCitiesForCountry(country.code),
@@ -90,12 +88,17 @@ export default async function CityPlacesPage({
     fetchCityHighlights(country.code, cityEntry),
   ]);
 
-  // Keyed by English article title, which is the one name both sides share.
-  const highlightByTitle = new Map(highlights.map((h) => [h.landmark.wikiTitle, h]));
-  const bookingLabelFor = (enTitle: string) => {
-    const hit = highlightByTitle.get(enTitle);
-    return hit ? BOOKING_SHORT_LABELS[hit.landmark.booking][loc] : undefined;
-  };
+  // A stored place and a curated landmark are the same thing when their
+  // English names match, or when they stand within 150 m of each other —
+  // OpenStreetMap often names a place in the local language.
+  const near = (aLat: number, aLon: number, bLat: number, bLon: number) =>
+    Math.abs(aLat - bLat) < 0.0015 && Math.abs(aLon - bLon) < 0.0015;
+  const highlightFor = (p: { nameEn: string; lat: number; lon: number }) =>
+    highlights.find(
+      (h) =>
+        h.landmark.nameEn.toLowerCase() === p.nameEn.toLowerCase() ||
+        near(h.lat, h.lon, p.lat, p.lon)
+    );
 
   // Viator names its destinations in English, same as our `nameEn`, so an
   // exact case-insensitive match is a safe join. Anything short of an exact
@@ -108,43 +111,38 @@ export default async function CityPlacesPage({
     ? (await fetchToursForCity(viatorCity.id, { count: 12, currency: "USD" })).tours
     : [];
 
+  const covered = new Set<string>();
   const items: PlaceListItem[] = places.map((p) => {
-    // Link to the article the name and description actually came from, so
-    // "read more" never lands the reader on a different language than the
-    // card they tapped.
-    const lang = p.englishOnly || loc === "en" ? "en" : "ar";
-    const title = lang === "ar" ? (p.arTitle as string) : p.enTitle;
+    const hit = highlightFor(p);
+    if (hit) covered.add(hit.landmark.nameEn);
     return {
-      key: String(p.pageId),
-      name: p.name,
+      key: p.id,
+      // Our own hand-written name wins for a curated landmark: it is checked,
+      // and it is in the reader's language.
+      name: hit ? (loc === "ar" ? hit.landmark.nameAr : hit.landmark.nameEn) : p.name,
       description: p.description,
-      photo: p.photo,
+      photo: hit?.photo,
       category: p.category,
       lat: p.lat,
       lon: p.lon,
-      wikiUrl: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`,
-      englishOnly: p.englishOnly,
-      bookingLabel: bookingLabelFor(p.enTitle),
+      englishOnly: hit ? false : p.englishOnly,
+      bookingLabel: hit ? BOOKING_SHORT_LABELS[hit.landmark.booking][loc] : undefined,
     };
   });
 
-  // A curated landmark that geosearch missed still belongs on its city's
-  // page — Diriyah is fifteen kilometres out of Riyadh and every traveller
-  // calls it Riyadh's. Added from its own article rather than dropped.
-  const covered = new Set(places.map((p) => p.enTitle));
+  // A curated landmark the stored places don't include still belongs on its
+  // city's page — Diriyah is fifteen kilometres out of Riyadh and every
+  // traveller calls it Riyadh's.
   for (const h of highlights) {
-    if (covered.has(h.landmark.wikiTitle)) continue;
+    if (covered.has(h.landmark.nameEn)) continue;
     items.push({
-      key: `guide-${h.landmark.wikiTitle}`,
+      key: `guide-${h.landmark.nameEn}`,
       name: loc === "ar" ? h.landmark.nameAr : h.landmark.nameEn,
-      description: h.extract,
       photo: h.photo,
       category: "historic",
-      wikiUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(
-        h.landmark.wikiTitle.replace(/ /g, "_")
-      )}`,
-      // The names here are our own, written in both languages, so nothing is
-      // being shown in a language the reader didn't ask for.
+      lat: h.lat,
+      lon: h.lon,
+      // The names here are our own, written in both languages.
       englishOnly: false,
       bookingLabel: BOOKING_SHORT_LABELS[h.landmark.booking][loc],
     });
@@ -160,7 +158,7 @@ export default async function CityPlacesPage({
   return (
     <div>
       <PageHero
-        photo={citySummary?.image}
+        photo={overviews.get(cityEntry.slug)?.photoLarge}
         size="sm"
         eyebrow={loc === "ar" ? country.nameAr : country.nameEn}
         title={dict.attractions.cityPlacesTitle.replace("{city}", cityName)}
@@ -233,7 +231,7 @@ export default async function CityPlacesPage({
                 placesCount: dict.attractions.placesCount,
                 emptyCategory: dict.attractions.emptyCategory,
                 englishOnly: dict.attractions.englishOnly,
-                readMoreWiki: dict.attractions.readMoreWiki,
+                directions: dict.maps.directions,
                 loadMore: dict.attractions.loadMore,
                 searchPlaceholder: dict.attractions.placeSearchPlaceholder,
               }}

@@ -63,3 +63,35 @@ export async function cachedJson<T>(
   }
   return value;
 }
+
+/** Just the read half: the cached JSON under `key`, or null. One subrequest. */
+export async function readJson<T>(key: string): Promise<T | null> {
+  const cache = edge();
+  if (!cache) return null;
+  try {
+    const hit = await cache.match(requestFor(key));
+    return hit ? ((await hit.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Just the write half. One subrequest. */
+export async function writeJson(key: string, value: unknown, ttlSeconds: number): Promise<void> {
+  const cache = edge();
+  if (!cache) return;
+  try {
+    await cache.put(
+      requestFor(key),
+      new Response(JSON.stringify(value), {
+        headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${ttlSeconds}` },
+      })
+    );
+  } catch {
+    // A cache write failing is not a reason to fail the page.
+  }
+}
+
+function requestFor(key: string): Request {
+  return new Request(`https://sfrtna.com/__edge-cache/${encodeURIComponent(key)}`);
+}

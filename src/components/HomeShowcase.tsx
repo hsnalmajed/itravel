@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import Photo from "@/components/Photo";
 import { countLabel } from "@/lib/format";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { openPlanner, type PlanProduct } from "@/lib/planEvents";
 
 export interface ShowcaseDestination {
   code: string;
@@ -31,6 +33,12 @@ interface ShowcaseDict {
   tabSeason: string;
   tabTools: string;
   tabHow: string;
+  tabPlan: string;
+  planSubtitle: string;
+  flightsTitle: string;
+  flightsHint: string;
+  hotelsTitle: string;
+  hotelsHint: string;
   featuredSubtitle: string;
   featuredCta: string;
   seasonTitle: string;
@@ -45,7 +53,7 @@ interface ShowcaseDict {
   cityCountMany: string;
 }
 
-type TabKey = "featured" | "season" | "tools" | "how";
+type TabKey = "featured" | "season" | "tools" | "how" | "plan";
 
 /**
  * Everything the site is, on one screen.
@@ -95,6 +103,7 @@ export default function HomeShowcase({
     { key: "featured", label: dict.tabFeatured },
     { key: "tools", label: dict.tabTools },
     { key: "how", label: dict.tabHow },
+    { key: "plan", label: dict.tabPlan },
   ];
 
   const blurb: Record<TabKey, string> = {
@@ -102,6 +111,7 @@ export default function HomeShowcase({
     season: dict.seasonSubtitle,
     tools: dict.toolsSubtitle,
     how: dict.stepsTitle,
+    plan: dict.planSubtitle,
   };
 
   const link: Partial<Record<TabKey, { href: string; label: string }>> = {
@@ -115,6 +125,22 @@ export default function HomeShowcase({
         ? "bg-sun-400 text-navy-950 shadow-lg shadow-sun-900/25"
         : "text-white/60 hover:bg-white/10 hover:text-white"
     }`;
+
+  // "Plan your trip" is not another thing to browse — it is the way out of
+  // browsing and into a search. So it looks like it at rest: sky blue, the
+  // one colour on the strip that isn't the orange of "you are here" or the
+  // grey of "somewhere else", with a plane on it.
+  const planTabClass = (on: boolean) =>
+    `inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-extrabold transition duration-200 sm:px-5 sm:text-base ${
+      on
+        ? "bg-sea-400 text-navy-950 shadow-lg shadow-sea-900/30"
+        : "bg-sea-600/25 text-sea-200 ring-1 ring-sea-400/60 hover:bg-sea-600/40 hover:text-white"
+    }`;
+
+  const planChoices: { value: PlanProduct; icon: IconName; title: string; hint: string }[] = [
+    { value: "flights", icon: "plane", title: dict.flightsTitle, hint: dict.flightsHint },
+    { value: "hotels", icon: "hotel", title: dict.hotelsTitle, hint: dict.hotelsHint },
+  ];
 
   const card = (d: ShowcaseDestination) => (
     <Link
@@ -163,8 +189,9 @@ export default function HomeShowcase({
                 type="button"
                 onClick={() => setActive(t.key)}
                 aria-pressed={active === t.key}
-                className={tabClass(active === t.key)}
+                className={t.key === "plan" ? planTabClass(active === t.key) : tabClass(active === t.key)}
               >
+                {t.key === "plan" && <Icon name="plane" className="h-4 w-4" />}
                 {t.key === "season" ? dict.seasonTitle : t.label}
               </button>
             ))}
@@ -231,6 +258,33 @@ export default function HomeShowcase({
                       </span>
                     </span>
                   </Link>
+                ))}
+              </div>
+            )}
+
+            {active === "plan" && (
+              <div className="mx-auto grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                {planChoices.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => openPlanner(c.value)}
+                    className="group flex items-center gap-4 rounded-2xl bg-white/[0.06] p-6 text-start ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.12] hover:ring-sun-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sun-400 sm:p-8"
+                  >
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sun-400 text-navy-950">
+                      <Icon name={c.icon} className="h-7 w-7" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-display text-h3 font-extrabold text-white">{c.title}</span>
+                      <span className="mt-0.5 block text-sm text-white/60">{c.hint}</span>
+                    </span>
+                    <span
+                      className="ms-auto text-xl text-sun-300 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+                      aria-hidden="true"
+                    >
+                      {arrow}
+                    </span>
+                  </button>
                 ))}
               </div>
             )}

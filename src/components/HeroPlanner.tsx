@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/lib/dictionaries";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import TripPlanner from "@/components/TripPlanner";
 import HotelPlanner from "@/components/HotelPlanner";
+import { PLAN_EVENT, type PlanProduct } from "@/lib/planEvents";
 
 /**
  * The planner, on the first screen.
@@ -30,7 +31,7 @@ import HotelPlanner from "@/components/HotelPlanner";
  * are unreadable.
  */
 
-type Product = "flights" | "hotels";
+type Product = PlanProduct;
 
 function initialProduct(sp: URLSearchParams): Product | null {
   const p = sp.get("product");
@@ -46,6 +47,19 @@ export default function HeroPlanner({ locale }: { locale: Locale }) {
   const [product, setProduct] = useState<Product | null>(() =>
     initialProduct(new URLSearchParams(sp.toString()))
   );
+
+  // The showcase's "plan your trip" tab opens this planner rather than
+  // drawing a second one — see planEvents.ts.
+  useEffect(() => {
+    function onOpen(e: Event) {
+      const p = (e as CustomEvent<PlanProduct>).detail;
+      if (p !== "flights" && p !== "hotels") return;
+      setProduct(p);
+      document.getElementById("plan")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    window.addEventListener(PLAN_EVENT, onOpen);
+    return () => window.removeEventListener(PLAN_EVENT, onOpen);
+  }, []);
 
   const choices: { value: Product; icon: IconName; title: string; hint: string }[] = [
     { value: "flights", icon: "plane", title: dict.productSelect.flightsTitle, hint: dict.productSelect.flightsHint },

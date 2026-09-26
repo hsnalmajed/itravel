@@ -358,6 +358,8 @@ export const dictionaries = {
       tabSeason: "الأنسب هذا الشهر",
       tabTools: "قبل أن تحجز",
       tabHow: "كيف يعمل الموقع",
+      tabPlan: "خطط رحلتك",
+      planSubtitle: "طيران أم فنادق؟ اختر، ونفتح لك نموذج البحث في أعلى الصفحة.",
 
       featuredEyebrow: "وجهات مختارة",
       featuredTitle: "وجهات يعشقها المسافر السعودي",
@@ -1240,6 +1242,8 @@ export const dictionaries = {
       tabSeason: "Best this month",
       tabTools: "Before you book",
       tabHow: "How it works",
+      tabPlan: "Plan your trip",
+      planSubtitle: "Flights or hotels? Pick one and we open the search at the top of the page.",
 
       featuredEyebrow: "Featured",
       featuredTitle: "Where Saudi travellers actually go",

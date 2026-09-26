@@ -9,6 +9,7 @@ import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
 import FlightMetasearch from "@/components/FlightMetasearch";
 import FlightBudgetBar from "@/components/FlightBudgetBar";
+import FlightCardNotes from "@/components/FlightCardNotes";
 import Icon from "@/components/ui/Icon";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
@@ -343,6 +344,7 @@ function ResultsContent() {
         currency={search.currency}
         travelers={travelers}
       />
+      <FlightCardNotes locale={locale} budget={search.budgetTotal} currency={search.currency} />
 
       <FlightMetasearch
         locale={locale}

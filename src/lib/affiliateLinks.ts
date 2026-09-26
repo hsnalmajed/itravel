@@ -173,3 +173,65 @@ export function hotelBookingAlternative(
   if (ALMOSAFER_REF) url.searchParams.set("ref", ALMOSAFER_REF);
   return { partner: "Almosafer", url: url.toString() };
 }
+
+/**
+ * The hotel planner's own search, carried to partners.
+ *
+ * The hotel page (/hotel-results) has no prices of its own: Hotellook, the
+ * source it was meant to have, closed in October 2025, and nothing replaces
+ * it yet. So its whole job is the handover, and the handover should carry
+ * everything the traveller told us — not just the city and the dates.
+ *
+ * Booking.com's search takes the stars, breakfast and stay type as filters
+ * in `nflt` (class, mealplan=1, ht_id 204 hotels / 201 apartments), and the
+ * children with their ages. The budget is not sent: Booking reads a price
+ * filter as a nightly band in its own currency list, and a wrong band would
+ * silently hide hotels the traveller can afford.
+ *
+ * Deliberately separate from hotelBookingHandoff, which still serves the
+ * older flight-and-hotel pages and sends to Hotellook first.
+ */
+export interface HotelSearchQuery {
+  /** A hotel's name, or a city — Booking's free-text search takes either. */
+  query: string;
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  childrenAges: number[];
+  minStars?: number;
+  breakfast?: boolean;
+  stay?: "room" | "apartment";
+}
+
+export function hotelPartnerLinks(q: HotelSearchQuery): BookingHandoff[] {
+  const booking = new URL("https://www.booking.com/searchresults.html");
+  booking.searchParams.set("ss", q.query);
+  booking.searchParams.set("checkin", q.checkIn);
+  booking.searchParams.set("checkout", q.checkOut);
+  booking.searchParams.set("group_adults", String(Math.max(1, q.adults)));
+  booking.searchParams.set("no_rooms", "1");
+  booking.searchParams.set("group_children", String(q.childrenAges.length));
+  for (const age of q.childrenAges) booking.searchParams.append("age", String(age));
+
+  const filters: string[] = [];
+  if (q.minStars && q.minStars > 0) {
+    for (let s = q.minStars; s <= 5; s++) filters.push(`class=${s}`);
+  }
+  if (q.breakfast) filters.push("mealplan=1");
+  if (q.stay === "room") filters.push("ht_id=204");
+  if (q.stay === "apartment") filters.push("ht_id=201");
+  if (filters.length) booking.searchParams.set("nflt", filters.join(";"));
+  if (BOOKING_AID) booking.searchParams.set("aid", BOOKING_AID);
+
+  const almosafer = new URL("https://www.almosafer.com/en/hotels/search-results");
+  almosafer.searchParams.set("city", q.query);
+  almosafer.searchParams.set("checkIn", q.checkIn);
+  almosafer.searchParams.set("checkOut", q.checkOut);
+  almosafer.searchParams.set("adults", String(Math.max(1, q.adults)));
+  if (ALMOSAFER_REF) almosafer.searchParams.set("ref", ALMOSAFER_REF);
+
+  return [
+    { partner: "Booking.com", url: booking.toString() },
+    { partner: "Almosafer", url: almosafer.toString() },
+  ];
+}

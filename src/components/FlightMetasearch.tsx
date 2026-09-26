@@ -21,13 +21,16 @@ import type { Locale } from "@/lib/types";
  * The script is loaded once, on the pages that actually show flights — it is
  * a third-party module and has no business on a page about visas.
  *
- * Why this block is on the homepage as well as the results page: when someone
- * searches in the widget, the widget itself decides where the answer goes,
- * and what it does is open the site's own root. There is no setting for that
- * address — the White Label has no "results page" field — so the only way the
- * tickets land somewhere of ours rather than nowhere is for the root to carry
- * the same two containers. Hence `tone`: the results page is white, the
- * homepage is navy, and the widget's own cards are white either way.
+ * This block belongs on the results page and nowhere else. It was briefly on
+ * the homepage too, back when a search in the widget navigated to the site
+ * root and the tickets needed a container waiting there. The `flightSearch`
+ * parameter made that unnecessary — the search now runs and renders in place
+ * — and a front page whose job is to make someone want to travel does not
+ * open with a second search form under the one it already has.
+ *
+ * `tone` survives from that experiment: "dark" boxes the widget in white on
+ * a navy background. Nothing uses it today; it costs nothing and saves
+ * rebuilding it if a dark section ever wants the widget.
  */
 
 const WIDGET_SRC = "https://tpwgt.com/wl_web/main.js?wl_id=22604";

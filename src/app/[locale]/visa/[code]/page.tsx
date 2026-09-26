@@ -1,3 +1,5 @@
+import VisaBadge from "@/components/VisaBadge";
+import { VISA_CHECKED_AT, visaStatusFor } from "@/data/visaStatus";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDictionary } from "@/lib/dictionaries";
@@ -28,6 +30,7 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
   // Full resolution: this one photo is a full-width hero, not a card.
   const photos = await fetchCountryPhotos([country.code], { full: true });
   const countryName = loc === "ar" ? country.nameAr : country.nameEn;
+  const status = visaStatusFor(country.code);
 
   return (
     <div>
@@ -59,6 +62,46 @@ export default async function VisaCountryPage({ params }: PageProps<"/[locale]/v
           scope={dict.visa.onlySaudi}
           showLinks={false}
         />
+
+        {/* The status, when we confirmed it from the country's official
+            source — with that source and the day it was read, so the claim
+            can be checked rather than trusted. */}
+        {status && (
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5">
+            <p className="mb-3 text-sm font-extrabold text-navy-900">
+              {dict.visa.statusHeading.replace("{country}", countryName)}
+            </p>
+            <VisaBadge
+              category={status.category}
+              label={
+                {
+                  free: dict.visa.statusFree,
+                  arrival: dict.visa.statusArrival,
+                  eta: dict.visa.statusEta,
+                  required: dict.visa.statusRequired,
+                }[status.category]
+              }
+              className="text-sm"
+            />
+            {status.until && (
+              <p className="mt-3 text-sm font-semibold text-navy-800">
+                {dict.visa.statusUntil.replace("{date}", status.until)}
+              </p>
+            )}
+            <p className="mt-3 text-xs leading-relaxed text-navy-500">
+              <a
+                href={status.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-sea-600 underline-offset-2 hover:underline"
+              >
+                {dict.visa.statusSource} ↗
+              </a>
+              {" · "}
+              {dict.visa.statusChecked.replace("{date}", VISA_CHECKED_AT)}
+            </p>
+          </section>
+        )}
 
         <div className="mt-6">
           <VisaOfficialLinks countryCode={country.code} locale={loc} />

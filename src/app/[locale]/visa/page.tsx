@@ -7,6 +7,7 @@ import VisaWarning from "@/components/VisaWarning";
 import VisaDirectory, { type VisaCountry } from "@/components/VisaDirectory";
 import { directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
 import { fetchCountryPhotos } from "@/lib/countryPhotos";
+import { visaStatusFor } from "@/data/visaStatus";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { sectionHero } from "@/lib/sectionHero";
@@ -26,10 +27,10 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/visa">):
   });
 }
 
-// The countries we hold a verified place to apply for — the country's own
-// visa portal, or its page on Direct — each with a photograph behind its
-// flag. The site states no visa status (see visaProviders.ts), so the filter
-// is by where you apply, not by what the rule is.
+// The countries whose entry status for a Saudi passport we confirmed from an
+// official source (src/data/visaStatus.ts) and hold a verified place to apply
+// for — each with a photograph behind its flag, its status on the picture,
+// and a filter by status. A country we could not confirm is left out.
 export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) {
   const { locale } = await params;
   const loc = (locale === "en" ? "en" : "ar") as Locale;
@@ -38,7 +39,10 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
   // Saudi Arabia itself is dropped: "can a Saudi passport enter Saudi Arabia"
   // is not a question.
   const listed = COUNTRIES.filter(
-    (c) => c.code !== "SA" && (officialVisaUrl(c.code) || directVisaUrl(c.code, loc))
+    (c) =>
+      c.code !== "SA" &&
+      visaStatusFor(c.code) &&
+      (officialVisaUrl(c.code) || directVisaUrl(c.code, loc))
   );
 
   const [hero, photos] = await Promise.all([
@@ -52,6 +56,7 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
     nameEn: country.nameEn,
     continent: country.continent,
     photo: photos.get(country.code),
+    category: visaStatusFor(country.code)!.category,
     official: Boolean(officialVisaUrl(country.code)),
     direct: Boolean(directVisaUrl(country.code, loc)),
   }));
@@ -90,14 +95,17 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
             continents: dict.attractions.continents,
             badgeOfficial: dict.visa.badgeOfficial,
             badgeDirect: dict.visa.badgeDirect,
-            routeFilterLabel: dict.visa.routeFilterLabel,
-            routeAll: dict.visa.routeAll,
-            routeOfficial: dict.visa.routeOfficial,
-            routeDirect: dict.visa.routeDirect,
-            routeBoth: dict.visa.routeBoth,
+            statusFilterLabel: dict.visa.statusFilterLabel,
+            allStatuses: dict.visa.routeAll,
+            labels: {
+              free: dict.visa.statusFree,
+              arrival: dict.visa.statusArrival,
+              eta: dict.visa.statusEta,
+              required: dict.visa.statusRequired,
+            },
           }}
         />
-        <p className="mt-4 text-xs text-navy-500">{dict.visa.directoryOnlyVerified}</p>
+        <p className="mt-4 text-xs text-navy-500">{dict.visa.directoryConfirmedOnly}</p>
         <p className="mt-1 text-xs text-navy-500">{dict.visa.applyExternalNote}</p>
       </div>
     </div>

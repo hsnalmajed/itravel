@@ -8,6 +8,8 @@ import { flagImageUrl } from "@/lib/visaProviders";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
 import { searchMatches, searchEquals } from "@/lib/search";
 import Photo from "@/components/Photo";
+import VisaBadge, { VISA_STYLES } from "@/components/VisaBadge";
+import { VISA_ORDER, type VisaCategory } from "@/data/visaStatus";
 
 export interface VisaCountry {
   code: string;
@@ -16,6 +18,8 @@ export interface VisaCountry {
   continent: Continent;
   /** A photograph of the place, when Pexels has a fitting one. */
   photo?: string;
+  /** Entry status for a Saudi passport, from the country's official source. */
+  category: VisaCategory;
   /** We hold a verified link to the country's own government visa portal. */
   official: boolean;
   /** Direct (visa.directksa.com) has a page for this country. */
@@ -29,33 +33,23 @@ interface DirectoryDict {
   continents: Record<Continent, string>;
   badgeOfficial: string;
   badgeDirect: string;
-  routeFilterLabel: string;
-  routeAll: string;
-  routeOfficial: string;
-  routeDirect: string;
-  routeBoth: string;
+  statusFilterLabel: string;
+  allStatuses: string;
+  labels: Record<VisaCategory, string>;
 }
 
-type Route = "all" | "official" | "direct" | "both";
-
 /**
- * The countries we can actually send a traveller somewhere for.
+ * Pick a destination by what it takes to get in.
  *
- * Only countries with a verified place to apply are listed — the country's
- * own government visa portal, or its page on Direct. A country we hold
- * neither for is left out rather than shown as a card that leads nowhere.
+ * The status on each card is the point of the grid: "Georgia" tells a
+ * traveller nothing, "Georgia — no visa" turns browsing into deciding. The
+ * filter above turns it round entirely: instead of checking countries one at
+ * a time to find one you can simply fly to, you ask for all of them at once.
  *
- * The directory still states no entry status (see visaProviders.ts): Direct's
- * catalogue is the visas it sells to applicants in Saudi Arabia, and some of
- * its pages are for residents, so "on Direct" does not mean "a Saudi citizen
- * needs a visa". The filter is therefore by where you apply, which is a fact
- * we hold, not by what the rule is, which we don't.
- *
- * The two routes look different on purpose. The official portal is the
- * government itself and the cheapest route — solid navy with a columned
- * building. Direct is an agency that charges a fee for handling the paperwork
- * — sunset orange with a document. Seen side by side on a grid, the
- * difference reads before the words do.
+ * Every status here was read from the country's official source (see
+ * src/data/visaStatus.ts); a country we could not confirm is not listed. The
+ * apply routes sit under the name, smaller: the official portal in navy with
+ * a building, Direct in orange with a document.
  */
 export default function VisaDirectory({
   locale,
@@ -67,46 +61,38 @@ export default function VisaDirectory({
   dict: DirectoryDict;
 }) {
   const [query, setQuery] = useState("");
-  const [route, setRoute] = useState<Route>("all");
+  const [category, setCategory] = useState<VisaCategory | "all">("all");
 
-  const matchesRoute = (c: VisaCountry, r: Route) =>
-    r === "all" ||
-    (r === "official" && c.official) ||
-    (r === "direct" && c.direct) ||
-    (r === "both" && c.official && c.direct);
-
-  const counts = useMemo(
-    () => ({
-      all: countries.length,
-      official: countries.filter((c) => c.official).length,
-      direct: countries.filter((c) => c.direct).length,
-      both: countries.filter((c) => c.official && c.direct).length,
-    }),
-    [countries]
-  );
+  const counts = useMemo(() => {
+    const c = { free: 0, arrival: 0, eta: 0, required: 0 } as Record<VisaCategory, number>;
+    for (const country of countries) c[country.category]++;
+    return c;
+  }, [countries]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
     return countries.filter(
       (c) =>
-        matchesRoute(c, route) &&
+        (category === "all" || c.category === category) &&
         (!q || searchMatches([c.nameAr, c.nameEn], q) || searchEquals(c.code, q))
     );
-  }, [countries, query, route]);
+  }, [countries, query, category]);
 
   const grouped = useMemo(() => {
     const map = new Map<Continent, VisaCountry[]>();
     for (const continent of CONTINENT_ORDER) map.set(continent, []);
     for (const country of filtered) map.get(country.continent)?.push(country);
+    // Easiest to enter first within each continent.
+    for (const list of map.values()) {
+      list.sort((a, b) => VISA_ORDER.indexOf(a.category) - VISA_ORDER.indexOf(b.category));
+    }
     return map;
   }, [filtered]);
 
-  const routes: { value: Route; label: string }[] = [
-    { value: "all", label: dict.routeAll },
-    { value: "official", label: dict.routeOfficial },
-    { value: "direct", label: dict.routeDirect },
-    { value: "both", label: dict.routeBoth },
-  ];
+  const chip = (active: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition sm:text-sm ${
+      active ? "bg-navy-900 text-white shadow-sm" : "bg-white text-navy-700 ring-1 ring-mist-200 hover:ring-navy-200"
+    }`;
 
   return (
     <div>
@@ -118,27 +104,19 @@ export default function VisaDirectory({
           className="w-full rounded-xl border border-mist-200 bg-white px-4 py-3 text-sm text-navy-900 outline-none transition placeholder:text-navy-400 focus:border-sea-400 focus:ring-4 focus:ring-sea-100"
         />
 
-        <p className="mb-2 mt-4 text-xs font-bold text-navy-700">{dict.routeFilterLabel}</p>
+        <p className="mb-2 mt-4 text-xs font-bold text-navy-700">{dict.statusFilterLabel}</p>
         <div className="flex flex-wrap gap-2">
-          {routes.map((r) => {
-            const active = route === r.value;
-            return (
-              <button
-                key={r.value}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setRoute(r.value)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition sm:text-sm ${
-                  active ? "bg-navy-900 text-white shadow-sm" : "bg-white text-navy-700 ring-1 ring-mist-200 hover:ring-navy-200"
-                }`}
-              >
-                {r.value === "official" && <span aria-hidden="true">🏛</span>}
-                {r.value === "direct" && <span aria-hidden="true">📄</span>}
-                {r.label}
-                <span className={active ? "text-white/60" : "text-navy-400"}>({counts[r.value]})</span>
-              </button>
-            );
-          })}
+          <button type="button" aria-pressed={category === "all"} onClick={() => setCategory("all")} className={chip(category === "all")}>
+            {dict.allStatuses}
+            <span className={category === "all" ? "text-white/60" : "text-navy-400"}>({countries.length})</span>
+          </button>
+          {VISA_ORDER.filter((c) => counts[c] > 0).map((c) => (
+            <button key={c} type="button" aria-pressed={category === c} onClick={() => setCategory(c)} className={chip(category === c)}>
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${VISA_STYLES[c].dot}`} aria-hidden="true" />
+              {dict.labels[c]}
+              <span className={category === c ? "text-white/60" : "text-navy-400"}>({counts[c]})</span>
+            </button>
+          ))}
         </div>
 
         <p className="mt-3 text-xs font-semibold text-navy-500">
@@ -171,8 +149,6 @@ export default function VisaDirectory({
                         href={`/${locale}/visa/${c.code}`}
                         className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] ring-1 ring-navy-950/5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] hover:ring-sea-400/40"
                       >
-                        {/* The place, with its flag on the seam — where the eye
-                            lands when scanning a grid of destinations. */}
                         <div className="relative h-24 sm:h-28">
                           <Photo
                             src={c.photo}
@@ -180,6 +156,12 @@ export default function VisaDirectory({
                             fallback={<div className="absolute inset-0 bg-gradient-to-br from-navy-700 to-navy-990" />}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-navy-990/40 to-transparent" />
+                          {/* The answer, on the picture — the first thing read. */}
+                          <VisaBadge
+                            category={c.category}
+                            label={dict.labels[c.category]}
+                            className="absolute start-2 top-2 max-w-[calc(100%-1rem)] shadow-sm"
+                          />
                           <span className="absolute -bottom-6 start-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white rtl:translate-x-1/2">
                             {/* eslint-disable-next-line @next/next/no-img-element -- flag
                                 CDN, and the app runs with the Next image optimizer
@@ -190,15 +172,15 @@ export default function VisaDirectory({
 
                         <div className="flex flex-1 flex-col items-center px-2 pb-3 pt-8 text-center">
                           <p className="w-full truncate text-sm font-bold text-navy-900">{name}</p>
-                          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                          <div className="mt-2 flex flex-wrap justify-center gap-1">
                             {c.official && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-navy-900 px-2.5 py-1 text-xs font-extrabold text-white">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-navy-900 px-2 py-0.5 text-2xs font-bold text-white">
                                 <span aria-hidden="true">🏛</span>
                                 {dict.badgeOfficial}
                               </span>
                             )}
                             {c.direct && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-sun-400 px-2.5 py-1 text-xs font-extrabold text-navy-950">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-sun-400 px-2 py-0.5 text-2xs font-bold text-navy-950">
                                 <span aria-hidden="true">📄</span>
                                 {dict.badgeDirect}
                               </span>

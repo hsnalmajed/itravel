@@ -65,7 +65,11 @@ interface ShowcaseDict {
   seasonFlight: string;
   seasonFlightTitle: string;
   seasonHigh: string;
-  seasonRain: string;
+  seasonRainNone: string;
+  seasonRainOne: string;
+  seasonRainTwo: string;
+  seasonRainFew: string;
+  seasonRainMany: string;
   seasonMethod: string;
   toolsSubtitle: string;
   toolCta: string;
@@ -238,7 +242,14 @@ export default function HomeShowcase({
             {dict.seasonHigh.replace("{high}", String(Math.round(c.high)))}
           </span>
           <span className="inline-flex rounded-full bg-navy-990/65 px-2 py-0.5 text-xs font-bold text-sea-200 backdrop-blur-sm">
-            {dict.seasonRain.replace("{wet}", String(Math.round(c.rainyDays)))}
+            {Math.round(c.rainyDays) === 0
+              ? dict.seasonRainNone
+              : countLabel(Math.round(c.rainyDays), {
+                  one: dict.seasonRainOne,
+                  two: dict.seasonRainTwo,
+                  few: dict.seasonRainFew,
+                  many: dict.seasonRainMany,
+                })}
           </span>
         </div>
       </div>

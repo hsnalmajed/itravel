@@ -58,11 +58,13 @@ function amountOf(text: string): number | null {
 interface Fares {
   prices: number[];
   currency: string | null;
+  /** The widget is still asking agencies — its progress bar is on screen. */
+  searching: boolean;
 }
 
 function readFares(): Fares {
   const root = document.getElementById("tpwl-tickets")?.shadowRoot;
-  if (!root) return { prices: [], currency: null };
+  if (!root) return { prices: [], currency: null, searching: false };
   const cells = root.querySelectorAll('[data-testid^="flight-card-price-"]');
   const prices: number[] = [];
   let currency: string | null = null;
@@ -72,8 +74,19 @@ function readFares(): Fares {
     if (n !== null) prices.push(n);
     currency ??= currencyOf(text);
   });
-  return { prices, currency };
+  // The first agencies answer within seconds and the rest over the next
+  // twenty or so, and the cheapest fare often arrives late. A verdict read
+  // off the first few cards ("everything is over your budget") would be
+  // wrong half the time, so while the progress bar is up there is none.
+  const searching = Boolean(root.querySelector('[class*="SearchProgressbar"]'));
+  return { prices, currency, searching };
 }
+
+/**
+ * If the progress-bar marker is never seen (the widget renamed it), fares
+ * unchanged for this long are taken as final.
+ */
+const SETTLE_MS = 4000;
 
 export default function FlightBudgetBar({
   locale,
@@ -88,16 +101,35 @@ export default function FlightBudgetBar({
   travelers: number;
 }) {
   const t = getDictionary(locale).results;
-  const [fares, setFares] = useState<Fares>({ prices: [], currency: null });
+  const [fares, setFares] = useState<Fares>({ prices: [], currency: null, searching: true });
+  const [settled, setSettled] = useState(false);
 
   // The widget fills in over several seconds and re-renders when the
   // traveller filters or sorts, so this keeps reading. Cheap: one query
   // inside one shadow root, once a second.
   useEffect(() => {
+    let lastKey = "";
+    let lastChange = Date.now();
+    let sawProgress = false;
     const tick = () => {
       const next = readFares();
-      setFares((prev) =>
-        prev.currency === next.currency && prev.prices.join() === next.prices.join() ? prev : next
+      const key = `${next.currency}|${next.prices.join()}|${next.searching}`;
+      if (key !== lastKey) {
+        lastKey = key;
+        lastChange = Date.now();
+        setFares(next);
+      }
+      // While the progress bar is up: never settled. Once it has come and
+      // gone: settled after a second's calm. If it was never seen at all (a
+      // renamed marker), fall back to a longer calm.
+      if (next.searching) sawProgress = true;
+      const calm = Date.now() - lastChange;
+      // A finished search with no fares at all is settled too — the bar
+      // then just has nothing to compare, rather than waiting forever.
+      setSettled(
+        !next.searching &&
+          (next.prices.length > 0 || sawProgress) &&
+          calm >= (sawProgress ? 1000 : SETTLE_MS)
       );
     };
     tick();
@@ -109,7 +141,8 @@ export default function FlightBudgetBar({
     `${Math.round(n).toLocaleString(locale === "ar" ? "ar-SA-u-nu-latn" : "en-US")} ${currency}`;
 
   const partyLine = t.budgetBarParty.replace("{count}", String(travelers));
-  const comparable = budget > 0 && fares.prices.length > 0 && fares.currency === currency;
+  const comparable = settled && budget > 0 && fares.prices.length > 0 && fares.currency === currency;
+  const waiting = !settled && budget > 0;
   const cheapest = comparable ? Math.min(...fares.prices) : 0;
   const within = comparable ? fares.prices.filter((p) => p <= budget).length : 0;
   const allOver = comparable && within === 0;
@@ -133,6 +166,13 @@ export default function FlightBudgetBar({
           {partyLine}
         </p>
       </div>
+
+      {waiting && (
+        <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-navy-500">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-sun-400" aria-hidden="true" />
+          {t.budgetBarWaiting}
+        </p>
+      )}
 
       {comparable && !allOver && (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -163,7 +203,7 @@ export default function FlightBudgetBar({
         </p>
       )}
 
-      {budget > 0 && fares.prices.length > 0 && fares.currency && fares.currency !== currency && (
+      {settled && budget > 0 && fares.prices.length > 0 && fares.currency && fares.currency !== currency && (
         <p className="mt-2 text-xs text-navy-500">{t.budgetBarOtherCurrency}</p>
       )}
     </div>

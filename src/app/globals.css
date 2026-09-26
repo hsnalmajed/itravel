@@ -1,13 +1,22 @@
-/* The layer order, stated outright.
+/* The layer order, stated outright — and `isolation` first, on purpose.
  *
- * Tailwind's preflight zeroes margin and padding on every element from the
- * `base` layer, and the utilities that put them back live in `utilities`.
- * Which of the two wins is decided by layer order — and in the compiled
- * bundle this site ships, `utilities` was not ending up last, so every
- * padding, margin and gap on the site computed to zero: the header sat on
- * top of the headline, the cards touched, the forms had no breathing room.
- * Naming the order here pins it, whatever order the pieces arrive in. */
-@layer properties, theme, base, components, utilities;
+ * Two things fight over margins and padding on this site.
+ *
+ * Tailwind's preflight zeroes them from the `base` layer, and the utilities
+ * that put them back live in `utilities`; that fight is settled by naming the
+ * order here rather than leaving it to whichever block the bundler emits
+ * first.
+ *
+ * The second is the flight widget. Travelpayouts' White Label script injects
+ * Eric Meyer's global reset — `html, body, div, span, … { margin: 0; padding:
+ * 0 }`, plus `body { line-height: 1 }` — into the page inside a layer it
+ * calls `isolation`. A layer nobody has named before is ordered last, which
+ * put that reset above every utility on the page: on any page carrying the
+ * widget, every padding, margin and gap on the site computed to zero and the
+ * header sat on top of the headline. Naming `isolation` first puts the
+ * widget's reset underneath our own styles, where a reset belongs, and the
+ * widget still gets it. */
+@layer isolation, properties, theme, base, components, utilities;
 
 @import "tailwindcss";
 

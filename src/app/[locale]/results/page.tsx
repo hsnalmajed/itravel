@@ -8,6 +8,7 @@ import type { RoomType, Locale, SearchParams, TripType } from "@/lib/types";
 import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
 import FlightMetasearch from "@/components/FlightMetasearch";
+import FlightBudgetBar from "@/components/FlightBudgetBar";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
@@ -311,6 +312,15 @@ function ResultsContent() {
           exact dates and this exact party, and the fare on the card is the
           fare on the agency's payment page. So it is not a second opinion
           under our own numbers any more; it is the numbers. */}
+      {/* The budget against the fares the widget is showing — see
+          FlightBudgetBar for how it reads them and when it stays quiet. */}
+      <FlightBudgetBar
+        locale={locale}
+        budget={search.budgetTotal}
+        currency={search.currency}
+        travelers={travelers}
+      />
+
       <FlightMetasearch
         locale={locale}
         heading={dict.results.liveSearchTitle}

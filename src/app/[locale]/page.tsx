@@ -4,10 +4,12 @@ import type { Locale } from "@/lib/types";
 import { COUNTRY_GUIDES } from "@/lib/countryGuides";
 import { COUNTRY_CITIES } from "@/lib/cities";
 import { findCountry } from "@/lib/countries";
-import { fetchCountryPhotos } from "@/lib/countryPhotos";
+import { fetchCityPhotos, fetchCountryPhotos } from "@/lib/countryPhotos";
+import { citiesInSeason, varietyFirst } from "@/lib/citySeasons";
+import { airportForCity } from "@/lib/airports";
 import { heroImage as heroImageOf, heroPhotoForToday } from "@/lib/heroPhotos";
-import { countriesByMonth, monthName } from "@/lib/seasons";
-import HomeShowcase from "@/components/HomeShowcase";
+import { monthName } from "@/lib/seasons";
+import HomeShowcase, { type ShowcaseCity } from "@/components/HomeShowcase";
 import HeroPlanner from "@/components/HeroPlanner";
 import Photo from "@/components/Photo";
 import { brandJsonLd } from "@/lib/seo";
@@ -38,17 +40,21 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const guideCodes = Object.keys(COUNTRY_GUIDES);
   const cityCount = guideCodes.reduce((n, code) => n + (COUNTRY_CITIES[code]?.length ?? 0), 0);
 
-  // This month, and the countries whose own guide recommends it. The seasons
-  // page derives these from the same table, so the homepage can never drift
-  // out of agreement with it.
+  // This month, and the cities whose own measured weather is at its best in
+  // it — see citySeasons.ts for the rule and the source. Cities, not
+  // countries: a season belongs to a place, and Antalya's October is not
+  // Istanbul's. Ordered so the first six come from six countries.
   const month = new Date().getMonth() + 1;
-  const inSeasonCodes = (countriesByMonth().get(month) ?? []).slice(0, 6);
+  const inSeasonCities = citiesInSeason(month);
+  const seasonOrder = varietyFirst(inSeasonCities, inSeasonCities.length);
 
   // A different corner of the world each day — see heroPhotos.ts for the
   // brief these are chosen against.
   const heroPick = heroPhotoForToday();
-  const photoCodes = Array.from(new Set([...FEATURED, ...inSeasonCodes]));
-  const photos = await fetchCountryPhotos(photoCodes);
+  const [photos, cityPhotos] = await Promise.all([
+    fetchCountryPhotos(FEATURED),
+    fetchCityPhotos(seasonOrder),
+  ]);
   const heroImage = heroImageOf(heroPick);
   const heroPhoto = heroImage.url;
   const nameOf = (code: string) => {
@@ -63,11 +69,22 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
     cities: COUNTRY_CITIES[code]?.length ?? 0,
   }));
 
-  const inSeason = inSeasonCodes.map((code) => ({
-    code,
-    name: nameOf(code),
-    photo: photos.get(code),
-  }));
+  const seasonCities: ShowcaseCity[] = seasonOrder.map((c) => {
+    const country = findCountry(c.code);
+    const airport = country ? airportForCity(c.nameEn, country.nameEn) : undefined;
+    return {
+      code: c.code,
+      slug: c.slug,
+      name: isAr ? c.nameAr : c.nameEn,
+      countryName: nameOf(c.code),
+      photo: cityPhotos.get(`${c.code}/${c.slug}`),
+      high: c.high,
+      rainyDays: c.rainyDays,
+      flightHref: airport
+        ? `/${loc}?${new URLSearchParams({ product: "flights", mode: "known", destination: airport.iata })}#plan`
+        : undefined,
+    };
+  });
 
   const stats = [
     { value: String(guideCodes.length), label: dict.home.statCountries },
@@ -191,7 +208,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
         <HomeShowcase
           locale={loc}
           featured={featured}
-          inSeason={inSeason.map((d) => ({ ...d, cities: 0 }))}
+          seasonCities={seasonCities}
           tools={tools}
           steps={steps}
           dict={{
@@ -210,6 +227,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             seasonTitle: dict.home.seasonTitle.replace("{month}", monthName(month, loc)),
             seasonSubtitle: dict.home.seasonSubtitle,
             seasonCta: dict.home.seasonCta,
+            seasonAllCities: dict.home.seasonAllCities.replace("{month}", monthName(month, loc)),
+            seasonFewerCities: dict.home.seasonFewerCities,
+            seasonCityWeather: dict.home.seasonCityWeather,
+            seasonFlight: dict.home.seasonFlight,
+            seasonMethod: dict.home.seasonMethod,
             toolsSubtitle: dict.home.toolsSubtitle,
             toolCta: dict.home.toolCta,
             stepsTitle: dict.home.stepsTitle,

@@ -15,6 +15,19 @@ export interface ShowcaseDestination {
   cities: number;
 }
 
+/** A city in season this month, with the two numbers that put it there. */
+export interface ShowcaseCity {
+  code: string;
+  slug: string;
+  name: string;
+  countryName: string;
+  photo?: string;
+  high: number;
+  rainyDays: number;
+  /** The homepage planner, pointed at this city's airport — when it has one. */
+  flightHref?: string;
+}
+
 export interface ShowcaseTool {
   href: string;
   icon: string;
@@ -44,6 +57,11 @@ interface ShowcaseDict {
   seasonTitle: string;
   seasonSubtitle: string;
   seasonCta: string;
+  seasonAllCities: string;
+  seasonFewerCities: string;
+  seasonCityWeather: string;
+  seasonFlight: string;
+  seasonMethod: string;
   toolsSubtitle: string;
   toolCta: string;
   stepsTitle: string;
@@ -82,24 +100,27 @@ type TabKey = "featured" | "season" | "tools" | "how" | "plan";
 export default function HomeShowcase({
   locale,
   featured,
-  inSeason,
+  seasonCities,
   tools,
   steps,
   dict,
 }: {
   locale: Locale;
   featured: ShowcaseDestination[];
-  inSeason: ShowcaseDestination[];
+  seasonCities: ShowcaseCity[];
   tools: ShowcaseTool[];
   steps: ShowcaseStep[];
   dict: ShowcaseDict;
 }) {
-  const [active, setActive] = useState<TabKey>(inSeason.length > 0 ? "season" : "featured");
+  const [active, setActive] = useState<TabKey>(seasonCities.length > 0 ? "season" : "featured");
+  // The season tab shows six cities, one per country where it can; the rest
+  // of the month's cities open in place rather than on another page.
+  const [allCities, setAllCities] = useState(false);
   const isAr = locale === "ar";
   const arrow = isAr ? "←" : "→";
 
   const tabs: { key: TabKey; label: string; hidden?: boolean }[] = [
-    { key: "season", label: dict.tabSeason, hidden: inSeason.length === 0 },
+    { key: "season", label: dict.tabSeason, hidden: seasonCities.length === 0 },
     { key: "featured", label: dict.tabFeatured },
     { key: "tools", label: dict.tabTools },
     { key: "how", label: dict.tabHow },
@@ -116,7 +137,6 @@ export default function HomeShowcase({
 
   const link: Partial<Record<TabKey, { href: string; label: string }>> = {
     featured: { href: `/${locale}/attractions`, label: dict.featuredCta },
-    season: { href: `/${locale}/seasons`, label: dict.seasonCta },
   };
 
   const tabClass = (on: boolean) =>
@@ -127,15 +147,15 @@ export default function HomeShowcase({
     }`;
 
   // "Plan your trip" is not another thing to browse — it is the way out of
-  // browsing and into a search. So it looks like it at rest: a solid
-  // sky-blue pill with a glow and a plane, the one thing on the strip that is
-  // neither the orange of "you are here" nor the grey of "somewhere else".
-  // (The first version was only an outline, and read as just another tab.)
+  // browsing and into a search. So it looks like it at rest: a blue pill
+  // with a sky-blue glow, its word and plane in the brand's gold. The blue
+  // runs Travel Blue to navy rather than sky blue, because gold on sky blue
+  // is barely readable (about 1.6:1) and gold on this is comfortably so.
   const planTabClass = (on: boolean) =>
     `relative inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition duration-200 sm:px-6 sm:text-base ${
       on
         ? "bg-white text-navy-950 ring-2 ring-sea-400 shadow-[0_0_28px_-6px_var(--sea-400)]"
-        : "bg-gradient-to-l from-sea-400 to-sea-600 text-white ring-2 ring-sea-300/60 shadow-[0_0_28px_-4px_var(--sea-400)] hover:from-sea-300 hover:to-sea-500"
+        : "bg-gradient-to-l from-sea-600 to-navy-900 text-sun-400 ring-2 ring-sea-400/70 shadow-[0_0_28px_-4px_var(--sea-400)] hover:from-sea-500 hover:to-navy-800 hover:text-sun-300"
     }`;
 
   const planChoices: { value: PlanProduct; icon: IconName; title: string; hint: string }[] = [
@@ -177,6 +197,40 @@ export default function HomeShowcase({
     </Link>
   );
 
+  const cityCard = (c: ShowcaseCity) => (
+    <div key={`${c.code}-${c.slug}`} className="group relative isolate aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition duration-300 hover:-translate-y-1 hover:ring-sun-400/50">
+      <Link href={`/${locale}/attractions/${c.code}/${c.slug}`} className="absolute inset-0 block">
+        <Photo
+          src={c.photo}
+          className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]"
+          fallback={<div className="absolute inset-0 -z-10 bg-gradient-to-br from-navy-700 to-navy-990" />}
+        />
+        <div className="scrim-soft absolute inset-0 -z-10" />
+        <span className="sr-only">{c.name}</span>
+      </Link>
+      {c.flightHref && (
+        // A full navigation, not a client one: the planner reads its starting
+        // trip once, when the page loads.
+        <a
+          href={c.flightHref}
+          className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-full bg-navy-990/70 px-2.5 py-1.5 text-xs font-extrabold text-sun-400 ring-1 ring-sun-400/50 backdrop-blur-md transition hover:bg-navy-990/90"
+        >
+          <Icon name="plane" className="h-3.5 w-3.5" />
+          {dict.seasonFlight}
+        </a>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+        <p className="truncate font-display text-sm font-extrabold text-white drop-shadow-sm sm:text-base">{c.name}</p>
+        <p className="truncate text-xs font-semibold text-white/70">{c.countryName}</p>
+        <p className="mt-1 inline-flex rounded-full bg-navy-990/60 px-2 py-0.5 text-xs font-bold text-sun-300 backdrop-blur-sm">
+          {dict.seasonCityWeather
+            .replace("{high}", String(Math.round(c.high)))
+            .replace("{wet}", String(Math.round(c.rainyDays)))}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-3 sm:px-6">
       <div className="overflow-hidden rounded-[2rem] bg-gradient-to-b from-navy-900 to-navy-990 shadow-[0_30px_80px_-20px_rgba(4,24,47,0.6)] ring-1 ring-white/10">
@@ -214,6 +268,21 @@ export default function HomeShowcase({
         <div className="p-4 sm:p-7">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <p className="max-w-2xl text-sm leading-relaxed text-white/65">{blurb[active]}</p>
+            {active === "season" && seasonCities.length > 6 && (
+              <button
+                type="button"
+                onClick={() => setAllCities((v) => !v)}
+                aria-expanded={allCities}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/20 transition hover:bg-white/20"
+              >
+                {allCities
+                  ? dict.seasonFewerCities
+                  : dict.seasonAllCities.replace("{count}", String(seasonCities.length))}
+                <span aria-hidden="true" className={`transition ${allCities ? "-rotate-90" : ""}`}>
+                  {arrow}
+                </span>
+              </button>
+            )}
             {link[active] && (
               <Link
                 href={link[active]!.href}
@@ -237,9 +306,17 @@ export default function HomeShowcase({
             )}
 
             {active === "season" && (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-                {inSeason.slice(0, 6).map(card)}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+                  {(allCities ? seasonCities : seasonCities.slice(0, 6)).map(cityCard)}
+                </div>
+                <p className="mt-4 text-xs text-white/45">
+                  {dict.seasonMethod}{" "}
+                  <Link href={`/${locale}/seasons`} className="font-bold text-white/70 underline-offset-2 hover:underline">
+                    {dict.seasonCta}
+                  </Link>
+                </p>
+              </>
             )}
 
             {active === "tools" && (

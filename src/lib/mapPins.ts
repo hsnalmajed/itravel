@@ -13,6 +13,7 @@
 // on import, so the pin *type* has to live outside it.)
 
 import { CITY_COORDS } from "@/data/cityCoords";
+import { cachedJson } from "@/lib/edgeCache";
 import { findCountry } from "@/lib/countries";
 import { searchPexelsPhotos, type PexelsQuery } from "@/lib/pexels";
 import type { PinCategory } from "@/lib/pinStyles";
@@ -153,26 +154,31 @@ function categoryOf(tags: Record<string, string>): { category: PinCategory; kind
  * with no pins is a disappointment, a page that fails to render is a bug.
  */
 async function fetchAround(lat: number, lon: number, radius: number): Promise<OverpassElement[]> {
-  const body = `data=${encodeURIComponent(query(lat, lon, radius))}`;
-  for (const url of OVERPASS) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        body,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        // A week. The query is the same for every visitor to this city, and
-        // the answer changes about as often as the city does.
-        next: { revalidate: 604800 },
-      });
-      if (!res.ok) continue;
-      const json = (await res.json()) as { elements?: OverpassElement[] };
-      const elements = json.elements ?? [];
-      if (elements.length) return elements;
-    } catch {
-      // Try the next mirror.
+  // Cached at Cloudflare's edge for a week (see edgeCache.ts): `revalidate`
+  // below never persisted on this deployment, and an Overpass POST per city
+  // per page view is slow for the visitor and unkind to a volunteer-run
+  // service. A failure on every mirror is not cached.
+  const found = await cachedJson<OverpassElement[]>(`overpass:${lat},${lon},${radius}`, 604800, async () => {
+    const body = `data=${encodeURIComponent(query(lat, lon, radius))}`;
+    for (const url of OVERPASS) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          body,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          next: { revalidate: 604800 },
+        });
+        if (!res.ok) continue;
+        const json = (await res.json()) as { elements?: OverpassElement[] };
+        const elements = json.elements ?? [];
+        if (elements.length) return elements;
+      } catch {
+        // Try the next mirror.
+      }
     }
-  }
-  return [];
+    return null;
+  });
+  return found ?? [];
 }
 
 function toPlace(el: OverpassElement, locale: Locale): Place | null {

@@ -30,3 +30,28 @@ export async function fetchCountryPhotos(
   for (const [code, p] of found) photos.set(code, full ? p.url : p.small);
   return photos;
 }
+
+/**
+ * One photograph per city, keyed "<country code>/<slug>".
+ *
+ * Tries "<city> <country>" first and keeps a photo only when its caption
+ * names the city — a search for a smaller city on Pexels otherwise returns
+ * the capital's skyline, and a card with no photo is better than a card with
+ * the wrong city.
+ */
+export async function fetchCityPhotos(
+  cities: { code: string; slug: string; nameEn: string }[]
+): Promise<Map<string, string>> {
+  const wanted = new Map<string, PexelsQuery[]>();
+  for (const c of cities) {
+    const country = findCountry(c.code)?.nameEn ?? "";
+    wanted.set(`${c.code}/${c.slug}`, [
+      { query: `${c.nameEn} ${country}`.trim(), mention: [c.nameEn] },
+      { query: `${c.nameEn} city`, mention: [c.nameEn] },
+    ]);
+  }
+  const found = await searchPexelsPhotos(wanted);
+  const photos = new Map<string, string>();
+  for (const [key, p] of found) photos.set(key, p.small);
+  return photos;
+}

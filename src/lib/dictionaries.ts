@@ -380,8 +380,13 @@ export const dictionaries = {
 
       seasonEyebrow: "الموسم الآن",
       seasonTitle: "أفضل الوجهات في {month}",
-      seasonSubtitle: "الوجهات التي يكون طقسها وموسمها في أفضل حالاته هذا الشهر تحديداً.",
+      seasonSubtitle: "مدن طقسها في أحسن حالاته هذا الشهر: متوسط العظمى بين ١٨ و٣٢ درجة، وأيام المطر ٨ أو أقل — من بيانات الطقس لعشرين سنة.",
       seasonCta: "تقويم المواسم كامل",
+      seasonAllCities: "كل المدن التي موسمها {month} ({count})",
+      seasonFewerCities: "عرض أقل",
+      seasonCityWeather: "{high}° · {wet} أيام مطر",
+      seasonFlight: "طيران",
+      seasonMethod: "المصدر: NASA POWER — متوسط العظمى اليومية وأيام المطر (١ مم فأكثر) لكل مدينة، ٢٠٠٥–٢٠٢٤.",
 
       toolsEyebrow: "أدوات المسافر",
       toolsTitle: "كل ما تحتاجه قبل أن تحجز",
@@ -1295,8 +1300,13 @@ export const dictionaries = {
 
       seasonEyebrow: "In season now",
       seasonTitle: "Best places to be in {month}",
-      seasonSubtitle: "Destinations whose weather and season are at their best this particular month.",
+      seasonSubtitle: "Cities at their best this month: afternoon highs of 18–32 °C and 8 rainy days or fewer — from 20 years of weather data.",
       seasonCta: "Full season calendar",
+      seasonAllCities: "Every city in season in {month} ({count})",
+      seasonFewerCities: "Show fewer",
+      seasonCityWeather: "{high}° · {wet} rainy days",
+      seasonFlight: "Flights",
+      seasonMethod: "Source: NASA POWER — mean daily high and rainy days (1 mm or more) for each city, 2005–2024.",
 
       toolsEyebrow: "Traveller tools",
       toolsTitle: "Everything you need before you book",

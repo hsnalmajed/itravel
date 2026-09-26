@@ -18,6 +18,8 @@
  * Docs: https://www.pexels.com/api/documentation/
  */
 
+import { cachedJson } from "@/lib/edgeCache";
+
 const API = "https://api.pexels.com/v1/search";
 
 export interface PexelsPhoto {
@@ -78,31 +80,43 @@ function fold(s: string): string {
  */
 export async function searchPexelsPhoto({ query, mention }: PexelsQuery): Promise<PexelsPhoto | null> {
   if (!key() || !query.trim()) return null;
-  const url = new URL(API);
-  url.searchParams.set("query", query);
-  url.searchParams.set("per_page", "15");
-  url.searchParams.set("orientation", "landscape");
-  try {
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: key() },
-      next: { revalidate: 604800 },
-    });
-    if (!res.ok) return null;
-    const body = (await res.json()) as { photos?: PexelsApiPhoto[] };
-    const words = mention.map(fold).filter(Boolean);
-    const p = (body.photos ?? []).find(
-      (ph) => ph.src?.original && words.some((w) => fold(ph.alt ?? "").includes(w))
-    );
-    if (!p) return null;
-    return {
-      ...pexelsSizes(p.src.original),
-      photographer: p.photographer,
-      photographerUrl: p.photographer_url,
-      pageUrl: p.url,
-    };
-  } catch {
-    return null;
-  }
+  // Cached at Cloudflare's edge (see edgeCache.ts) — the `revalidate` below
+  // alone never persisted on this deployment. A search that found no fitting
+  // photo is remembered too; one that failed (429, network) is not.
+  const found = await cachedJson<{ photo: PexelsPhoto | null }>(
+    `pexels:${query}|${mention.join(",")}`,
+    604800,
+    async () => {
+      const url = new URL(API);
+      url.searchParams.set("query", query);
+      url.searchParams.set("per_page", "15");
+      url.searchParams.set("orientation", "landscape");
+      try {
+        const res = await fetch(url.toString(), {
+          headers: { Authorization: key() },
+          next: { revalidate: 604800 },
+        });
+        if (!res.ok) return null;
+        const body = (await res.json()) as { photos?: PexelsApiPhoto[] };
+        const words = mention.map(fold).filter(Boolean);
+        const p = (body.photos ?? []).find(
+          (ph) => ph.src?.original && words.some((w) => fold(ph.alt ?? "").includes(w))
+        );
+        if (!p) return { photo: null };
+        return {
+          photo: {
+            ...pexelsSizes(p.src.original),
+            photographer: p.photographer,
+            photographerUrl: p.photographer_url,
+            pageUrl: p.url,
+          },
+        };
+      } catch {
+        return null;
+      }
+    }
+  );
+  return found?.photo ?? null;
 }
 
 /**

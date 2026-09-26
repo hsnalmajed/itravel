@@ -127,14 +127,15 @@ export default function HomeShowcase({
     }`;
 
   // "Plan your trip" is not another thing to browse — it is the way out of
-  // browsing and into a search. So it looks like it at rest: sky blue, the
-  // one colour on the strip that isn't the orange of "you are here" or the
-  // grey of "somewhere else", with a plane on it.
+  // browsing and into a search. So it looks like it at rest: a solid
+  // sky-blue pill with a glow and a plane, the one thing on the strip that is
+  // neither the orange of "you are here" nor the grey of "somewhere else".
+  // (The first version was only an outline, and read as just another tab.)
   const planTabClass = (on: boolean) =>
-    `inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-extrabold transition duration-200 sm:px-5 sm:text-base ${
+    `relative inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition duration-200 sm:px-6 sm:text-base ${
       on
-        ? "bg-sea-400 text-navy-950 shadow-lg shadow-sea-900/30"
-        : "bg-sea-600/25 text-sea-200 ring-1 ring-sea-400/60 hover:bg-sea-600/40 hover:text-white"
+        ? "bg-white text-navy-950 ring-2 ring-sea-400 shadow-[0_0_28px_-6px_var(--sea-400)]"
+        : "bg-gradient-to-l from-sea-400 to-sea-600 text-white ring-2 ring-sea-300/60 shadow-[0_0_28px_-4px_var(--sea-400)] hover:from-sea-300 hover:to-sea-500"
     }`;
 
   const planChoices: { value: PlanProduct; icon: IconName; title: string; hint: string }[] = [
@@ -191,7 +192,19 @@ export default function HomeShowcase({
                 aria-pressed={active === t.key}
                 className={t.key === "plan" ? planTabClass(active === t.key) : tabClass(active === t.key)}
               >
-                {t.key === "plan" && <Icon name="plane" className="h-4 w-4" />}
+                {t.key === "plan" && (
+                  <>
+                    {/* A small beacon, so the eye finds it even in passing.
+                        Still when the visitor prefers reduced motion. */}
+                    {active !== "plan" && (
+                      <span className="absolute -top-0.5 -end-0.5 flex h-3 w-3" aria-hidden="true">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-sun-400 opacity-75 motion-safe:animate-ping" />
+                        <span className="relative inline-flex h-3 w-3 rounded-full bg-sun-400 ring-2 ring-navy-900" />
+                      </span>
+                    )}
+                    <Icon name="plane" className="h-[1.1rem] w-[1.1rem]" />
+                  </>
+                )}
                 {t.key === "season" ? dict.seasonTitle : t.label}
               </button>
             ))}

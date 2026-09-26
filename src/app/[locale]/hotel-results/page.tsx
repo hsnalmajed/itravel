@@ -44,6 +44,10 @@ function HotelResultsContent() {
 
   const mode = sp.get("hmode") === "discover" ? "discover" : "known";
   const query = (mode === "known" ? sp.get("hotel") : sp.get("city"))?.trim() || "";
+  // What the heading shows, when it differs from what is searched: the
+  // flight page sends the city's English name to search with and the
+  // traveller's own-language name to show.
+  const label = sp.get("label")?.trim() || "";
   const checkIn = sp.get("checkIn") || "";
   const checkOut = sp.get("checkOut") || "";
   const adults = Math.max(1, Number(sp.get("adults")) || 1);
@@ -114,7 +118,7 @@ function HotelResultsContent() {
             </p>
             <h1 className="flex items-center gap-3 font-display text-h1 font-extrabold text-white">
               <Icon name="hotel" className="h-8 w-8 shrink-0 text-sun-400" />
-              <span className="min-w-0 break-words">{query || "—"}</span>
+              <span className="min-w-0 break-words">{label || query || "—"}</span>
             </h1>
             {complete && (
               <p className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-semibold text-white/70">

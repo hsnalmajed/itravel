@@ -9,6 +9,7 @@ import EntryRequirementsPanel from "@/components/EntryRequirementsPanel";
 import TripCurrencyStrip from "@/components/TripCurrencyStrip";
 import FlightMetasearch from "@/components/FlightMetasearch";
 import FlightBudgetBar from "@/components/FlightBudgetBar";
+import Icon from "@/components/ui/Icon";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
@@ -220,6 +221,28 @@ function ResultsContent() {
       : `/${locale}/attractions/${destinationCountry.code}?${p}#guide`;
   }, [locale, destinationCountry, destinationCity, nights, backHref]);
 
+  // The hotel search this flight implies. Only for a round trip — a one-way
+  // flight says nothing about how long the stay is. The search uses the
+  // city's English name (partners match it more reliably); the page shows
+  // the traveller's own-language name.
+  const hotelCityLabel =
+    destinationCityName ?? (locale === "ar" ? destinationAirport?.cityAr : destinationAirport?.cityEn) ?? "";
+  const hotelNextHref = useMemo(() => {
+    const cityEn = destinationCity?.nameEn ?? destinationAirport?.cityEn;
+    if (!cityEn || !search.departDate || !search.returnDate) return undefined;
+    const p = new URLSearchParams({
+      hmode: "discover",
+      city: cityEn,
+      label: hotelCityLabel,
+      checkIn: search.departDate,
+      checkOut: search.returnDate,
+      adults: String(search.adults),
+      childrenAges: serializeChildrenAges(search.childrenAges || []),
+      infants: String(search.infants || 0),
+    });
+    return `/${locale}/hotel-results?${p.toString()}`;
+  }, [locale, destinationCity, destinationAirport, hotelCityLabel, search]);
+
   return (
     <div className="bg-mist-50">
       {/* ── The trip band ───────────────────────────────────────────────
@@ -327,6 +350,37 @@ function ResultsContent() {
         note={dict.results.liveSearchNote}
         prefill={flightSearchCode(search)}
       />
+
+      {/* The next half of the trip. We cannot see whether the flight was
+          booked — that happens at the agency — so this is offered, not
+          assumed: the same city, the same dates, the same party, carried to
+          the hotels page so nothing is typed twice. */}
+      {hotelNextHref && (
+        <Link
+          href={hotelNextHref}
+          className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-l from-sea-600 to-navy-900 p-5 shadow-sm ring-1 ring-sea-400/40 transition hover:ring-sun-400/60 sm:p-6"
+        >
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sun-400 text-navy-950">
+              <Icon name="hotel" className="h-6 w-6" />
+            </span>
+            <div>
+              <p className="font-display font-extrabold text-white">
+                {dict.results.hotelNextTitle.replace("{city}", hotelCityLabel)}
+              </p>
+              <p className="mt-1 text-sm text-white/70">
+                {dict.results.hotelNextBody
+                  .replace("{checkIn}", search.departDate)
+                  .replace("{checkOut}", search.returnDate || "")
+                  .replace("{nights}", nights === 1 ? dict.hotelResults.oneNight : dict.hotelResults.nights.replace("{count}", String(nights)))}
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-xl bg-sun-400 px-5 py-3 text-sm font-extrabold text-navy-950 shadow-[var(--shadow-sun)]">
+            {dict.results.hotelNextCta}
+          </span>
+        </Link>
+      )}
 
       <div className="mt-10 space-y-4">
           {/* Itinerary prompt — surfaced first, as requested, so the itinerary

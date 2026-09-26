@@ -51,8 +51,50 @@ export async function GET() {
     hotels = { status: "error", sample: String(err).slice(0, 160) };
   }
 
+  // The edge cache the photos depend on (edgeCache.ts): is it there, and
+  // does a write come back on the next read?
+  const edgeCache: { present: boolean; roundTrip: string } = { present: false, roundTrip: "skipped" };
+  try {
+    const cache = (globalThis as { caches?: { default?: Cache } }).caches?.default;
+    edgeCache.present = Boolean(cache);
+    if (cache) {
+      const req = new Request("https://sfrtna.com/__edge-cache/health-probe");
+      const stamp = String(Date.now());
+      await cache.put(req, new Response(stamp, { headers: { "Cache-Control": "public, max-age=300" } }));
+      const back = await cache.match(req);
+      edgeCache.roundTrip = back ? ((await back.text()) === stamp ? "ok" : "stale") : "miss";
+    }
+  } catch (err) {
+    edgeCache.roundTrip = `error: ${String(err).slice(0, 120)}`;
+  }
+
+  // Pexels' own answer to one search, and how much of the hourly allowance
+  // is left — never the key.
+  let pexels: { status: number | string; remaining: string | null; reset: string | null } = {
+    status: "skipped",
+    remaining: null,
+    reset: null,
+  };
+  if (process.env.PEXELS_API_KEY) {
+    try {
+      const res = await fetch("https://api.pexels.com/v1/search?query=Istanbul&per_page=1", {
+        headers: { Authorization: process.env.PEXELS_API_KEY },
+        cache: "no-store",
+      });
+      pexels = {
+        status: res.status,
+        remaining: res.headers.get("x-ratelimit-remaining"),
+        reset: res.headers.get("x-ratelimit-reset"),
+      };
+    } catch (err) {
+      pexels = { status: `error: ${String(err).slice(0, 120)}`, remaining: null, reset: null };
+    }
+  }
+
   return NextResponse.json(
     {
+      edgeCache,
+      pexels,
       configuredProviders: configured,
       hotelProbe: hotels,
       keys: {

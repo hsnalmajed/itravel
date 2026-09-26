@@ -24,8 +24,10 @@ export interface ShowcaseCity {
   photo?: string;
   high: number;
   rainyDays: number;
-  /** The homepage planner, pointed at this city's airport — when it has one. */
+  /** The homepage planner, pointed at this city's airport (see cityAirports.ts). */
   flightHref?: string;
+  flightAirport?: string;
+  flightKm?: number;
 }
 
 export interface ShowcaseTool {
@@ -61,6 +63,9 @@ interface ShowcaseDict {
   seasonFewerCities: string;
   seasonCityWeather: string;
   seasonFlight: string;
+  seasonFlightTitle: string;
+  seasonHigh: string;
+  seasonRain: string;
   seasonMethod: string;
   toolsSubtitle: string;
   toolCta: string;
@@ -210,10 +215,14 @@ export default function HomeShowcase({
       </Link>
       {c.flightHref && (
         // A full navigation, not a client one: the planner reads its starting
-        // trip once, when the page loads.
+        // trip once, when the page loads. The title names the airport, since
+        // for some cities it is a nearby one (Petra flies into Aqaba).
         <a
           href={c.flightHref}
-          className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-full bg-navy-990/70 px-2.5 py-1.5 text-xs font-extrabold text-sun-400 ring-1 ring-sun-400/50 backdrop-blur-md transition hover:bg-navy-990/90"
+          title={dict.seasonFlightTitle
+            .replace("{airport}", c.flightAirport ?? "")
+            .replace("{km}", String(c.flightKm ?? ""))}
+          className="absolute end-2 top-2 inline-flex items-center gap-1 rounded-full bg-navy-990/75 px-2.5 py-1.5 text-xs font-extrabold text-sun-400 ring-1 ring-sun-400/50 backdrop-blur-md transition hover:bg-navy-990/90"
         >
           <Icon name="plane" className="h-3.5 w-3.5" />
           {dict.seasonFlight}
@@ -222,11 +231,16 @@ export default function HomeShowcase({
       <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
         <p className="truncate font-display text-sm font-extrabold text-white drop-shadow-sm sm:text-base">{c.name}</p>
         <p className="truncate text-xs font-semibold text-white/70">{c.countryName}</p>
-        <p className="mt-1 inline-flex rounded-full bg-navy-990/60 px-2 py-0.5 text-xs font-bold text-sun-300 backdrop-blur-sm">
-          {dict.seasonCityWeather
-            .replace("{high}", String(Math.round(c.high)))
-            .replace("{wet}", String(Math.round(c.rainyDays)))}
-        </p>
+        {/* Two numbers, each saying what it is: the typical afternoon
+            temperature, and how many days of the month see rain. */}
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          <span className="inline-flex rounded-full bg-navy-990/65 px-2 py-0.5 text-xs font-bold text-sun-300 backdrop-blur-sm">
+            {dict.seasonHigh.replace("{high}", String(Math.round(c.high)))}
+          </span>
+          <span className="inline-flex rounded-full bg-navy-990/65 px-2 py-0.5 text-xs font-bold text-sea-200 backdrop-blur-sm">
+            {dict.seasonRain.replace("{wet}", String(Math.round(c.rainyDays)))}
+          </span>
+        </div>
       </div>
     </div>
   );

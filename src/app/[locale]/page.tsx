@@ -6,7 +6,7 @@ import { COUNTRY_CITIES } from "@/lib/cities";
 import { findCountry } from "@/lib/countries";
 import { fetchCityPhotos, fetchCountryPhotos } from "@/lib/countryPhotos";
 import { citiesInSeason, varietyFirst } from "@/lib/citySeasons";
-import { airportForCity } from "@/lib/airports";
+import { CITY_AIRPORTS } from "@/data/cityAirports";
 import { heroImage as heroImageOf, heroPhotoForToday } from "@/lib/heroPhotos";
 import { monthName } from "@/lib/seasons";
 import HomeShowcase, { type ShowcaseCity } from "@/components/HomeShowcase";
@@ -70,8 +70,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
   }));
 
   const seasonCities: ShowcaseCity[] = seasonOrder.map((c) => {
-    const country = findCountry(c.code);
-    const airport = country ? airportForCity(c.nameEn, country.nameEn) : undefined;
+    const airport = CITY_AIRPORTS[c.slug];
     return {
       code: c.code,
       slug: c.slug,
@@ -83,6 +82,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       flightHref: airport
         ? `/${loc}?${new URLSearchParams({ product: "flights", mode: "known", destination: airport.iata })}#plan`
         : undefined,
+      flightAirport: airport?.iata,
+      flightKm: airport?.km ?? undefined,
     };
   });
 
@@ -231,6 +232,9 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             seasonFewerCities: dict.home.seasonFewerCities,
             seasonCityWeather: dict.home.seasonCityWeather,
             seasonFlight: dict.home.seasonFlight,
+            seasonFlightTitle: dict.home.seasonFlightTitle,
+            seasonHigh: dict.home.seasonHigh,
+            seasonRain: dict.home.seasonRain,
             seasonMethod: dict.home.seasonMethod,
             toolsSubtitle: dict.home.toolsSubtitle,
             toolCta: dict.home.toolCta,

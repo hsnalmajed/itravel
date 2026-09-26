@@ -9,7 +9,6 @@ import { heroImage as heroImageOf, heroPhotoForToday } from "@/lib/heroPhotos";
 import { countriesByMonth, monthName } from "@/lib/seasons";
 import HomeShowcase from "@/components/HomeShowcase";
 import HeroPlanner from "@/components/HeroPlanner";
-import FlightMetasearch from "@/components/FlightMetasearch";
 import Photo from "@/components/Photo";
 import { brandJsonLd } from "@/lib/seo";
 
@@ -214,25 +213,6 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             cityCountMany: dict.home.cityCountMany,
           }}
         />
-      </section>
-
-      {/* ── Live flights ────────────────────────────────────────────────
-          The metasearch, on the page the widget itself navigates to after a
-          search. See FlightMetasearch: the White Label sends its results to
-          the site root, so the root is where the tickets container has to
-          live, or the traveller's search lands on a page that cannot show
-          it. On a first visit the tickets half is empty and costs nothing —
-          it is a form under a heading, which is what a travel site's front
-          page is expected to end on anyway. */}
-      <section className="relative z-10 bg-navy-990 pb-2 pt-8 sm:pt-10">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-          <FlightMetasearch
-            locale={loc}
-            heading={dict.results.liveSearchTitle}
-            note={dict.results.liveSearchNote}
-            tone="dark"
-          />
-        </div>
       </section>
     </div>
   );

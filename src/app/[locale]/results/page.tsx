@@ -11,7 +11,7 @@ import FlightMetasearch from "@/components/FlightMetasearch";
 import { currencyForCountry } from "@/lib/currencies";
 import { parseChildrenAges, serializeChildrenAges } from "@/lib/searchParamsUtil";
 import { findAirport } from "@/lib/airports";
-import { flightSearchCode } from "@/lib/flightSearchCode";
+import { flightSearchCode, parseFlightSearchCode } from "@/lib/flightSearchCode";
 import { findCityByName } from "@/lib/cities";
 import { findCountryByEnglishName, flagEmoji } from "@/lib/countries";
 
@@ -45,20 +45,38 @@ function ResultsContent() {
   const dict = getDictionary(locale);
   const sp = useSearchParams();
 
-  // The address bar is not ours alone on this page. When the flight widget
-  // runs a search it rewrites the address to its own one parameter and drops
-  // everything else, which would otherwise empty this page of the trip the
-  // traveller asked for. So the trip is read from the address once and kept;
-  // a later address that still names a destination is a real change and is
-  // taken, one that does not is the widget talking to itself and is ignored.
+  // Where the trip lives on this page, and why it moved.
+  //
+  // The flight widget reads the trip from `?flightSearch=` — but if the
+  // address has anything else in its query string, the widget reloads the
+  // whole page to an address of its own, with only its code in it and both
+  // dates a day early. That reload is what emptied this page of the visa
+  // panel, the currency strip and the route header, and what searched the
+  // wrong day. With `flightSearch` alone in the query it leaves the page
+  // alone and searches the right dates (checked on sfrtna.com, 26 Sep 2026).
+  //
+  // So FlightMetasearch moves our trip into the fragment — `?flightSearch=
+  // RUH1110IST18102#origin=RUH&destination=IST&…` — before the widget loads,
+  // and this reads it from there. Arriving links still use a normal query;
+  // it is moved on arrival. If the widget later runs a search of its own and
+  // reloads with only its code, the route is read back out of the code.
   const spText = sp.toString();
-  const [query, setQuery] = useState(spText);
+  const [query, setQuery] = useState(() =>
+    new URLSearchParams(spText).get("destination") ? spText : ""
+  );
   useEffect(() => {
-    const next = new URLSearchParams(spText);
-    if (!next.get("destination") && new URLSearchParams(query).get("destination")) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setQuery(spText);
-  }, [spText, query]);
+    function read() {
+      const fromHash = new URLSearchParams(window.location.hash.slice(1));
+      if (fromHash.get("destination")) return setQuery(fromHash.toString());
+      const fromQuery = new URLSearchParams(spText);
+      if (fromQuery.get("destination")) return setQuery(spText);
+      const fromCode = parseFlightSearchCode(fromQuery.get("flightSearch"));
+      if (fromCode) setQuery(fromCode.toString());
+    }
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, [spText]);
   const q = useMemo(() => new URLSearchParams(query), [query]);
 
   const search: SearchParams = useMemo(
@@ -161,7 +179,7 @@ function ResultsContent() {
   // Where "back" goes from anywhere this page sends the traveller. It is this
   // exact page with this exact search, so returning lands them on their own
   // results rather than on a blank search form.
-  const backHref = `/${locale}/results?${sp.toString()}`;
+  const backHref = `/${locale}/results?${query}`;
 
   const itineraryHref = useMemo(() => {
     const p = new URLSearchParams({

@@ -57,11 +57,20 @@ export default function FlightMetasearch({
     // already searched when the page opens; without it they would be asked
     // for the trip a second time, which is the thing this site exists not to
     // do.
+    //
+    // And it has to be the only thing in the query string. Given anything
+    // else there, the widget reloads the page to an address of its own,
+    // dropping the rest and moving both dates a day earlier. So the rest of
+    // the query moves into the fragment, where the widget leaves it alone
+    // and the results page reads it back (see results/page.tsx).
     if (prefill) {
       const url = new URL(window.location.href);
-      if (url.searchParams.get("flightSearch") !== prefill) {
-        url.searchParams.set("flightSearch", prefill);
-        window.history.replaceState(null, "", url.toString());
+      const rest = new URLSearchParams(url.search);
+      rest.delete("flightSearch");
+      const trip = rest.toString() || url.hash.slice(1);
+      const next = `${url.pathname}?flightSearch=${encodeURIComponent(prefill)}${trip ? `#${trip}` : ""}`;
+      if (next !== `${url.pathname}${url.search}${url.hash}`) {
+        window.history.replaceState(null, "", next);
       }
     }
     if (document.getElementById("tpwl-main")) return;

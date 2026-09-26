@@ -65,3 +65,38 @@ export function flightSearchCode(search: SearchParams): string | null {
 
   return `${from}${out}${to}${back ?? ""}${seats}`;
 }
+
+/**
+ * The trip back out of a widget code — "RUH1110IST18102" → origin RUH,
+ * destination IST, 11 Oct out, 18 Oct back, two seats.
+ *
+ * The fallback for when the results page has nothing else to go on: the
+ * widget runs a new search from its own form and reloads the page with only
+ * its code in the address. The code still names the route, which is all the
+ * visa and currency panels need. The year is the next time that day comes
+ * round, which is how the widget reads it too.
+ */
+export function parseFlightSearchCode(code: string | null | undefined): URLSearchParams | null {
+  const m = /^([A-Z]{3})(\d{2})(\d{2})([A-Z]{3})(?:(\d{2})(\d{2}))?(\d)$/.exec((code || "").trim());
+  if (!m) return null;
+  const [, from, d1, m1, to, d2, m2, seats] = m;
+
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const nextIso = (day: string, month: string, notBefore: string) => {
+    const y = today.getFullYear();
+    const thisYear = `${y}-${month}-${day}`;
+    return thisYear >= notBefore ? thisYear : `${y + 1}-${month}-${day}`;
+  };
+
+  const departDate = nextIso(d1, m1, todayIso);
+  const returnDate = d2 && m2 ? nextIso(d2, m2, departDate) : "";
+  return new URLSearchParams({
+    tripType: "flight",
+    origin: from,
+    destination: to,
+    departDate,
+    returnDate,
+    adults: seats,
+  });
+}

@@ -76,9 +76,15 @@ export default function VisaOfficialLinks({
                     href={officialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                    className="flex flex-1 items-center justify-center gap-2.5 rounded-xl bg-navy-900 px-4 py-3.5 text-sm font-extrabold text-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:bg-navy-800"
                   >
-                    🏛 {dict.visa.applyOfficial} ↗
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-base" aria-hidden="true">
+                      🏛
+                    </span>
+                    <span className="text-start">
+                      <span className="block text-2xs font-bold uppercase tracking-wide text-sea-300">{dict.visa.badgeOfficial}</span>
+                      {dict.visa.applyOfficial} ↗
+                    </span>
                   </a>
                 )}
                 {directUrl && (
@@ -86,14 +92,20 @@ export default function VisaOfficialLinks({
                     href={directUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-bold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+                    className="flex flex-1 items-center justify-center gap-2.5 rounded-xl bg-sun-400 px-4 py-3.5 text-sm font-extrabold text-navy-950 shadow-[var(--shadow-sun)] transition hover:-translate-y-0.5 hover:bg-sun-300"
                   >
-                    📄 {dict.visa.applyDirect} ↗
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-950/10 text-base" aria-hidden="true">
+                      📄
+                    </span>
+                    <span className="text-start">
+                      <span className="block text-2xs font-bold uppercase tracking-wide text-navy-950/60">{dict.visa.badgeDirect}</span>
+                      {dict.visa.applyDirect} ↗
+                    </span>
                   </a>
                 )}
               </div>
               {officialUrl && (
-                <p className="mt-2.5 text-xs leading-relaxed text-emerald-800">{dict.visa.officialNote}</p>
+                <p className="mt-2.5 text-xs leading-relaxed text-navy-700">{dict.visa.officialNote}</p>
               )}
               <p className="mt-2 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
             </>

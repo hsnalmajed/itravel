@@ -5,7 +5,8 @@ import type { Locale } from "@/lib/types";
 import { COUNTRIES } from "@/lib/countries";
 import VisaWarning from "@/components/VisaWarning";
 import VisaDirectory, { type VisaCountry } from "@/components/VisaDirectory";
-import { applicableCountryCodes } from "@/lib/visaProviders";
+import { directVisaUrl, officialVisaUrl } from "@/lib/visaProviders";
+import { fetchCountryPhotos } from "@/lib/countryPhotos";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { sectionHero } from "@/lib/sectionHero";
@@ -25,25 +26,34 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/visa">):
   });
 }
 
-// An index into the country pages. The site states no visa status (see
-// visaProviders.ts), so there is nothing to count or filter by — only a
-// search, and a note on the cards where we hold a verified application link.
+// The countries we hold a verified place to apply for — the country's own
+// visa portal, or its page on Direct — each with a photograph behind its
+// flag. The site states no visa status (see visaProviders.ts), so the filter
+// is by where you apply, not by what the rule is.
 export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) {
   const { locale } = await params;
   const loc = (locale === "en" ? "en" : "ar") as Locale;
   const dict = getDictionary(loc);
 
-  const hero = await sectionHero("visa", loc);
-
   // Saudi Arabia itself is dropped: "can a Saudi passport enter Saudi Arabia"
   // is not a question.
-  const applySet = new Set(applicableCountryCodes());
-  const directory: VisaCountry[] = COUNTRIES.filter((c) => c.code !== "SA").map((country) => ({
+  const listed = COUNTRIES.filter(
+    (c) => c.code !== "SA" && (officialVisaUrl(c.code) || directVisaUrl(c.code, loc))
+  );
+
+  const [hero, photos] = await Promise.all([
+    sectionHero("visa", loc),
+    fetchCountryPhotos(listed.map((c) => c.code)),
+  ]);
+
+  const directory: VisaCountry[] = listed.map((country) => ({
     code: country.code,
     nameAr: country.nameAr,
     nameEn: country.nameEn,
     continent: country.continent,
-    canApply: applySet.has(country.code),
+    photo: photos.get(country.code),
+    official: Boolean(officialVisaUrl(country.code)),
+    direct: Boolean(directVisaUrl(country.code, loc)),
   }));
 
   return (
@@ -77,11 +87,18 @@ export default async function VisaPage({ params }: PageProps<"/[locale]/visa">) 
             searchPlaceholder: dict.visa.searchPlaceholder,
             countriesCount: dict.visa.countriesCount,
             noResults: dict.visa.noResults,
-            canApply: dict.visa.canApply,
             continents: dict.attractions.continents,
+            badgeOfficial: dict.visa.badgeOfficial,
+            badgeDirect: dict.visa.badgeDirect,
+            routeFilterLabel: dict.visa.routeFilterLabel,
+            routeAll: dict.visa.routeAll,
+            routeOfficial: dict.visa.routeOfficial,
+            routeDirect: dict.visa.routeDirect,
+            routeBoth: dict.visa.routeBoth,
           }}
         />
-        <p className="mt-4 text-xs text-gray-500">{dict.visa.applyExternalNote}</p>
+        <p className="mt-4 text-xs text-navy-500">{dict.visa.directoryOnlyVerified}</p>
+        <p className="mt-1 text-xs text-navy-500">{dict.visa.applyExternalNote}</p>
       </div>
     </div>
   );

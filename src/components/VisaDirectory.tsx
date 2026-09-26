@@ -7,35 +7,55 @@ import type { Continent } from "@/lib/countries";
 import { flagImageUrl } from "@/lib/visaProviders";
 import { CONTINENT_ORDER } from "@/components/DestinationFilters";
 import { searchMatches, searchEquals } from "@/lib/search";
+import Photo from "@/components/Photo";
 
 export interface VisaCountry {
   code: string;
   nameAr: string;
   nameEn: string;
   continent: Continent;
-  /** There is somewhere to actually start an application. */
-  canApply: boolean;
+  /** A photograph of the place, when Pexels has a fitting one. */
+  photo?: string;
+  /** We hold a verified link to the country's own government visa portal. */
+  official: boolean;
+  /** Direct (visa.directksa.com) has a page for this country. */
+  direct: boolean;
 }
 
 interface DirectoryDict {
   searchPlaceholder: string;
   countriesCount: string;
   noResults: string;
-  canApply: string;
   continents: Record<Continent, string>;
+  badgeOfficial: string;
+  badgeDirect: string;
+  routeFilterLabel: string;
+  routeAll: string;
+  routeOfficial: string;
+  routeDirect: string;
+  routeBoth: string;
 }
 
+type Route = "all" | "official" | "direct" | "both";
+
 /**
- * Every country, once, as a way into its page.
+ * The countries we can actually send a traveller somewhere for.
  *
- * The directory makes no claim about entry status — the site states none (see
- * visaProviders.ts). It is a searchable list grouped by continent, each card
- * leading to that country's official links. The one fact a card carries is
- * our own: whether we hold a verified application link for it.
+ * Only countries with a verified place to apply are listed — the country's
+ * own government visa portal, or its page on Direct. A country we hold
+ * neither for is left out rather than shown as a card that leads nowhere.
  *
- * The cards carry flags rather than photographs: fetching a photo per country
- * meant a couple of hundred lookups for a page that is really an index, and
- * on a page about crossing borders the flag is the right picture anyway.
+ * The directory still states no entry status (see visaProviders.ts): Direct's
+ * catalogue is the visas it sells to applicants in Saudi Arabia, and some of
+ * its pages are for residents, so "on Direct" does not mean "a Saudi citizen
+ * needs a visa". The filter is therefore by where you apply, which is a fact
+ * we hold, not by what the rule is, which we don't.
+ *
+ * The two routes look different on purpose. The official portal is the
+ * government itself and the cheapest route — solid navy with a columned
+ * building. Direct is an agency that charges a fee for handling the paperwork
+ * — sunset orange with a document. Seen side by side on a grid, the
+ * difference reads before the words do.
  */
 export default function VisaDirectory({
   locale,
@@ -47,12 +67,32 @@ export default function VisaDirectory({
   dict: DirectoryDict;
 }) {
   const [query, setQuery] = useState("");
+  const [route, setRoute] = useState<Route>("all");
+
+  const matchesRoute = (c: VisaCountry, r: Route) =>
+    r === "all" ||
+    (r === "official" && c.official) ||
+    (r === "direct" && c.direct) ||
+    (r === "both" && c.official && c.direct);
+
+  const counts = useMemo(
+    () => ({
+      all: countries.length,
+      official: countries.filter((c) => c.official).length,
+      direct: countries.filter((c) => c.direct).length,
+      both: countries.filter((c) => c.official && c.direct).length,
+    }),
+    [countries]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim();
-    if (!q) return countries;
-    return countries.filter((c) => searchMatches([c.nameAr, c.nameEn], q) || searchEquals(c.code, q));
-  }, [countries, query]);
+    return countries.filter(
+      (c) =>
+        matchesRoute(c, route) &&
+        (!q || searchMatches([c.nameAr, c.nameEn], q) || searchEquals(c.code, q))
+    );
+  }, [countries, query, route]);
 
   const grouped = useMemo(() => {
     const map = new Map<Continent, VisaCountry[]>();
@@ -61,24 +101,53 @@ export default function VisaDirectory({
     return map;
   }, [filtered]);
 
+  const routes: { value: Route; label: string }[] = [
+    { value: "all", label: dict.routeAll },
+    { value: "official", label: dict.routeOfficial },
+    { value: "direct", label: dict.routeDirect },
+    { value: "both", label: dict.routeBoth },
+  ];
+
   return (
     <div>
-      <div className="rounded-2xl bg-gray-50 p-4 ring-1 ring-black/5">
+      <div className="rounded-2xl bg-mist-50 p-4 ring-1 ring-mist-200">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={dict.searchPlaceholder}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100 placeholder:text-gray-400"
+          className="w-full rounded-xl border border-mist-200 bg-white px-4 py-3 text-sm text-navy-900 outline-none transition placeholder:text-navy-400 focus:border-sea-400 focus:ring-4 focus:ring-sea-100"
         />
-        <p className="mt-3 text-xs font-semibold text-gray-500">
+
+        <p className="mb-2 mt-4 text-xs font-bold text-navy-700">{dict.routeFilterLabel}</p>
+        <div className="flex flex-wrap gap-2">
+          {routes.map((r) => {
+            const active = route === r.value;
+            return (
+              <button
+                key={r.value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setRoute(r.value)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition sm:text-sm ${
+                  active ? "bg-navy-900 text-white shadow-sm" : "bg-white text-navy-700 ring-1 ring-mist-200 hover:ring-navy-200"
+                }`}
+              >
+                {r.value === "official" && <span aria-hidden="true">🏛</span>}
+                {r.value === "direct" && <span aria-hidden="true">📄</span>}
+                {r.label}
+                <span className={active ? "text-white/60" : "text-navy-400"}>({counts[r.value]})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-3 text-xs font-semibold text-navy-500">
           {dict.countriesCount.replace("{count}", String(filtered.length))}
         </p>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-8 rounded-xl bg-gray-50 px-4 py-10 text-center text-sm text-gray-500">
-          {dict.noResults}
-        </p>
+        <p className="mt-8 rounded-xl bg-mist-50 px-4 py-10 text-center text-sm text-navy-500">{dict.noResults}</p>
       ) : (
         <div className="mt-6 space-y-10">
           {CONTINENT_ORDER.map((continent) => {
@@ -87,10 +156,10 @@ export default function VisaDirectory({
 
             return (
               <section key={continent}>
-                <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-brand-900">
-                  <span className="h-4 w-1 rounded-full bg-accent-500" aria-hidden="true" />
+                <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-extrabold text-navy-900">
+                  <span className="h-4 w-1 rounded-full bg-sun-400" aria-hidden="true" />
                   {dict.continents[continent]}
-                  <span className="text-sm font-normal text-gray-400">({inContinent.length})</span>
+                  <span className="text-sm font-normal text-navy-400">({inContinent.length})</span>
                 </h2>
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
@@ -100,29 +169,41 @@ export default function VisaDirectory({
                       <Link
                         key={c.code}
                         href={`/${locale}/visa/${c.code}`}
-                        className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg hover:ring-brand-200"
+                        className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)] ring-1 ring-navy-950/5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] hover:ring-sea-400/40"
                       >
-                        <div className="relative flex h-20 items-center justify-center bg-brand-50">
-                          <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white">
+                        {/* The place, with its flag on the seam — where the eye
+                            lands when scanning a grid of destinations. */}
+                        <div className="relative h-24 sm:h-28">
+                          <Photo
+                            src={c.photo}
+                            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            fallback={<div className="absolute inset-0 bg-gradient-to-br from-navy-700 to-navy-990" />}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-navy-990/40 to-transparent" />
+                          <span className="absolute -bottom-6 start-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-2 ring-white rtl:translate-x-1/2">
                             {/* eslint-disable-next-line @next/next/no-img-element -- flag
                                 CDN, and the app runs with the Next image optimizer
                                 disabled on Workers. */}
-                            <img
-                              src={flagImageUrl(c.code)}
-                              alt=""
-                              loading="lazy"
-                              className="h-full w-full object-cover"
-                            />
+                            <img src={flagImageUrl(c.code)} alt="" loading="lazy" className="h-full w-full object-cover" />
                           </span>
                         </div>
 
-                        <div className="flex flex-1 flex-col px-2 pb-3 pt-3 text-center">
-                          <p className="truncate text-sm font-bold text-gray-900">{name}</p>
-                          {c.canApply && (
-                            <p className="mt-auto pt-1.5 text-[10px] font-bold text-brand-700">
-                              {dict.canApply}
-                            </p>
-                          )}
+                        <div className="flex flex-1 flex-col items-center px-2 pb-3 pt-8 text-center">
+                          <p className="w-full truncate text-sm font-bold text-navy-900">{name}</p>
+                          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                            {c.official && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-navy-900 px-2.5 py-1 text-xs font-extrabold text-white">
+                                <span aria-hidden="true">🏛</span>
+                                {dict.badgeOfficial}
+                              </span>
+                            )}
+                            {c.direct && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-sun-400 px-2.5 py-1 text-xs font-extrabold text-navy-950">
+                                <span aria-hidden="true">📄</span>
+                                {dict.badgeDirect}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </Link>
                     );
